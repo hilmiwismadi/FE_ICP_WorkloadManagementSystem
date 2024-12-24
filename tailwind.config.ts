@@ -1,3 +1,5 @@
+import { Poppins } from "next/font/google";
+import { title } from "process";
 import type { Config } from "tailwindcss";
 
 export default {
@@ -11,6 +13,11 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        navy: '#142857',
+      },
+      fontFamily: {
+        Poppins: ["Poppins"],
+
       },
     },
   },
