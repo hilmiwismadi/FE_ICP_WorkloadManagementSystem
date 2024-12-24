@@ -36,7 +36,7 @@ export default function LoginPage() {
           </div>
           <a
             className="flex aspect-[530/68] text-white bg-navy rounded-xl justify-center items-center cursor-pointer hover:bg-blue-800 transition-colors"
-            href="/home"
+            href="/dashboard"
           >
             Login
           </a>

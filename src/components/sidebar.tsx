@@ -2,23 +2,30 @@
 import "../App/globals.css";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 const side_components = [
   {
     title: "Dashboard",
+    link: "/dashboard", // Add the link here
     jsx: <Icon icon="material-symbols:dashboard" style={{ width: "1.719vw", height: "1.719vw" }} />,
   },
   {
     title: "Employee Activity",
+    link: "/employeeactivity", // Add the link here
     jsx: <Icon icon="material-symbols:work" style={{ width: "1.719vw", height: "1.719vw" }} />,
   },
   {
     title: "Task Management",
+    link: "/taskmanagement", // Add the link here
     jsx: <Icon icon="material-symbols:assignment" style={{ width: "1.719vw", height: "1.719vw" }} />,
   },
 ];
 
 export default function Sidebar() {
+  const pathname = usePathname(); // Get the current pathname
+
   return (
     <div className="absolute left-0 w-[19.583vw] aspect-[376/1080] text-[10vw] flex flex-col items-center bg-navy">
       <Image
@@ -45,15 +52,18 @@ export default function Sidebar() {
 
       <div className="gap-y-[4.5vw] flex flex-col mt-[3vw]">
         {side_components.map((component, index) => (
-          <div
-            key={index}
-            className="aspect-[376/33] w-[14.583vw] flex text-[1.146vw] font-semibold cursor-pointer hover:text-white active:text-white transition-colors duration-300 text-gray-700"
-          >
-            <div className="w-[1.719vw] aspect-square flex justify-center items-center">
-              {component.jsx}
+          <Link href={component.link} key={index}>
+            <div
+              className={`aspect-[376/33] w-[14.583vw] flex text-[1.146vw] font-semibold cursor-pointer hover:text-white active:text-white transition-colors duration-300 ${
+                pathname === component.link ? "text-white" : "text-gray-700"
+              }`}
+            >
+              <div className="w-[1.719vw] aspect-square flex justify-center items-center">
+                {component.jsx}
+              </div>
+              <h1 className="ml-[1vw]">{component.title}</h1>
             </div>
-            <h1 className="ml-[1vw]">{component.title}</h1>
-          </div>
+          </Link>
         ))}
 
         <div
