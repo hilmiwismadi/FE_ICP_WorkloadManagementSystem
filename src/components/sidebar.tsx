@@ -2,7 +2,7 @@
 import "../App/globals.css";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 
 const side_components = [
@@ -25,6 +25,7 @@ const side_components = [
 
 export default function Sidebar() {
   const pathname = usePathname(); // Get the current pathname
+  const router = useRouter();
 
   return (
     <div className="absolute left-0 w-[19.583vw] aspect-[376/1080] text-[10vw] flex flex-col items-center bg-navy">
@@ -68,7 +69,7 @@ export default function Sidebar() {
 
         <div
           className="justify-start items-center aspect-[376/33] w-[14.583vw] flex text-[1.146vw] font-semibold cursor-pointer hover:text-red-600 active:text-red-600 transition-colors duration-300 text-red-900 absolute bottom-[5vw]"
-          onClick={() => alert("Clicked!")} // Replace with your click logic
+          onClick={() => router.push("/")} 
         >
           <Icon icon="streamline:logout-1-solid" style={{ width: "1.719vw", height: "1.719vw" }} />
           <h1 className="ml-[1vw]">Log Out</h1>
