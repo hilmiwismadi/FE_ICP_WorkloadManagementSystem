@@ -13,12 +13,12 @@ const side_components = [
   },
   {
     title: "Employee Activity",
-    link: "/employeeactivity", // Add the link here
+    link: "/activity", // Add the link here
     jsx: <Icon icon="material-symbols:work" style={{ width: "1.719vw", height: "1.719vw" }} />,
   },
   {
     title: "Task Management",
-    link: "/taskmanagement", // Add the link here
+    link: "/task", // Add the link here
     jsx: <Icon icon="material-symbols:assignment" style={{ width: "1.719vw", height: "1.719vw" }} />,
   },
 ];
