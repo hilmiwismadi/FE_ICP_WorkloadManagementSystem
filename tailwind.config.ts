@@ -17,7 +17,6 @@ export default {
       },
       fontFamily: {
         Poppins: ["Poppins"],
-
       },
     },
   },

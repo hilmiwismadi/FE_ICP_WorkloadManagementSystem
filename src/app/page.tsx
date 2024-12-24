@@ -1,4 +1,6 @@
-'use client'
+import React from "react";
+import { useNavigate } from "react-router-dom";
+
 
 export default function LoginPage() {
   return (
@@ -32,11 +34,12 @@ export default function LoginPage() {
             />
             <h1 className="text-[0.938vw] text-black"> Remember Me</h1>
           </div>
-          <button
+          <a
             className="flex aspect-[530/68] text-white bg-navy rounded-xl justify-center items-center cursor-pointer hover:bg-blue-800 transition-colors"
+            href="/home"
           >
             Login
-          </button>
+          </a>
         </div>
       </div>
     </div>
