@@ -1,80 +1,122 @@
 "use client";
-import "../App/globals.css";
+import { useState } from 'react';
 import Image from "next/image";
-import { Icon } from "@iconify/react";
-import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight, LayoutDashboard, Users, ClipboardList, LogOut } from 'lucide-react';
 
-const side_components = [
+const sidebarItems = [
   {
     title: "Dashboard",
-    link: "/dashboard", // Add the link here
-    jsx: <Icon icon="material-symbols:dashboard" style={{ width: "1.719vw", height: "1.719vw" }} />,
+    link: "/dashboard",
+    icon: LayoutDashboard
   },
   {
     title: "Employee Activity",
-    link: "/activity", // Add the link here
-    jsx: <Icon icon="material-symbols:work" style={{ width: "1.719vw", height: "1.719vw" }} />,
+    link: "/activity",
+    icon: Users
   },
   {
     title: "Task Management",
-    link: "/task", // Add the link here
-    jsx: <Icon icon="material-symbols:assignment" style={{ width: "1.719vw", height: "1.719vw" }} />,
-  },
+    link: "/task",
+    icon: ClipboardList
+  }
 ];
 
-export default function Sidebar() {
-  const pathname = usePathname(); // Get the current pathname
+const Sidebar = () => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const pathname = usePathname();
   const router = useRouter();
 
   return (
-    <div className="absolute left-0 w-[19.583vw] aspect-[376/1080] text-[10vw] flex flex-col items-center bg-navy">
-      <Image
-        src="/img/sidebar/Logo_IconPlus.png"
-        alt="logo"
-        width={2000}
-        height={2000}
-        className="w-[9.792vw] mt-[6vw]"
-      />
+    <div
+      className={`relative min-h-screen bg-navy transition-all duration-300 ease-in-out ${
+        isExpanded ? 'w-64' : 'w-20'
+      }`}
+    >
+      {/* Toggle Button */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="absolute -right-3 top-8 bg-white rounded-full p-1 border border-gray-200 hover:bg-gray-100 transition-colors duration-200"
+      >
+        {isExpanded ? (
+          <ChevronLeft className="h-4 w-4 text-navy" />
+        ) : (
+          <ChevronRight className="h-4 w-4 text-navy" />
+        )}
+      </button>
 
-      <div className="bg-[#243F80] rounded-lg aspect-[280/150] w-[14.583vw] my-[2vw] flex justify-center items-center gap-x-[1.3vw]">
+      {/* Logo */}
+      <div className="flex justify-center py-6">
         <Image
-          src="/img/sidebar/UserProfile.png"
+          src="/img/sidebar/Logo_IconPlus.png"
           alt="logo"
-          width={2000}
-          height={2000}
-          className="w-[4.427vw] aspect-square rounded-[10.417vw]"
+          width={isExpanded ? 120 : 40}
+          height={isExpanded ? 120 : 40}
+          className="transition-all duration-300"
         />
-        <div className="flex flex-col font-semibold text-[1.146vw] gap-[0.7vw] text-white">
-          <h1>PIC APKT</h1>
-          <h1>ID-10009</h1>
+      </div>
+
+      {/* User Profile */}
+      <div className="mx-4 mb-8">
+        <div className="bg-[#243F80] rounded-lg p-4 transition-all duration-300">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/img/sidebar/UserProfile.png"
+              alt="profile"
+              width={40}
+              height={40}
+              className="rounded-full"
+            />
+            {isExpanded && (
+              <div className="flex flex-col text-white">
+                <span className="font-semibold text-sm">PIC APKT</span>
+                <span className="text-xs">ID-10009</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="gap-y-[4.5vw] flex flex-col mt-[3vw]">
-        {side_components.map((component, index) => (
-          <Link href={component.link} key={index}>
-            <div
-              className={`aspect-[376/33] w-[14.583vw] flex text-[1.146vw] font-semibold cursor-pointer hover:text-white active:text-white transition-colors duration-300 ${
-                pathname === component.link ? "text-white" : "text-gray-700"
+      {/* Navigation Items */}
+      <nav className="px-4 space-y-2">
+        {sidebarItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = pathname === item.link;
+          
+          return (
+            <Link
+              key={item.link}
+              href={item.link}
+              className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
+                isActive 
+                  ? 'bg-blue-900 text-white' 
+                  : 'text-gray-400 hover:bg-blue-900/50 hover:text-white'
               }`}
             >
-              <div className="w-[1.719vw] aspect-square flex justify-center items-center">
-                {component.jsx}
-              </div>
-              <h1 className="ml-[1vw]">{component.title}</h1>
-            </div>
-          </Link>
-        ))}
+              <Icon className="h-5 w-5" />
+              {isExpanded && (
+                <span className="font-medium text-sm">{item.title}</span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
 
-        <div
-          className="justify-start items-center aspect-[376/33] w-[14.583vw] flex text-[1.146vw] font-semibold cursor-pointer hover:text-red-600 active:text-red-600 transition-colors duration-300 text-red-900 absolute bottom-[5vw]"
-          onClick={() => router.push("/")} 
+      {/* Logout Button */}
+      <div className="absolute bottom-8 w-full px-4">
+        <button
+          onClick={() => router.push('/')}
+          className="flex items-center gap-3 p-3 w-full text-red-500 hover:bg-red-500/10 rounded-lg transition-all duration-200"
         >
-          <Icon icon="streamline:logout-1-solid" style={{ width: "1.719vw", height: "1.719vw" }} />
-          <h1 className="ml-[1vw]">Log Out</h1>
-        </div>
+          <LogOut className="h-5 w-5" />
+          {isExpanded && (
+            <span className="font-medium text-sm">Log Out</span>
+          )}
+        </button>
       </div>
     </div>
   );
-}
+};
+
+export default Sidebar;
