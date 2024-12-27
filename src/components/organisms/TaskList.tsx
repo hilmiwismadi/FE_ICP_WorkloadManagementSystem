@@ -14,7 +14,7 @@ export default function TaskList({ tasks }: any) {
       <CardHeader>
         <CardTitle className="text-white">Ongoing Task Summary</CardTitle>
       </CardHeader>
-      <CardContent className="h-[590px] overflow-y-scroll scrollbar-thin scrollbar-thumb-white scrollbar-track-[#0A1D56]">
+      <CardContent className="h-[38vw] overflow-y-scroll scrollbar-thin scrollbar-thumb-white scrollbar-track-[#0A1D56]">
         {/* Scrollable content */}
         <div className="space-y-4">
           {tasks.map((task: any) => (

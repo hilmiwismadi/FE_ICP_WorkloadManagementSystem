@@ -43,12 +43,12 @@ export default function WorkloadOverview({ workloadTrend, currentWorkload, avera
   return (
     <div className="space-y-6">
       {/* Workloads Trend Chart */}
-      <Card className="bg-[#0A1D56] h-[290px]">
+      <Card className="bg-[#0A1D56] h-[19vw]">
         <CardHeader>
           <CardTitle className="text-white text-lg">Workloads Trend</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[200px]">
+          <div className="h-[13vw]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={workloadTrend}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -64,11 +64,11 @@ export default function WorkloadOverview({ workloadTrend, currentWorkload, avera
 
       <div className="grid grid-cols-2 gap-6">
         {/* Current Workloads */}
-        <Card className="bg-[#0A1D56] font-semibold">
+        <Card className="bg-[#0A1D56] font-semibold h-[11vw]">
           <CardHeader>
             <CardTitle className="text-white text-lg">Current Workloads</CardTitle>
           </CardHeader>
-          <CardContent className="mt-7">
+          <CardContent className="mt-10">
             <div className="flex items-center space-x-4">
               <div className="w-full">
                 <CustomProgressBar value={currentWorkload} />
@@ -79,11 +79,11 @@ export default function WorkloadOverview({ workloadTrend, currentWorkload, avera
         </Card>
 
         {/* Average Employee Workloads */}
-        <Card className="bg-[#0A1D56] font-semibold">
+        <Card className="bg-[#0A1D56] font-semibold h-[11vw]">
           <CardHeader>
             <CardTitle className="text-white text-lg">Average Employee Workloads</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="mt-3">
             <div className="flex items-center space-x-4">
               <div className="w-full">
                 <CustomProgressBar value={averageWorkload} />

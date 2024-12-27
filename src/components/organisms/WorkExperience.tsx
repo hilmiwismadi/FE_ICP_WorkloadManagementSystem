@@ -21,14 +21,14 @@ const WorkExperience = ({ experience }) => {
   const { years, months } = calculateExperience(experience.joinDate);
   
   return (
-    <Card className="bg-[#0A1D56] h-[160px]">
+    <Card className="bg-[#0A1D56] h-[11vw]">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold text-white">Work Experience</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-1">
+        <div className="space-y-2">
           <div className="flex justify-between items-start">
-            <h3 className="font-medium text-white">{experience.role}</h3>
+            <h3 className="font-medium text-white text-lg">{experience.role}</h3>
             <Badge variant="secondary" className="text-gray-600 text-sm bg-white rounded-full px-4">
               {experience.batch}
             </Badge>

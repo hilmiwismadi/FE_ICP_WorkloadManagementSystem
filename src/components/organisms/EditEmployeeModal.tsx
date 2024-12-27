@@ -25,13 +25,13 @@ const MultiSelect = ({ values, onChange, options, placeholder }) => {
       onValueChange={() => {}}
       value={values.length ? ' ' : undefined}
     >
-      <SelectTrigger className="w-full bg-white border border-gray-200 rounded-lg min-h-[40px]">
+      <SelectTrigger className="w-full bg-white border border-gray-200 rounded-lg min-h-[3vw]">
         <SelectValue placeholder={placeholder}>
           {values.length > 0 ? values.join(', ') : placeholder}
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="w-[var(--radix-select-trigger-width)] p-0">
-        <div className="max-h-[300px] overflow-auto p-2">
+        <div className="max-h-[16vw] overflow-auto p-2">
           {options.map((option) => (
             <div
               key={option}
@@ -109,7 +109,7 @@ const EditEmployeeModal = ({ employee, onUpdate }) => {
       </Button>
 
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="sm:max-w-[600px] lg:max-w-[800px] bg-white p-2 gap-4">
+        <DialogContent className="sm:max-w-[32vw] lg:max-w-[52vw] min-h-[32vw] bg-white p-2 gap-4">
           <DialogHeader className="p-6 pb-2">
             <DialogTitle className="text-xl font-semibold">Edit Employee Profile</DialogTitle>
           </DialogHeader>

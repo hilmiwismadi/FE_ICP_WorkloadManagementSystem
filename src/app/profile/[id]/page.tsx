@@ -94,7 +94,7 @@ export default function ProfilePage() {
                   <div className="col-span-12 md:col-span-6 space-y-6">
                     <ProgrammingLanguages 
                       languages={programmingLanguages}
-                      className="bg-white rounded-full shadow-sm p-6 min-h-[400px]"
+                      className="bg-white rounded-full shadow-sm p-6 min-h-[24vw]"
                     />
                     <WorkExperience 
                       experience={workExperience}

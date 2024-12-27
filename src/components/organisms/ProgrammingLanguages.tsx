@@ -6,7 +6,7 @@ export default function ProgrammingLanguages({ languages }: any) {
   const displayLanguages = languages.slice(0, 6);
 
   return (
-    <Card className="bg-[#0A1D56] min-h-[290px]">
+    <Card className="bg-[#0A1D56] min-h-[19vw]">
       <CardHeader>
         <CardTitle className="text-white text-xl font-semibold">
           Programming Language
