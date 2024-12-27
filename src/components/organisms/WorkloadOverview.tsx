@@ -45,7 +45,7 @@ export default function WorkloadOverview({ workloadTrend, currentWorkload, avera
       {/* Workloads Trend Chart */}
       <Card className="bg-[#0A1D56] h-[290px]">
         <CardHeader>
-          <CardTitle className="text-white">Workloads Trend</CardTitle>
+          <CardTitle className="text-white text-lg">Workloads Trend</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-[200px]">
