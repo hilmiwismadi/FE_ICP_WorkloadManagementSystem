@@ -21,6 +21,14 @@ export const columns: ColumnDef<EmployeeData>[] = [
     header: "ID",
   },
   {
+    accessorKey: "email",
+    header: "E-mail",
+  },
+  {
+    accessorKey: "phone",
+    header: "Contact",
+  },
+  {
     accessorKey: "name",
     header: "Nama",
   },
@@ -30,7 +38,7 @@ export const columns: ColumnDef<EmployeeData>[] = [
   },
   {
     accessorKey: "skill",
-    header: "skill",
+    header: "Skill",
   },
   {
     accessorKey: "current_workload",
