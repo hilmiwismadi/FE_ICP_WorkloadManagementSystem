@@ -1,8 +1,12 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Edit } from "lucide-react";
+import EditEmployeeModal from "./EditEmployeeModal";
 
 export default function ProfileHeader({ employee }: any) {
+  const handleUpdateEmployee = (updatedData: any) => {
+    // Implement your update logic here
+    console.log('Updated employee data:', updatedData);
+  };
+
   return (
     <Card className="bg-[#0A1D56]">
       <CardContent className="p-6">
@@ -14,7 +18,7 @@ export default function ProfileHeader({ employee }: any) {
             <div className="space-y-1">
               <h2 className="text-2xl font-bold text-white">{employee.name}</h2>
               <p className="text-slate-300">ID-{employee.id}</p>
-              <div className="text-slate-300 space-y-2 mt-4">
+              <div className="text-slate-300 mt-4">
                 <div className="grid grid-cols-[100px_1fr]">
                   <span>Team</span>
                   <span>: {employee.team}</span>
@@ -26,9 +30,10 @@ export default function ProfileHeader({ employee }: any) {
               </div>
             </div>
           </div>
-          <Button variant="secondary" size="sm" className="gap-2">
-            <Edit className="h-4 w-4" /> Edit Employee
-          </Button>
+          <EditEmployeeModal 
+            employee={employee}
+            onUpdate={handleUpdateEmployee}
+          />
         </div>
       </CardContent>
     </Card>

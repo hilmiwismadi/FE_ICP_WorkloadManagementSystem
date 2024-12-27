@@ -29,8 +29,8 @@ const WorkExperience = ({ experience }) => {
         <div className="space-y-1">
           <div className="flex justify-between items-start">
             <h3 className="font-medium text-white">{experience.role}</h3>
-            <Badge variant="secondary" className="text-xs">
-              {experience.classification}
+            <Badge variant="secondary" className="text-gray-600 text-sm bg-white rounded-full px-4">
+              {experience.batch}
             </Badge>
           </div>
           <div className="space-y-1">

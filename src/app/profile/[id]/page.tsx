@@ -1,11 +1,11 @@
 "use client";
 import React from 'react';
 import { useEffect, useState } from 'react';
-import ProfileHeader from '@/components/organisms/profile-header';
-import ProgrammingLanguages from '@/components/organisms/programming-languages';
-import WorkloadOverview from '@/components/organisms/workload-overview';
-import WorkExperience from '@/components/organisms/work-experience';
-import TaskList from '@/components/organisms/task-list';
+import ProfileHeader from '@/components/organisms/ProfileHeader';
+import ProgrammingLanguages from '@/components/organisms/ProgrammingLanguages';
+import WorkloadOverview from '@/components/organisms/WorkloadOverview';
+import WorkExperience from '@/components/organisms/WorkExperience';
+import TaskList from '@/components/organisms/TaskList';
 import Sidebar from '@/components/sidebar';
 
 export default function ProfilePage() {
@@ -25,7 +25,7 @@ export default function ProfilePage() {
   const workExperience = {
     role: "Backend Engineer",
     joinDate: "2023-02-15",
-    classification: "Junior"  // This would come from the database
+    batch: "Batch 86"
   };
 
   const programmingLanguages = [
@@ -81,7 +81,7 @@ export default function ProfilePage() {
       <main 
         className={`flex-1 transition-all duration-300 ease-in-out`}
       >
-        <div className="h-screen overflow-y-auto">
+        <div className="h-screen overflow-y-auto mt-4 px-4">
           <div className="container mx-auto p-6">
             <div className="grid grid-cols-12 gap-6">
               {/* Main Content Area */}
@@ -94,7 +94,7 @@ export default function ProfilePage() {
                   <div className="col-span-12 md:col-span-6 space-y-6">
                     <ProgrammingLanguages 
                       languages={programmingLanguages}
-                      className="bg-white rounded-xl shadow-sm p-6 min-h-[400px]"
+                      className="bg-white rounded-full shadow-sm p-6 min-h-[400px]"
                     />
                     <WorkExperience 
                       experience={workExperience}
