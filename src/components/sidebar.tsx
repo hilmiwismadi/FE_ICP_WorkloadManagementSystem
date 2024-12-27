@@ -62,7 +62,7 @@ export default function Sidebar() {
               <div className="w-[1.719vw] aspect-square flex justify-center items-center">
                 {component.jsx}
               </div>
-              <h1 className="ml-[1vw]">{component.title}</h1>
+              <h1 className="ml-[1vw] flex justify-center items-center">{component.title}</h1>
             </div>
           </Link>
         ))}

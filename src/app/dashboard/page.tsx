@@ -8,7 +8,10 @@ export default function Dashboard() {
   return (
     <div className="w-full bg-white h-screen aspect-[1920/1080] text-[10vw] text-red-500 flex justify-center items-center relative">
         <Sidebar />
-        Dashboard
+        <div className="ml-[20vw]">
+          Dashboard
+
+        </div>
     </div>
   );
 }
