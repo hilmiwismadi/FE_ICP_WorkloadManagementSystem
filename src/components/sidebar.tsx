@@ -94,21 +94,6 @@ const Sidebar = () => {
                   : 'text-gray-400 hover:bg-blue-900/50 hover:text-white'
               }`}
             >
-              <div className="w-[1.719vw] aspect-square flex justify-center items-center">
-                {component.jsx}
-              </div>
-              <h1 className="ml-[1vw] flex justify-center items-center">{component.title}</h1>
-            </div>
-          </Link>
-        ))}
-
-        <div
-          className="justify-start items-center aspect-[376/33] w-[14.583vw] flex text-[1.146vw] font-semibold cursor-pointer hover:text-red-600 active:text-red-600 transition-colors duration-300 text-red-900 absolute bottom-[5vw]"
-          onClick={() => router.push("/")} 
-        >
-          <Icon icon="streamline:logout-1-solid" style={{ width: "1.719vw", height: "1.719vw" }} />
-          <h1 className="ml-[1vw]">Log Out</h1>
-        </div>
               <Icon className="h-5 w-5" />
               {isExpanded && (
                 <span className="font-medium text-sm">{item.title}</span>
