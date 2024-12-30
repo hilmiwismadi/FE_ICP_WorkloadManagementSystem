@@ -221,7 +221,7 @@ const EditEmployeeModal = ({ employee, onUpdate }) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Update</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to update this employee's information?
+              Are you sure you want to update this employee`&apos;`s information?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
