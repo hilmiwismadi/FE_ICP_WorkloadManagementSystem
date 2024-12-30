@@ -2,7 +2,13 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-const calculateExperience = (joinDate) => {
+type Experience = {
+  joinDate: string; // Assuming joinDate is a string (ISO date string)
+  role: string;     // Add role property
+  batch: string; 
+};
+
+const calculateExperience = (joinDate: string) => {
   const start = new Date(joinDate);
   const today = new Date();
   
@@ -17,7 +23,7 @@ const calculateExperience = (joinDate) => {
   return { years, months };
 };
 
-const WorkExperience = ({ experience }) => {
+const WorkExperience = ({ experience }: { experience: Experience }) => {
   const { years, months } = calculateExperience(experience.joinDate);
   
   return (
