@@ -126,7 +126,7 @@ export function DataTable<TData, TValue>({
   return (
     <>
       <div className="flex flex-col justify-center items-center w-full">
-        <div className="w-[68.333vw] h-[100vh]">
+        <div className="w-[78.333vw] ">
           {/* Search and Filter Section */}
           <div className="flex items-center space-x-2 py-[2vw] text-[1.25vw] ">
             {/* Search Input */}
@@ -165,7 +165,7 @@ export function DataTable<TData, TValue>({
           </div>
 
           {/* Table */}
-          <div className="rounded-md border aspect-[1312/716]">
+          <div className="rounded-md border aspect-[1312/600]">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (

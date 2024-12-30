@@ -204,7 +204,7 @@ export default async function Dashboard() {
   const data = await getData();
 
   return (
-    <div className="w-full bg-white h-screen aspect-[1920/1080] text-[10vw] text-black flex">
+    <div className="w-full bg-white h-screen aspect-[1920/1080] text-[10vw] text-black flex justify-center items-center relative">
       <Sidebar />
       <DataTable columns={columns} data={data} />
     </div>
