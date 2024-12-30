@@ -1,7 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
-import EditEmployeeModal from "./EditEmployeeModal";
+// import EditEmployeeModal from "./EditEmployeeModal";
 
-export default function ProfileHeader({ employee }: any) {
+interface ProfileHeaderProps {
+  employee: any;
+  showEditButton?: boolean; 
+}
+
+export default function ProfileHeader({ employee, showEditButton = true }: ProfileHeaderProps) {
   const handleUpdateEmployee = (updatedData: any) => {
     console.log("Updated employee data:", updatedData);
   };
@@ -45,7 +50,9 @@ export default function ProfileHeader({ employee }: any) {
               </div>
             </div>
           </div>
-          <EditEmployeeModal employee={employee} onUpdate={handleUpdateEmployee} />
+          {/* {showEditButton && (
+            <EditEmployeeModal employee={employee} onUpdate={handleUpdateEmployee} />
+          )} */}
         </div>
       </CardContent>
     </Card>
