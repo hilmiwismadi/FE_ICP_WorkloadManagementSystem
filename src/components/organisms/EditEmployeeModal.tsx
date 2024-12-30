@@ -19,7 +19,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Edit } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-const MultiSelect = ({ values, onChange, options, placeholder }) => {
+interface Option {
+  value: string;
+  label: string;
+}
+
+interface MultiSelectProps {
+  values: string[]; // Adjust type as needed, e.g., `number[]` or a specific enum
+  onChange: (selectedValues: string[]) => void; // Callback for when the selected values change
+  options: Option[]; // List of options for the select dropdown
+  placeholder?: string; // Optional placeholder text
+}
+
+const MultiSelect : React.FC<MultiSelectProps> = ({ values, onChange, options, placeholder }) => {
   return (
     <Select
       onValueChange={() => {}}
