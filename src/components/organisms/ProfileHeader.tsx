@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import EditEmployeeModal from "./EditEmployeeModal";
+// import EditEmployeeModal from "./EditEmployeeModal";
 
 export default function ProfileHeader({ employee }: any) {
   const handleUpdateEmployee = (updatedData: any) => {
@@ -45,7 +45,7 @@ export default function ProfileHeader({ employee }: any) {
               </div>
             </div>
           </div>
-          <EditEmployeeModal employee={employee} onUpdate={handleUpdateEmployee} />
+          {/* <EditEmployeeModal employee={employee} onUpdate={handleUpdateEmployee} /> */}
         </div>
       </CardContent>
     </Card>
