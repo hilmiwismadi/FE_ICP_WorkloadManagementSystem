@@ -88,7 +88,7 @@ export default function ProfilePage() {
               <div className="col-span-12 xl:col-span-9 space-y-6">
                 <ProfileHeader 
                   employee={mockEmployee}
-                  className="bg-white rounded-xl shadow-sm p-6"
+                  showEditButton={true}
                 />
                 <div className="grid grid-cols-12 gap-6">
                   <div className="col-span-12 md:col-span-6 space-y-6">

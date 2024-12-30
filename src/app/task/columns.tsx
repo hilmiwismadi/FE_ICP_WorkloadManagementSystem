@@ -4,7 +4,6 @@ import { ColumnDef } from "@tanstack/react-table"
  
 export type TaskData = {
   task_id: string
-  name: string
   description: string
   workload: number
   start_date: Date
@@ -13,12 +12,8 @@ export type TaskData = {
  
 export const columns: ColumnDef<TaskData>[] = [
   {
-    accessorKey: "task_id",
+    accessorKey: "employee_id",
     header: "ID",
-  },
-  {
-    accessorKey: "name",
-    header: "Nama",
   },
   {
     accessorKey: "description",

@@ -1,6 +1,3 @@
-// components/data-table.tsx
-"use client"
-
 import * as React from "react"
 import {
   ColumnDef,
@@ -10,9 +7,11 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table"
 import { ArrowUpDown } from "lucide-react"
+import { useParams } from "next/navigation"
 
 import {
   Table,
@@ -24,203 +23,73 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 
-// Define the Task type
+// Keep existing Task interface
 interface Task {
   task_id: string
-  name: string
   description: string
   workload: number
   start_date: Date
   end_date: Date
 }
 
-// Sample data
+// Keep existing data array
 const data: Task[] = [
   {
-    task_id: "12003",
-    name: "Attaqi Sarjiman Wismadi",
-    description: "Monitoring vendor APKT",
-    workload: 7.5,
-    start_date: new Date(2024, 0, 1),
-    end_date: new Date(2024, 0, 7),
+    task_id: "E001",
+    description: "Update client project plans and timelines.",
+    workload: 35,
+    start_date: new Date("2024-01-10"),
+    end_date: new Date("2024-01-15"),
   },
   {
-    task_id: "12003",
-    name: "Attaqi Sarjiman Wismadi",
-    description: "Monitoring vendor APKT",
-    workload: 7.5,
-    start_date: new Date(2024, 0, 1),
-    end_date: new Date(2024, 0, 7),
+    task_id: "E002",
+    description: "Design UI components for the internal dashboard.",
+    workload: 25,
+    start_date: new Date("2024-01-12"),
+    end_date: new Date("2024-01-20"),
   },
   {
-    task_id: "12004",
-    name: "Rizki Fauzan",
-    description: "Developing new feature for app",
-    workload: 10,
-    start_date: new Date(2024, 0, 5),
-    end_date: new Date(2024, 0, 12),
+    task_id: "E003",
+    description: "Refactor backend API to improve performance.",
+    workload: 40,
+    start_date: new Date("2024-01-15"),
+    end_date: new Date("2024-01-25"),
   },
   {
-    task_id: "12005",
-    name: "Lina Salsabila",
-    description: "Research on competitor products",
-    workload: 6,
-    start_date: new Date(2024, 0, 3),
-    end_date: new Date(2024, 0, 8),
+    task_id: "E004",
+    description: "Test and debug the new authentication system.",
+    workload: 30,
+    start_date: new Date("2024-01-18"),
+    end_date: new Date("2024-01-30"),
   },
   {
-    task_id: "12006",
-    name: "Budi Santoso",
-    description: "Update the backend server",
-    workload: 8,
-    start_date: new Date(2024, 0, 4),
-    end_date: new Date(2024, 0, 10),
+    task_id: "E005",
+    description: "Research and integrate a new payment gateway.",
+    workload: 20,
+    start_date: new Date("2024-01-20"),
+    end_date: new Date("2024-01-27"),
   },
   {
-    task_id: "12007",
-    name: "Mira Ningsih",
-    description: "UI/UX design for new website",
-    workload: 9,
-    start_date: new Date(2024, 0, 6),
-    end_date: new Date(2024, 0, 13),
-  },
-  {
-    task_id: "12008",
-    name: "Joko Prasetyo",
-    description: "Bug fixing for mobile app",
-    workload: 7,
-    start_date: new Date(2024, 0, 2),
-    end_date: new Date(2024, 0, 8),
-  },
-  {
-    task_id: "12009",
-    name: "Dian Amalia",
-    description: "Code review for new features",
-    workload: 6.5,
-    start_date: new Date(2024, 0, 9),
-    end_date: new Date(2024, 0, 15),
-  },
-  {
-    task_id: "12010",
-    name: "Farhan Hidayat",
-    description: "Database migration",
-    workload: 12,
-    start_date: new Date(2024, 0, 10),
-    end_date: new Date(2024, 0, 17),
-  },
-  {
-    task_id: "12011",
-    name: "Indah Wulandari",
-    description: "Marketing campaign planning",
-    workload: 8,
-    start_date: new Date(2024, 0, 11),
-    end_date: new Date(2024, 0, 18),
-  },
-  {
-    task_id: "12012",
-    name: "Fajar Setiawan",
-    description: "Test automation setup",
-    workload: 7,
-    start_date: new Date(2024, 0, 12),
-    end_date: new Date(2024, 0, 19),
-  },
-  {
-    task_id: "12013",
-    name: "Rita Pramudita",
-    description: "Customer support system improvement",
-    workload: 5,
-    start_date: new Date(2024, 0, 14),
-    end_date: new Date(2024, 0, 20),
-  },
-  {
-    task_id: "12014",
-    name: "Arif Budiman",
-    description: "Cloud infrastructure setup",
-    workload: 10,
-    start_date: new Date(2024, 0, 15),
-    end_date: new Date(2024, 0, 22),
-  },
-  {
-    task_id: "12015",
-    name: "Siti Rahmawati",
-    description: "SEO optimization for website",
-    workload: 6,
-    start_date: new Date(2024, 0, 16),
-    end_date: new Date(2024, 0, 23),
-  },
-  {
-    task_id: "12016",
-    name: "Wahyu Pratama",
-    description: "Mobile app performance tuning",
-    workload: 7.5,
-    start_date: new Date(2024, 0, 17),
-    end_date: new Date(2024, 0, 24),
-  },
-  {
-    task_id: "12017",
-    name: "Alya Putri",
-    description: "Designing marketing materials",
-    workload: 9,
-    start_date: new Date(2024, 0, 18),
-    end_date: new Date(2024, 0, 25),
-  },
-  {
-    task_id: "12018",
-    name: "Kiki Saputra",
-    description: "Web scraping for data analysis",
-    workload: 8,
-    start_date: new Date(2024, 0, 19),
-    end_date: new Date(2024, 0, 26),
-  },
-  {
-    task_id: "12019",
-    name: "Zahra Amalia",
-    description: "User feedback analysis",
-    workload: 6.5,
-    start_date: new Date(2024, 0, 20),
-    end_date: new Date(2024, 0, 27),
-  },
-  {
-    task_id: "12020",
-    name: "Yusuf Hendra",
-    description: "API integration with third-party services",
-    workload: 10,
-    start_date: new Date(2024, 0, 21),
-    end_date: new Date(2024, 0, 28),
-  },
-  {
-    task_id: "12021",
-    name: "Nina Susanti",
-    description: "Social media content strategy",
-    workload: 7,
-    start_date: new Date(2024, 0, 22),
-    end_date: new Date(2024, 0, 29),
-  },
-  {
-    task_id: "12022",
-    name: "Bram Dwi",
-    description: "User onboarding process improvement",
-    workload: 7.5,
-    start_date: new Date(2024, 0, 23),
-    end_date: new Date(2024, 0, 30),
+    task_id: "E006",
+    description: "Create technical documentation for the API.",
+    workload: 15,
+    start_date: new Date("2024-01-22"),
+    end_date: new Date("2024-01-28"),
   },
 ]
 
-// Define columns
+
+// Modified columns with additional sorting
 const columns: ColumnDef<Task>[] = [
   {
     accessorKey: "task_id",
-    header: "Task ID",
-  },
-  {
-    accessorKey: "name",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Name
+          Task ID
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
@@ -246,7 +115,17 @@ const columns: ColumnDef<Task>[] = [
   },
   {
     accessorKey: "start_date",
-    header: "Start Date",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Start Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const date = row.getValue("start_date") as Date
       return date.toLocaleDateString()
@@ -254,7 +133,17 @@ const columns: ColumnDef<Task>[] = [
   },
   {
     accessorKey: "end_date",
-    header: "End Date",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          End Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const date = row.getValue("end_date") as Date
       return date.toLocaleDateString()
@@ -263,9 +152,23 @@ const columns: ColumnDef<Task>[] = [
 ]
 
 export function DataTable() {
+  const params = useParams()
+  const id = params?.id as string
+
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   
+  React.useEffect(() => {
+    if (id) {
+      setColumnFilters([
+        {
+          id: 'task_id',
+          value: id
+        }
+      ])
+    }
+  }, [id])
+
   const table = useReactTable({
     data,
     columns,
@@ -273,10 +176,17 @@ export function DataTable() {
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     onColumnFiltersChange: setColumnFilters,
     state: {
       sorting,
       columnFilters,
+    },
+    // Set default pagination
+    initialState: {
+      pagination: {
+        pageSize: 5,
+      },
     },
   })
 
@@ -289,7 +199,12 @@ export function DataTable() {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead 
+                        key={header.id}
+                        className={`text-[0.9vw] h-[0.9vw] ${
+                        header.column.id === "description" ? "text-left" : "text-center"
+                        }`}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -310,7 +225,12 @@ export function DataTable() {
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                        key={cell.id}
+                        className={`text-[0.8vw] h-[0.8vw] ${
+                        cell.column.id === "description" ? "text-left" : "text-center"
+                        }`}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -332,23 +252,29 @@ export function DataTable() {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
+      <div className="flex items-center justify-between py-4">
+        <div className="text-sm text-gray-500">
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
+          {table.getPageCount()}
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   )

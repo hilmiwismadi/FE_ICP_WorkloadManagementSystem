@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { SearchBar } from '@/components/organisms/SearchBar';
+import SearchBar from '@/components/organisms/SearchBar';
 import ProfileHeader from '@/components/organisms/ProfileHeader';
 import Sidebar from '@/components/sidebar';
 import { DataTable } from './data-table';
@@ -63,15 +63,27 @@ export default function TaskPage() {
     console.log('Submitted Task:', taskData);
   };
 
+  const mockEmployee = {
+    id: "12003",
+    name: "Varick Zahir Sarjiman",
+    email: "varickzahirsarjiman@mail.ugm.ac.id",
+    phone: "+62 812-1212-1212",
+    team: "Aplikasi Penanganan Pengaduan Keluhan dan Gangguan Pelanggan",
+    role: "Backend Engineer",
+    currentWorkload: 79,
+    averageWorkload: 42,
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
-
-      {/* Main Content */}
       <div className="flex-1 overflow-auto">
-        <div className="p-8">
-
-          <ProfileHeader />
+        <div className="p-8 space-y-4">
+          <SearchBar />
+          <ProfileHeader 
+            employee={mockEmployee}
+            showEditButton={false}
+          />
 
           {/* Task Section */}
           <div className="bg-white rounded-lg shadow">
