@@ -82,7 +82,7 @@ export default function ProfilePage() {
         className={`flex-1 transition-all duration-300 ease-in-out`}
       >
         <div className="h-screen overflow-y-auto mt-4 px-4">
-          <div className="container mx-auto p-6">
+          <div className="container w-[82vw] mx-auto mt-6">
             <div className="grid grid-cols-12 gap-6">
               {/* Main Content Area */}
               <div className="col-span-12 xl:col-span-9 space-y-6">

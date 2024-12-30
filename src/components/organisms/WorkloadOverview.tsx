@@ -41,7 +41,7 @@ const CustomProgressBar = ({ value }: { value: number }) => {
 
 export default function WorkloadOverview({ workloadTrend, currentWorkload, averageWorkload }: any) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-h-screen">
       {/* Workloads Trend Chart */}
       <Card className="bg-[#0A1D56] h-[19vw]">
         <CardHeader>
@@ -64,11 +64,11 @@ export default function WorkloadOverview({ workloadTrend, currentWorkload, avera
 
       <div className="grid grid-cols-2 gap-6">
         {/* Current Workloads */}
-        <Card className="bg-[#0A1D56] font-semibold h-[11vw]">
+        <Card className="bg-[#0A1D56] font-semibold">
           <CardHeader>
             <CardTitle className="text-white text-lg">Current Workloads</CardTitle>
           </CardHeader>
-          <CardContent className="mt-10">
+          <CardContent className="mt-9">
             <div className="flex items-center space-x-4">
               <div className="w-full">
                 <CustomProgressBar value={currentWorkload} />
@@ -79,11 +79,11 @@ export default function WorkloadOverview({ workloadTrend, currentWorkload, avera
         </Card>
 
         {/* Average Employee Workloads */}
-        <Card className="bg-[#0A1D56] font-semibold h-[11vw]">
+        <Card className="bg-[#0A1D56] font-semibold">
           <CardHeader>
             <CardTitle className="text-white text-lg">Average Employee Workloads</CardTitle>
           </CardHeader>
-          <CardContent className="mt-3">
+          <CardContent className="mt-2">
             <div className="flex items-center space-x-4">
               <div className="w-full">
                 <CustomProgressBar value={averageWorkload} />
