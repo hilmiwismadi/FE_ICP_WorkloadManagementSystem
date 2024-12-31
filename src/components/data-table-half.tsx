@@ -171,7 +171,7 @@ export function DataTableHalf<TData, TValue>({
           <div className="flex items-center mx-[2vw] mb-[1vw]">
             <div className="flex items-center gap-[2vw]">
               <img
-                src="/api/placeholder/100/100"
+                src="/img/sidebar/UserProfile.png"
                 alt="User Avatar"
                 className="rounded-full w-[7vw] h-[7vw]"
               />
