@@ -30,7 +30,7 @@ export default function ProfileHeader({ employee, showEditButton = true }: Profi
             <div className="h-16 w-16 rounded-full bg-slate-100 overflow-hidden">
               {/* Add avatar image here */}
               <img
-                src={employee.avatar || "/placeholder-avatar.png"}
+                src={employee.avatar || "/img/sidebar/UserProfile.png"}
                 alt="Avatar"
                 className="h-full w-full object-cover"
               />
