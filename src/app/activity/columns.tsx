@@ -1,6 +1,7 @@
 "use client"
  
 import { ColumnDef } from "@tanstack/react-table"
+import { format } from "date-fns"; // Or any other date formatting library
  
 export type TaskData = {
   task_id: string
@@ -31,9 +32,11 @@ export const columns: ColumnDef<TaskData>[] = [
   {
     accessorKey: "start_date",
     header: "Memulai",
+    cell: ({ row }) => format(new Date(row.original.start_date), "M/d/yyyy"),
   },
   {
     accessorKey: "end_date",
     header: "Selesai",
+    cell: ({ row }) => format(new Date(row.original.start_date), "M/d/yyyy"),
   },
 ]

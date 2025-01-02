@@ -46,7 +46,7 @@ export default function LoginPage() {
               alt="Login"
               width={500}
               height={500}
-              className="relative z-10 w-full h-auto"
+              className="relative z-10 w-full h-auto "
               priority
             />
           </div>
