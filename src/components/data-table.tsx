@@ -125,8 +125,8 @@ export function DataTable<TData, TValue>({
 
   return (
     <>
-      <div className="flex flex-col justify-center items-center w-full">
-        <div className="w-[78.333vw] ">
+      <div className="flex flex-col justify-center items-center w-[78vw] mx-auto flex-grow">
+        <div className="w-full ">
           {/* Search and Filter Section */}
           <div className="flex items-center space-x-2 py-[2vw] text-[1.25vw] ">
             {/* Search Input */}

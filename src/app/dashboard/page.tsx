@@ -204,9 +204,9 @@ export default async function Dashboard() {
   const data = await getData();
 
   return (
-    <div className="w-full bg-white h-screen aspect-[1920/1080] text-[10vw] text-black flex justify-center items-center relative">
+    <div className="w-full bg-white h-screen text-[10vw] text-black flex justify-center items-center relative">
       <Sidebar />
-      <div className="flex-grow">
+      <div className="flex-grow ">
         <DataTable columns={columns} data={data} />
       </div>
     </div>
