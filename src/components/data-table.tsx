@@ -49,22 +49,7 @@ const filterOptions: FilterOption[] = [
   { value: "current_workload", label: "Current Workload", type: "number" },
 ];
 
-// Custom filter function for workload
-const workloadFilter: FilterFn<any> = (row, columnId, filterValue) => {
-  const rowValue = row.getValue(columnId);
-
-  // Handle empty filter value
-  if (filterValue === "") return true;
-
-  // Convert filter value to number
-  const numericFilterValue = Number(filterValue);
-  if (isNaN(numericFilterValue)) return true;
-
-  // Check if rowValue is a valid number
-  if (typeof rowValue !== "number") return false;
-
-  return rowValue <= numericFilterValue;
-};
+// Custom filter function for workloa
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -87,9 +72,6 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
-    filterFns: {
-      workload: workloadFilter,
-    },
     state: {
       columnFilters,
     },
@@ -107,26 +89,10 @@ export function DataTable<TData, TValue>({
     (option) => option.value === selectedFilter
   );
 
-  // Handle input change
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    const column = table.getColumn(selectedFilter);
-
-    if (!column) return;
-
-    if (selectedFilter === "current_workload") {
-      // For workload, use custom filter
-      column.setFilterValue(value === "" ? "" : Number(value));
-    } else {
-      // For other columns, use default string filter
-      column.setFilterValue(value);
-    }
-  };
-
   return (
     <>
-      <div className="flex flex-col justify-center items-center w-[78vw] mx-auto flex-grow">
-        <div className="w-full ">
+      <div className="flex flex-col flex-grow justify-center items-center w-[78vw] mx-[3vw]">
+        <div className="w-full">
           {/* Search and Filter Section */}
           <div className="flex items-center space-x-2 py-[2vw] text-[1.25vw] ">
             {/* Search Input */}
@@ -141,10 +107,12 @@ export function DataTable<TData, TValue>({
                     .getColumn(selectedFilter)
                     ?.getFilterValue() as string) ?? ""
                 }
-                onChange={handleInputChange}
-                type={
-                  currentFilterOption?.type === "number" ? "number" : "text"
+                onChange={(e) =>
+                  table
+                    .getColumn(selectedFilter)
+                    ?.setFilterValue(e.target.value)
                 }
+                type={selectedFilter === "current_workload" ? "number" : "text"} // Enforce numeric input
                 className="pl-[2vw] pr-[2vw] py-[1vw] w-full bg-gray-100 rounded-lg"
               />
             </div>
@@ -214,8 +182,8 @@ export function DataTable<TData, TValue>({
               </TableBody>
             </Table>
           </div>
-          
-        {/* Pagination */}
+
+          {/* Pagination */}
           <div className="flex items-center justify-end space-x-[1vw] mt-[1vw]">
             <Button
               variant="outline"
