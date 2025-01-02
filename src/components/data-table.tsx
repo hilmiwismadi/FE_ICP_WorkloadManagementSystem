@@ -32,11 +32,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Define the filter options type
 type FilterOption = {
   value: string;
   label: string;
   type: "string" | "number";
+};
+
+type WorkloadFilter = {
+  value: number;
+  operator: ">" | "<" | "=";
 };
 
 const filterOptions: FilterOption[] = [
@@ -49,7 +53,11 @@ const filterOptions: FilterOption[] = [
   { value: "current_workload", label: "Current Workload", type: "number" },
 ];
 
-// Custom filter function for workloa
+const workloadOperators = [
+  { value: ">", label: "Greater than" },
+  { value: "<", label: "Less than" },
+  { value: "=", label: "Equal to" },
+];
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -64,6 +72,10 @@ export function DataTable<TData, TValue>({
     []
   );
   const [selectedFilter, setSelectedFilter] = React.useState<string>("name");
+  const [workloadFilter, setWorkloadFilter] = React.useState<WorkloadFilter>({
+    value: 0,
+    operator: ">",
+  });
 
   const table = useReactTable({
     data,
@@ -75,47 +87,98 @@ export function DataTable<TData, TValue>({
     state: {
       columnFilters,
     },
+    filterFns: {
+      workload: (row, columnId, filterValue: WorkloadFilter) => {
+        const cellValue = row.getValue(columnId) as number;
+        switch (filterValue.operator) {
+          case ">":
+            return cellValue > filterValue.value;
+          case "<":
+            return cellValue < filterValue.value;
+          case "=":
+            return cellValue === filterValue.value;
+          default:
+            return true;
+        }
+      },
+    },
   });
 
-  // Handle filter change
   const handleFilterChange = (value: string) => {
     setSelectedFilter(value);
-    // Clear the previous filter value when changing columns
     table.getColumn(value)?.setFilterValue("");
   };
 
-  // Get the current filter option
+  const handleWorkloadChange = (value: string, type: "value" | "operator") => {
+    const newFilter = {
+      ...workloadFilter,
+      [type]: type === "value" ? Number(value) : value,
+    };
+    setWorkloadFilter(newFilter);
+    table.getColumn("current_workload")?.setFilterValue(newFilter);
+  };
+
   const currentFilterOption = filterOptions.find(
     (option) => option.value === selectedFilter
   );
+
+  const renderSearchInput = () => {
+    if (selectedFilter === "current_workload") {
+      return (
+        <div className="flex space-x-2 flex-1">
+          <Select
+            value={workloadFilter.operator}
+            onValueChange={(value) => handleWorkloadChange(value, "operator")}
+          >
+            <SelectTrigger className="w-[12vw] bg-gray-100">
+              <SelectValue placeholder="Select operator" />
+            </SelectTrigger>
+            <SelectContent>
+              {workloadOperators.map((op) => (
+                <SelectItem key={op.value} value={op.value}>
+                  {op.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="relative flex-1">
+            <Search className="absolute left-[1vw] top-1/2 transform -translate-y-1/2 text-gray-500 h-[1vw] w-[1vw]" />
+            <Input
+              type="number"
+              placeholder="Enter workload value..."
+              value={workloadFilter.value}
+              onChange={(e) => handleWorkloadChange(e.target.value, "value")}
+              className="pl-[2vw] pr-[2vw] py-[1vw] w-full bg-gray-100 rounded-lg"
+            />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative flex-1">
+        <Search className="absolute left-[1vw] top-1/2 transform -translate-y-1/2 text-gray-500 h-[1vw] w-[1vw]" />
+        <Input
+          placeholder={`Search ${currentFilterOption?.label || "Employee"}...`}
+          value={
+            (table.getColumn(selectedFilter)?.getFilterValue() as string) ?? ""
+          }
+          onChange={(e) =>
+            table.getColumn(selectedFilter)?.setFilterValue(e.target.value)
+          }
+          className="pl-[2vw] pr-[2vw] py-[1vw] w-full bg-gray-100 rounded-lg"
+        />
+      </div>
+    );
+  };
 
   return (
     <>
       <div className="flex flex-col flex-grow justify-center items-center w-[78vw] mx-[3vw]">
         <div className="w-full">
           {/* Search and Filter Section */}
-          <div className="flex items-center space-x-2 py-[2vw] text-[1.25vw] ">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <Search className="absolute left-[1vw] top-1/2 transform -translate-y-1/2 text-gray-500 h-[1vw] w-[1vw]" />
-              <Input
-                placeholder={`Search ${
-                  currentFilterOption?.label || "Employee"
-                }...`}
-                value={
-                  (table
-                    .getColumn(selectedFilter)
-                    ?.getFilterValue() as string) ?? ""
-                }
-                onChange={(e) =>
-                  table
-                    .getColumn(selectedFilter)
-                    ?.setFilterValue(e.target.value)
-                }
-                type={selectedFilter === "current_workload" ? "number" : "text"} // Enforce numeric input
-                className="pl-[2vw] pr-[2vw] py-[1vw] w-full bg-gray-100 rounded-lg"
-              />
-            </div>
+          <div className="flex items-center space-x-2 py-[2vw] text-[1.25vw]">
+            {renderSearchInput()}
 
             {/* Filter Dropdown */}
             <Select value={selectedFilter} onValueChange={handleFilterChange}>

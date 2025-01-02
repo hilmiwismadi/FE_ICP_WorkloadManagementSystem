@@ -41,5 +41,10 @@ export const columns: ColumnDef<EmployeeData>[] = [
   {
     accessorKey: "current_workload",
     header: "Workload",
+    cell: ({ getValue }) => {
+      const value = getValue<number>();
+      const percentage = value * 10; // Calculate percentage
+      return `${percentage}%`; // Display as percentage
+    },
   },
 ]
