@@ -14,7 +14,7 @@ export default function ProfileHeader({ employee, showEditButton = true }: Profi
   if (!employee) {
     return (
       <Card className="bg-[#0A1D56]">
-        <CardContent className="p-6">
+        <CardContent className="p-[1.25vw]">
           <div className="text-white">Select an employee to view details.</div>
         </CardContent>
       </Card>
@@ -25,8 +25,8 @@ export default function ProfileHeader({ employee, showEditButton = true }: Profi
     <Card className="bg-[#0A1D56] w-full h-[20vh]">
       <CardContent className="p-[1.25vw]">
         <div className="flex items-start justify-between">
-          <div className="flex items-start gap-[0.833vw]">
-            <div className="h-[3.333vw] w-[3.333vw] rounded-full bg-slate-100 overflow-hidden">
+          <div className="flex items-start pl-[1vw] gap-[2vw]">
+            <div className="h-[7vw] w-[7vw] rounded-full bg-slate-100 overflow-hidden border-[0.5vw] border-[#29A6DE]">
               {/* Add avatar image here */}
               <img
                 src={employee.avatar || "/img/sidebar/UserProfile.png"}
