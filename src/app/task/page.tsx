@@ -77,9 +77,9 @@ export default function TaskPage() {
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
-      <div className="flex-1 overflow-auto">
-        <div className="p-8 space-y-4">
-          <SearchBar />
+      <div className="flex-grow overflow-auto flex items-start justify-center">
+        <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] p-[1.667vw] space-y-[1.25vw]">
+          <SearchBar /> 
           <ProfileHeader 
             employee={mockEmployee}
             showEditButton={false}
@@ -87,19 +87,19 @@ export default function TaskPage() {
 
           {/* Task Section */}
           <div className="bg-white rounded-lg shadow">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-medium">On Going Task</h3>
+            <div className="px-[1.25vw] py-[0.625vw]">
+              <div className="flex justify-between items-center mb-[0.833vw]">
+                <h3 className="text-[1.25vw] ml-[0.833vw] mt-[1.25vw] font-medium">On Going Task</h3>
                 <Button
                   onClick={() => setIsModalOpen(true)}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
+                  className="bg-green-500 hover:bg-green-600 text-white text-[0.8vw] px-[0.833vw] h-[2.5vw] mr-[0.833vw] mt-[1.25vw] rounded-[0.5vw]"
                 >
                   Assign New Task
                 </Button>
               </div>
 
               {/* Table placeholder */}
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="rounded-lg p-[0.833vw]">
                 <DataTable />
               </div>
             </div>

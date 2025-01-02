@@ -175,7 +175,11 @@ export default async function Activity() {
   return (
     <div className="w-full bg-white h-screen aspect-[1920/1080] text-[10vw] text-black flex justify-center items-center relative">
       <Sidebar />
-      <DataTableHalf columns={columns} data={data} />
+      <div className="flex-grow">
+        <div className="overflow-auto">
+          <DataTableHalf columns={columns} data={data} />
+        </div>
+      </div>
     </div>
   );
 }

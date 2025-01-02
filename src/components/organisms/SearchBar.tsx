@@ -69,7 +69,7 @@ export default function CustomSearchBar() {
   };
 
   return (
-    <div className="flex items-center gap-4 w-full py-2">
+    <div className="flex items-center gap-[0.833vw] w-full py-[0.417vw]">
       {/* Search Bar */}
       <div className="relative flex-1" ref={searchRef}>
         <div className="relative">
@@ -79,25 +79,25 @@ export default function CustomSearchBar() {
             onChange={(e) => setSearchValue(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             placeholder="Search employees by name or ID..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+            className="text-[1vw] w-full pl-[2.083vw] pr-[0.833vw] py-[0.625vw] rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
           />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-[0.625vw] top-1/2 -translate-y-1/2 w-[1vw] h-[1vw] text-gray-400" />
         </div>
 
         {/* Search Suggestions Dropdown */}
         {isSearchFocused && (
-          <div className="absolute w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-64 overflow-y-auto z-20">
+          <div className="absolute w-full mt-[0.208vw] bg-white rounded-lg shadow-lg border border-gray-200 max-h-[13.333vw] overflow-y-auto z-20">
             {filteredEmployees.length === 0 ? (
-              <div className="px-4 py-3 text-gray-500">No employees found</div>
+              <div className="px-[0.833vw] py-[0.625vw] text-gray-500">No employees found</div>
             ) : (
               filteredEmployees.map((employee) => (
                 <div
                   key={employee.id}
                   onClick={() => handleEmployeeSelect(employee.id)}
-                  className="px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                  className="px-[0.833vw] py-[0.625vw] hover:bg-gray-50 cursor-pointer"
                 >
-                  <div className="font-medium">{employee.name}</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-[1vw] font-medium">{employee.name}</div>
+                  <div className="text-[0.729vw] text-gray-500">
                     {employee.id} • {employee.team}
                   </div>
                 </div>
@@ -111,29 +111,29 @@ export default function CustomSearchBar() {
       <div className="relative" ref={teamDropdownRef}>
         <button
           onClick={() => setIsTeamDropdownOpen(!isTeamDropdownOpen)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-[0.417vw] px-[0.833vw] py-[0.625vw] rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
         >
-          <span className="text-sm font-medium">
+          <span className="text-[1vw] font-medium">
             Teams ({selectedTeams.length})
           </span>
-          <ChevronDown className="w-4 h-4" />
+          <ChevronDown className="w-[1vw] h-[1vw]" />
         </button>
 
         {/* Teams Dropdown */}
         {isTeamDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-[16vw] bg-white rounded-lg shadow-lg border border-gray-200 z-10 p-2 space-y-2">
+          <div className="absolute right-0 mt-[0.417vw] w-[16vw] bg-white rounded-lg shadow-lg border border-gray-200 z-10 p-[0.417vw] space-y-[0.417vw]">
             {teams.map(team => (
               <label
                 key={team}
-                className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 cursor-pointer"
+                className="flex items-center gap-[0.417vw] px-[0.833vw] py-[0.417vw] hover:bg-gray-50 cursor-pointer"
               >
                 <input
                   type="checkbox"
                   checked={selectedTeams.includes(team)}
                   onChange={() => toggleTeam(team)}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="w-[0.833vw] h-[0.833vw] rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="text-sm">{team}</span>
+                <span className="text-[1vw]">{team}</span>
               </label>
             ))}
           </div>
