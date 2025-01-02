@@ -1,6 +1,6 @@
 export default function UserProfile() {
     return (
-      <div className="bg-[#15234A] rounded-[0.8vw] text-white mb-[1vw] py-[1vw] w-[80vw] mx-auto">
+      <div className="bg-[#15234A] rounded-[0.8vw] text-white mb-[1vw] py-[1vw] w-full mx-auto">
         <div className="flex items-center mx-[2vw] mb-[1vw]">
           <div className="flex items-center gap-[2vw]">
             <img

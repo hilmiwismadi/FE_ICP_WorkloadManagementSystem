@@ -42,7 +42,7 @@ export default function Activity() {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50 aspect-[1920/1080]">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar />
       <div className="flex-grow overflow-auto flex items-start justify-center">
         <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] p-[1.667vw] space-y-[1.25vw]">
@@ -51,7 +51,7 @@ export default function Activity() {
         <UserProfile />
 
         {/* Tabs */}
-        <div className="flex border-b mb-[1vw] w-[80vw] mx-auto">
+        <div className="flex border-b mb-[1vw] w-full mx-auto">
           <button
             className={`px-[3vw] py-[0.3vw] text-[1vw] font-medium w-6/12 ${
               activeTab === "ongoing"
