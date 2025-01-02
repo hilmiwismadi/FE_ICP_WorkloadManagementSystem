@@ -7,6 +7,7 @@ import WorkloadOverview from '@/components/organisms/WorkloadOverview';
 import WorkExperience from '@/components/organisms/WorkExperience';
 import TaskList from '@/components/organisms/TaskList';
 import Sidebar from '@/components/sidebar';
+import ActivityDetailsButton from '@/components/ui/ActivityDetailsButton';
 
 export default function ProfilePage() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
@@ -76,52 +77,53 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="flex max-h-screen overflow-hidden bg-slate-50">
+    <div className="flex h-screen bg-stale-50">
       <Sidebar />
-      <main 
-        className={`flex-1 transition-all duration-300 ease-in-out`}
-      >
-        <div className="h-screen overflow-y-auto mt-4 px-4">
-          <div className="container w-[82vw] mx-auto mt-6">
-            <div className="grid grid-cols-12 gap-6">
+      <div className="flex-grow overflow-auto flex items-start justify-center">
+        <div 
+          className={`flex-1 max-h-screen p-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out`}
+        >
+          <div className="py-[0.625vw]">
+            <div className="grid grid-cols-12 gap-[1.25vw]">
               {/* Main Content Area */}
-              <div className="col-span-12 xl:col-span-9 space-y-6">
+              <div className="col-span-12 xl:col-span-9 space-y-[1.25vw]">
                 <ProfileHeader 
                   employee={mockEmployee}
                   showEditButton={true}
                 />
-                <div className="grid grid-cols-12 gap-6">
-                  <div className="col-span-12 md:col-span-6 space-y-6">
+                <div className="grid grid-cols-12 gap-[1.25vw]">
+                  <div className="col-span-12 md:col-span-5 space-y-[1.25vw]">
                     <ProgrammingLanguages 
                       languages={programmingLanguages}
-                      className="bg-white rounded-full shadow-sm p-6 min-h-[24vw]"
+                      className="bg-white rounded-full shadow-sm p-[1.25vw] min-h-[24vw]"
                     />
                     <WorkExperience 
                       experience={workExperience}
                     />
                   </div>
-                  <div className="col-span-12 md:col-span-6">
+                  <div className="col-span-12 md:col-span-7">
                     <WorkloadOverview 
                       workloadTrend={workloadTrend}
                       currentWorkload={mockEmployee.currentWorkload}
                       averageWorkload={mockEmployee.averageWorkload}
-                      className="bg-white rounded-xl shadow-sm p-6 h-full"
+                      className="bg-white rounded-[1vw] shadow-sm p-[1.25vw] h-full"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Sidebar Content */}
-              <div className="col-span-12 xl:col-span-3">
+              <div className="col-span-12 xl:col-span-3 space-y-[1.5vw]">
                 <TaskList 
                   tasks={tasks}
-                  className="bg-white rounded-xl shadow-sm p-6 sticky top-6"
+                  className="bg-white rounded-[0.625vw] shadow-sm p-[1.25vw] sticky top-[1.25vw]"
                 />
+                <ActivityDetailsButton taskId={tasks[0]?.id} />
               </div>
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
