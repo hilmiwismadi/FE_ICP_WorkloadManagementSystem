@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Search } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -68,6 +69,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  const router = useRouter();
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
@@ -76,6 +78,11 @@ export function DataTable<TData, TValue>({
     value: 0,
     operator: ">",
   });
+
+  const handleRowClick = (row: any) => {
+    const employeeId = row.original.employee_id;
+    router.push(`/profile/${employeeId}`);
+  };
 
   const table = useReactTable({
     data,
@@ -220,7 +227,9 @@ export function DataTable<TData, TValue>({
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
-                      className="flex-row items-center"
+                      className="cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => handleRowClick(row)}
+                      role="link"
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
