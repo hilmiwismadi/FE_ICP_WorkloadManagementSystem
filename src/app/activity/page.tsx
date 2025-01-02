@@ -5,6 +5,12 @@ import { TaskData, columns } from "./columns";
 import { DataTableHalf } from "@/components/data-table-half";
 
 async function getData(): Promise<TaskData[]> {
+  const formatDate = (date: Date): string => {
+    const day = date.getDate();
+    const month = date.getMonth() + 1; // Months are zero-based
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
   // Fetch data from your API here.
   return [
     {
