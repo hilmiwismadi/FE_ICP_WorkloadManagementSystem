@@ -76,7 +76,7 @@ export const columns: ColumnDef<EmployeeData>[] = [
               window.location.href = `/profile/${employeeId}`;
             }}
           >
-            <ChevronRight className="h-[1vw] w-[1vw]" />
+            <ChevronRight className="h-[1vw] w-[1vw] text-white" />
           </Button>
         </div>
       );

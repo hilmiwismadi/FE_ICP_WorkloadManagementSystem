@@ -185,7 +185,7 @@ export function DataTable<TData, TValue>({
       <div className="flex flex-col flex-grow justify-center items-center w-[78vw] mx-[3vw]">
         <div className="w-full">
           {/* Search and Filter Section */}
-          <div className="flex items-center space-x-2 py-[2vw] text-[1.25vw]">
+          <div className="flex items-center space-x-2 py-[1vw] text-[1.25vw]">
             {renderSearchInput()}
 
             {/* Filter Dropdown */}
@@ -228,7 +228,8 @@ export function DataTable<TData, TValue>({
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
-                      className="flex-row items-center"
+                      className="cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleRowClick(row)}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
@@ -253,6 +254,7 @@ export function DataTable<TData, TValue>({
               </TableBody>
             </Table>
           </div>
+
 
           {/* Pagination */}
           <div className="flex items-center justify-end space-x-[1vw] mt-[1vw]">

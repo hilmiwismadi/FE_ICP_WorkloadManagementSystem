@@ -48,7 +48,7 @@ async function getData(): Promise<EmployeeData[]> {
       name: "Tariq Ridwan",
       team: "Operations",
       skill: "DevOps Engineer",
-      current_workload: 7.0,
+      current_workload: 2.85,
       email: "tariq.ridwan@gmail.com",
       phone: "08123456783",
     },
