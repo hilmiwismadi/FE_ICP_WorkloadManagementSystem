@@ -10,6 +10,7 @@ import { historyData } from "./data-history";
 import { ongoingData } from "./data-ongoing";
 import UserProfile from "./user-profile";
 import SearchAndFilter, { FilterOption } from "./search-filter";
+import SearchBar from '@/components/organisms/SearchBar';
 
 const filterOptions: FilterOption[] = [
   { value: "task_id", label: "Task_ID", type: "string" as const },

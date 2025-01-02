@@ -131,7 +131,7 @@ export function DataTableHalf<TData, TValue>({
 
   return (
     <div className="flex flex-col justify-center items-center w-full">
-      <div className="w-[80vw] h-[100vh]">
+      <div className="w-[80vw]">
         {/* Search and Filter Section */}
         <div className="flex items-center space-x-2 py-[1vw] text-[1.25vw] ">
           {/* Search Input */}
