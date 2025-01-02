@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import SearchBar from '@/components/organisms/SearchBar';
+import SearchBar from '@/components/organisms/SearchBarTask';
 import ProfileHeader from '@/components/organisms/ProfileHeader';
 import Sidebar from '@/components/sidebar';
 import { DataTable } from './data-table';
@@ -75,7 +75,7 @@ export default function TaskPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-stale-50">
       <Sidebar />
       <div className="flex-grow overflow-auto flex items-start justify-center">
         <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] p-[1.667vw] space-y-[1.25vw]">

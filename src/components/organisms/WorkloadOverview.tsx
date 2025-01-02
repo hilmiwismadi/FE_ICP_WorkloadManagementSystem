@@ -26,7 +26,7 @@ const getBarColor = (value: number): string => {
 // Custom progress bar component
 const CustomProgressBar = ({ value }: { value: number }) => {
   return (
-    <div className="w-full bg-gray-600 rounded-full h-3 overflow-hidden">
+    <div className="w-full bg-gray-600 rounded-full h-[0.625vw] overflow-hidden">
       <div
         className="h-full rounded-full"
         style={{
@@ -41,11 +41,11 @@ const CustomProgressBar = ({ value }: { value: number }) => {
 
 export default function WorkloadOverview({ workloadTrend, currentWorkload, averageWorkload }: any) {
   return (
-    <div className="space-y-6 max-h-screen">
+    <div className="space-y-[1.25vw] max-h-screen">
       {/* Workloads Trend Chart */}
       <Card className="bg-[#0A1D56] h-[19vw]">
         <CardHeader>
-          <CardTitle className="text-white text-lg">Workloads Trend</CardTitle>
+          <CardTitle className="text-white text-[1.25vw]">Workloads Trend</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-[13vw]">
@@ -62,33 +62,33 @@ export default function WorkloadOverview({ workloadTrend, currentWorkload, avera
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 gap-[1.25vw] h-[13vw]">
         {/* Current Workloads */}
-        <Card className="bg-[#0A1D56] font-semibold">
+        <Card className="bg-[#0A1D56] space-y-[4vw] font-semibold">
           <CardHeader>
-            <CardTitle className="text-white text-lg">Current Workloads</CardTitle>
+            <CardTitle className="text-white text-[1.25vw]">Current Workloads</CardTitle>
           </CardHeader>
-          <CardContent className="mt-9">
-            <div className="flex items-center space-x-4">
+          <CardContent>
+            <div className="flex items-center space-x-[0.833vw]">
               <div className="w-full">
                 <CustomProgressBar value={currentWorkload} />
               </div>
-              <p className="text-white text-lg">{currentWorkload}%</p>
+              <p className="text-white text-[1.25vw]">{currentWorkload}%</p>
             </div>
           </CardContent>
         </Card>
 
         {/* Average Employee Workloads */}
-        <Card className="bg-[#0A1D56] font-semibold">
+        <Card className="bg-[#0A1D56] space-y-[2vw] font-semibold">
           <CardHeader>
-            <CardTitle className="text-white text-lg">Average Employee Workloads</CardTitle>
+            <CardTitle className="text-white text-[1.25vw]">Average Employee Workloads</CardTitle>
           </CardHeader>
-          <CardContent className="mt-2">
-            <div className="flex items-center space-x-4">
+          <CardContent>
+            <div className="flex items-center space-x-[0.833vw]">
               <div className="w-full">
                 <CustomProgressBar value={averageWorkload} />
               </div>
-              <p className="text-white text-lg">{averageWorkload}%</p>
+              <p className="text-white text-[1.25vw]">{averageWorkload}%</p>
             </div>
           </CardContent>
         </Card>

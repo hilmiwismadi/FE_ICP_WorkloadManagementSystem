@@ -27,23 +27,23 @@ const WorkExperience = ({ experience }: { experience: Experience }) => {
   const { years, months } = calculateExperience(experience.joinDate);
   
   return (
-    <Card className="bg-[#0A1D56] h-[11vw]">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-white">Work Experience</CardTitle>
+    <Card className="bg-[#0A1D56] h-[13vw]">
+      <CardHeader className="space-y-[0.417vw]">
+        <CardTitle className="text-[1.25vw] font-semibold text-white">Work Experience</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        <div className="space-y-[1.25vw]">
           <div className="flex justify-between items-start">
-            <h3 className="font-medium text-white text-lg">{experience.role}</h3>
-            <Badge variant="secondary" className="text-gray-600 text-sm bg-white rounded-full px-4">
+            <h3 className="font-medium text-white text-[1.1vw]">{experience.role}</h3>
+            <Badge variant="secondary" className="text-gray-600 text-sm bg-white rounded-full px-[0.833vw]">
               {experience.batch}
             </Badge>
           </div>
-          <div className="space-y-1">
-            <p className="text-sm text-gray-200">
+          <div className="space-y-[0.417vw]">
+            <p className="text-[0.9vw] text-gray-200">
               Join Date: {new Date(experience.joinDate).toLocaleDateString()}
             </p>
-            <p className="text-sm text-gray-200">
+            <p className="text-[0.9vw] text-gray-200">
               Duration: {years} Year{years !== 1 ? 's' : ''}, {months} Month{months !== 1 ? 's' : ''}
             </p>
           </div>
