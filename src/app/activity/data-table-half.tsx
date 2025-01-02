@@ -164,69 +164,8 @@ export function DataTableHalf<TData, TValue>({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </div>  
 
-        {/* User Info Section */}
-        <div className="bg-[#15234A] rounded-[0.8vw] text-white mb-[1vw] py-[1vw] ">
-          <div className="flex items-center mx-[2vw] mb-[1vw]">
-            <div className="flex items-center gap-[2vw]">
-              <img
-                src="/img/sidebar/UserProfile.png"
-                alt="User Avatar"
-                className="rounded-full w-[7vw] h-[7vw]"
-              />
-              <div>
-                <h2 className="text-[2vw] font-semibold">
-                  Varick Zahir Sarjiman
-                </h2>
-                <p className="text-[1vw] text-gray-300">ID-12003</p>
-              </div>
-            </div>
-            <div className="ml-auto text-right">
-              <p className="text-[1vw] text-gray-300">
-                varickzahirsarjiman@mail.ugm.ac.id
-              </p>
-              <p className="text-[1vw] text-gray-300">+62 812-1212-1212</p>
-            </div>
-          </div>
-
-          <div className="flex mx-[2vw] gap-[2vw] text-[1.1vw]">
-            <div className="flex justify-center items-center w-[8/12] gap-[0.3vw]">
-              <p className="text-gray-400 text-[1vw]">Team : </p>
-              <p className="text-[1vw]">
-                Aplikasi Penanganan Pengaduan Keluhan dan Gangguan Pelanggan
-              </p>
-            </div>
-            <div className="flex justify-center items-center w-[4/12] gap-[0.3vw]">
-              <p className="text-gray-400 text-[1vw]">Role :</p>
-              <p className="text-[1vw]">Backend Engineer</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex border-b mb-[1vw] w-full">
-          <button
-            className={`px-[3vw] py-[0.3vw] text-[1vw] font-medium w-6/12 ${
-              activeTab === "ongoing"
-                ? "border-b-2 border-blue-500 text-blue-500"
-                : "text-gray-500"
-            }`}
-            onClick={() => setActiveTab("ongoing")}
-          >
-            On Going
-          </button>
-          <button
-            className={`px-[3vw] py-[0.3vw] text-[1vw] font-medium w-6/12 ${
-              activeTab === "history"
-                ? "border-b-2 border-blue-500 text-blue-500"
-                : "text-gray-500"
-            }`}
-            onClick={() => setActiveTab("history")}
-          >
-            History
-          </button>
-        </div>
 
         {/* Table */}
         <div className="rounded-[0.8vw] border ">
