@@ -12,7 +12,6 @@ export default function ProfileHeader({ employee, showEditButton = true }: Profi
   };
 
   if (!employee) {
-    // Render placeholder or empty state
     return (
       <Card className="bg-[#0A1D56]">
         <CardContent className="p-6">
@@ -23,11 +22,11 @@ export default function ProfileHeader({ employee, showEditButton = true }: Profi
   }
 
   return (
-    <Card className="bg-[#0A1D56]">
-      <CardContent className="p-6">
+    <Card className="bg-[#0A1D56] w-full h-[20vh]">
+      <CardContent className="p-[1.25vw]">
         <div className="flex items-start justify-between">
-          <div className="flex items-start gap-4">
-            <div className="h-16 w-16 rounded-full bg-slate-100 overflow-hidden">
+          <div className="flex items-start gap-[0.833vw]">
+            <div className="h-[3.333vw] w-[3.333vw] rounded-full bg-slate-100 overflow-hidden">
               {/* Add avatar image here */}
               <img
                 src={employee.avatar || "/img/sidebar/UserProfile.png"}
@@ -35,15 +34,15 @@ export default function ProfileHeader({ employee, showEditButton = true }: Profi
                 className="h-full w-full object-cover"
               />
             </div>
-            <div className="space-y-1">
-              <h2 className="text-2xl font-bold text-white">{employee.name}</h2>
-              <p className="text-slate-300">ID-{employee.id}</p>
-              <div className="text-slate-300 mt-4">
-                <div className="grid grid-cols-[100px_1fr]">
+            <div className="space-y-[0.208vw]">
+              <h2 className="text-[1.5vw] font-bold text-white">{employee.name}</h2>
+              <p className="text-slate-300 text-[1vw]">ID-{employee.id}</p>
+              <div className="text-slate-300 mt-[0.833vw] text-[1vw]">
+                <div className="grid grid-cols-[4vw_1fr]">
                   <span>Team</span>
                   <span>: {employee.team}</span>
                 </div>
-                <div className="grid grid-cols-[100px_1fr]">
+                <div className="grid grid-cols-[4vw_1fr]">
                   <span>Role</span>
                   <span>: {employee.role}</span>
                 </div>

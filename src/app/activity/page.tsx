@@ -42,17 +42,11 @@ export default function Activity() {
   );
 
   return (
-    <div className="w-full bg-white h-screen aspect-[1920/1080] text-[10vw] text-black flex justify-center items-center relative">
+    <div className="flex h-screen bg-gray-50 aspect-[1920/1080]">
       <Sidebar />
-      <div className="flex flex-col w-full h-full">
-        <SearchAndFilter
-          selectedFilter={selectedFilter}
-          filterOptions={filterOptions}
-          onFilterChange={handleFilterChange}
-          onInputChange={handleInputChange}
-          currentFilterOption={currentFilterOption}
-          filterValue={filterValue}
-        />
+      <div className="flex-grow overflow-auto flex items-start justify-center">
+        <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] p-[1.667vw] space-y-[1.25vw]">
+        <SearchBar />
 
         <UserProfile />
 
@@ -86,6 +80,7 @@ export default function Activity() {
             data={activeTab === "ongoing" ? ongoingData : historyData}
           />
         </div>
+      </div>
       </div>
     </div>
   );

@@ -88,9 +88,10 @@ const columns: ColumnDef<Task>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="text-[0.8vw]"
         >
           Task ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
         </Button>
       )
     },
@@ -106,9 +107,10 @@ const columns: ColumnDef<Task>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="text-[0.8vw]"
         >
           Workload
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
         </Button>
       )
     },
@@ -120,9 +122,10 @@ const columns: ColumnDef<Task>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="text-[0.8vw]"
         >
           Start Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
         </Button>
       )
     },
@@ -138,9 +141,10 @@ const columns: ColumnDef<Task>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="text-[0.8vw]"
         >
           End Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
         </Button>
       )
     },
@@ -192,7 +196,7 @@ export function DataTable() {
 
   return (
     <div className="w-full">
-      <div className="rounded-md border">
+      <div className="border bg-gray-50 rounded-[1vw]">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -201,7 +205,7 @@ export function DataTable() {
                   return (
                     <TableHead 
                         key={header.id}
-                        className={`text-[0.9vw] h-[0.9vw] ${
+                        className={`text-[0.9vw] h-[0.8vw] ${
                         header.column.id === "description" ? "text-left" : "text-center"
                         }`}
                     >
@@ -243,7 +247,7 @@ export function DataTable() {
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-[5vw] text-center"
                 >
                   No results.
                 </TableCell>
@@ -252,25 +256,27 @@ export function DataTable() {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between py-4">
-        <div className="text-sm text-gray-500">
+      <div className="flex items-center justify-between space-y-[1.5vw]">
+        <div className="text-[0.729vw] text-gray-500">
           Page {table.getState().pagination.pageIndex + 1} of{" "}
           {table.getPageCount()}
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-[0.417vw]">
           <Button
             variant="outline"
-            size="sm"
+            size="default"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
+            className="text-[0.729vw] h-[2.5vw] px-[1.25vw] rounded-[0.5vw] border border-gray-300"
           >
             Previous
           </Button>
           <Button
             variant="outline"
-            size="sm"
+            size="default"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
+            className="text-[0.729vw] h-[2.5vw] px-[1.25vw] rounded-[0.5vw] border border-gray-300"
           >
             Next
           </Button>
