@@ -1,92 +1,70 @@
 "use client"
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import SearchBar from '@/components/organisms/SearchBarTask';
 import ProfileHeader from '@/components/organisms/ProfileHeader';
 import Sidebar from '@/components/sidebar';
-import { DataTable } from './data-table';
+import { DataTable } from '../data-table';
 import { NewTaskModal } from '@/components/organisms/NewTaskModal';
-import { TaskData, columns } from "./columns";
+import { TaskData, columns } from "../columns";
 
 interface Employee {
   id: string;
   name: string;
-  position: string;
-  department: string;
+  email: string;
+  phone: string;
+  team: string;
+  skill: string;
+  role: string;
+  currentWorkload: number;
+  startDate: string;
   avatar?: string;
 }
 
-const mockEmployees: Employee[] = [
-  {
-    id: '12003',
-    name: 'Varick Zahir Sarjiman',
-    position: 'Backend Engineer',
-    department: 'APKT',
-    avatar: '/placeholder-avatar.png'
-  },
-  {
-    id: '12004',
-    name: 'John Doe',
-    position: 'Frontend Engineer',
-    department: 'APKT',
-    avatar: '/placeholder-avatar.png'
-  },
-];
-
-export default function TaskPage() {
+export default function TaskPageId() {
   const router = useRouter();
+  const { id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchEmployeeData = async () => {
       try {
-        const response = await axios.post(
-          "https://be-icpworkloadmanagementsystem.up.railway.app/api/user/read",
-          { data: [] },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
+        const response = await axios.get(
+          `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${id}`
         );
+
+        console.log(response.data);
+
         const result = response.data;
 
         if (result.error) {
           console.error("API Error:", result.error);
-        } else {
-          setEmployees(result.data.map((user: any) => ({
-            id: user.user_Id,
+        } else if (result.data) {
+          const user = result.data;
+          setSelectedEmployee({
+            id: user.employee_Id,
             name: user.name,
-            position: user.role,
-            department: "APKT", // Assuming department is not provided in the API response
+            email: user.email,
+            phone: user.phone,
+            team: user.team,
+            skill: user.skill,
+            role: user.role,
+            currentWorkload: user.current_Workload,
+            startDate: user.start_Date,
             avatar: user.image || '/placeholder-avatar.png'
-          })));
+          });
         }
       } catch (error) {
-        console.error("Failed to fetch user data:", error);
+        console.error("Failed to fetch employee data:", error);
       }
     };
 
-    fetchUserData();
-  }, []);
-
-  const handleSearch = async (query: string) => {
-    return mockEmployees.filter(emp =>
-      emp.name.toLowerCase().includes(query.toLowerCase()) ||
-      emp.id.includes(query)
-    );
-  };
-
-  const handleEmployeeSelect = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    router.push(`/task/${employee.id}`);
-  };
-
+    fetchEmployeeData();
+  }, [id]);
 
   const handleSubmit = (taskData: {
     name: string;
@@ -98,27 +76,18 @@ export default function TaskPage() {
     console.log('Submitted Task:', taskData);
   };
 
-  const mockEmployee = {
-    id: "12003",
-    name: "Varick Zahir Attaqi",
-    email: "varickzahirsarjiman@mail.ugm.ac.id",
-    phone: "+62 812-1212-1212",
-    team: "Aplikasi Penanganan Pengaduan Keluhan dan Gangguan Pelanggan",
-    role: "Backend Engineer",
-    currentWorkload: 79,
-    averageWorkload: 42,
-  };
-
   return (
     <div className="flex h-screen bg-stale-50">
       <Sidebar />
       <div className="flex-grow overflow-auto flex items-start justify-center">
         <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] p-[1.667vw] space-y-[1.25vw]">
           <SearchBar /> 
-          <ProfileHeader 
-            employee={selectedEmployee || mockEmployee}
-            showEditButton={false}
-          />
+          {selectedEmployee && (
+            <ProfileHeader 
+              employee={selectedEmployee}
+              showEditButton={false}
+            />
+          )}
 
           {/* Task Section */}
           <div className="bg-white rounded-lg shadow">
