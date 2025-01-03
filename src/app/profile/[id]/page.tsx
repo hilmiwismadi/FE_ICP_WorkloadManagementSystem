@@ -1,6 +1,8 @@
 "use client";
 import React from 'react';
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import axios from 'axios';
 import ProfileHeader from '@/components/organisms/ProfileHeader';
 import ProgrammingLanguages from '@/components/organisms/ProgrammingLanguages';
 import WorkloadOverview from '@/components/organisms/WorkloadOverview';
@@ -9,24 +11,50 @@ import TaskList from '@/components/organisms/TaskList';
 import Sidebar from '@/components/sidebar';
 import ActivityDetailsButton from '@/components/ui/ActivityDetailsButton';
 
+interface Employee {
+  employee_Id: string;
+  name: string;
+  image?: string;
+  email: string;
+  phone: string;
+  team: string;
+  skill: string;
+  role: string;
+  current_Workload: number;
+  start_Date: string;
+}
+
 export default function ProfilePage() {
+  const { id } = useParams();
+  const [employee, setEmployee] = useState<Employee | null>(null);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
 
-  const mockEmployee = {
-    id: "12003",
-    name: "Varick Zahir Sarjiman",
-    email: "varickzahirsarjiman@mail.ugm.ac.id",
-    phone: "+62 812-1212-1212",
-    team: "Aplikasi Penanganan Pengaduan Keluhan dan Gangguan Pelanggan",
-    role: "Backend Engineer",
-    currentWorkload: 79,
-    averageWorkload: 42,
-  };
+  // Fetch employee data
+  useEffect(() => {
+    const fetchEmployeeData = async () => {
+      try {
+        const response = await axios.get(
+          `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${id}`
+        );
 
+        if (response.data && response.data.data) {
+          setEmployee(response.data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch employee data:", error);
+      }
+    };
+
+    if (id) {
+      fetchEmployeeData();
+    }
+  }, [id]);
+
+  // Mock data that will be integrated later
   const workExperience = {
-    role: "Backend Engineer",
-    joinDate: "2023-02-15",
-    batch: "Batch 86"
+    role: employee?.role || '',
+    joinDate: employee?.start_Date || '',
+    batch: "Batch 86" // Mock data
   };
 
   const programmingLanguages = [
@@ -76,6 +104,23 @@ export default function ProfilePage() {
     }
   ];
 
+  // Transform employee data for ProfileHeader component
+  const employeeData = employee ? {
+    id: employee.employee_Id,
+    name: employee.name,
+    email: employee.email,
+    phone: employee.phone,
+    team: employee.team,
+    role: employee.role,
+    currentWorkload: employee.current_Workload,
+    averageWorkload: 42, // Mock data
+    avatar: employee.image
+  } : null;
+
+  if (!employee) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+
   return (
     <div className="flex h-screen bg-stale-50">
       <Sidebar />
@@ -88,7 +133,7 @@ export default function ProfilePage() {
               {/* Main Content Area */}
               <div className="col-span-12 xl:col-span-9 space-y-[1.25vw]">
                 <ProfileHeader 
-                  employee={mockEmployee}
+                  employee={employeeData}
                   showEditButton={true}
                 />
                 <div className="grid grid-cols-12 gap-[1.25vw]">
@@ -104,8 +149,8 @@ export default function ProfilePage() {
                   <div className="col-span-12 md:col-span-7">
                     <WorkloadOverview 
                       workloadTrend={workloadTrend}
-                      currentWorkload={mockEmployee.currentWorkload}
-                      averageWorkload={mockEmployee.averageWorkload}
+                      currentWorkload={employee.current_Workload}
+                      averageWorkload={42} // Mock data
                       className="bg-white rounded-[1vw] shadow-sm p-[1.25vw] h-full"
                     />
                   </div>
@@ -118,7 +163,7 @@ export default function ProfilePage() {
                   tasks={tasks}
                   className="bg-white rounded-[0.625vw] shadow-sm p-[1.25vw] sticky top-[1.25vw]"
                 />
-                <ActivityDetailsButton taskId={tasks[0]?.id} />
+                <ActivityDetailsButton employeeId={employee.employee_Id} />
               </div>
             </div>
           </div>
