@@ -14,16 +14,16 @@ const WorkloadStatusBar = ({ value }: { value: number }) => {
   // Handle special case for 0
   if (value === 0) {
     return (
-      <div className="flex items-center space-x-2">
-        <div className="w-24 h-2 bg-gray-200 rounded-full" />
-        <span className="text-gray-500 text-sm">Idle</span>
+      <div className="flex items-center space-x-[0.417vw]">
+        <div className="w-[7vw] h-[0.5vw] bg-gray-200 rounded-full" />
+        <span className="text-gray-500 text-[1vw]">Idle</span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center space-x-2">
-      <div className="w-24 h-2 bg-gray-200 rounded-full">
+    <div className="flex items-center space-x-[0.5vw]">
+      <div className="w-[7vw] h-[0.5vw] bg-gray-200 rounded-full">
         <div
           className={`h-full rounded-full ${getColor()}`}
           style={{ width: `${percentage}%` }}

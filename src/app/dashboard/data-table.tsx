@@ -133,7 +133,7 @@ export function DataTable<TData, TValue>({
   const renderSearchInput = () => {
     if (selectedFilter === "current_workload") {
       return (
-        <div className="flex space-x-2 flex-1">
+        <div className="flex space-x-[0.417vw] flex-1">
           <Select
             value={workloadFilter.operator}
             onValueChange={(value) => handleWorkloadChange(value, "operator")}
@@ -156,7 +156,7 @@ export function DataTable<TData, TValue>({
               placeholder="Enter workload value..."
               value={workloadFilter.value}
               onChange={(e) => handleWorkloadChange(e.target.value, "value")}
-              className="pl-[2vw] pr-[2vw] py-[1vw] w-full bg-gray-100 rounded-lg"
+              className="pl-[2vw] pr-[2vw] py-[1vw] w-full bg-gray-100 rounded-[0.417vw]"
             />
           </div>
         </div>
@@ -165,7 +165,7 @@ export function DataTable<TData, TValue>({
 
     return (
       <div className="relative flex-1">
-        <Search className="absolute left-[1vw] top-1/2 transform -translate-y-1/2 text-gray-500 h-[1vw] w-[1vw]" />
+        <Search className="absolute left-[0.833vw] top-1/2 transform -translate-y-1/2 text-gray-500 h-[1vw] w-[1vw]" />
         <Input
           placeholder={`Search ${currentFilterOption?.label || "Employee"}...`}
           value={
@@ -174,7 +174,7 @@ export function DataTable<TData, TValue>({
           onChange={(e) =>
             table.getColumn(selectedFilter)?.setFilterValue(e.target.value)
           }
-          className="pl-[2vw] pr-[2vw] py-[1vw] w-full bg-gray-100 rounded-lg"
+          className="pl-[2.5vw] pr-[2vw] py-[1vw] space-x-[0.2vw] w-full bg-gray-100 rounded-[0.417vw]"
         />
       </div>
     );
@@ -182,10 +182,10 @@ export function DataTable<TData, TValue>({
 
   return (
     <>
-      <div className="flex flex-col flex-grow justify-center items-center w-[78vw] mx-[3vw]">
-        <div className="w-full">
+      <div className="flex flex-col flex-grow justify-center items-center">
+        <div className="w-full space-y-[1.25vw]">
           {/* Search and Filter Section */}
-          <div className="flex items-center space-x-2 py-[1vw] text-[1.25vw]">
+          <div className="flex items-center space-x-[0.8vw] py-[0.417vw] text-[1.25vw]">
             {renderSearchInput()}
 
             {/* Filter Dropdown */}
@@ -204,7 +204,7 @@ export function DataTable<TData, TValue>({
           </div>
 
           {/* Table */}
-          <div className="rounded-md border aspect-[1312/600]">
+          <div className="rounded-[0.417vw] border">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (

@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Icon } from "@iconify/react";
 import Sidebar from "../../components/sidebar";
 import { EmployeeData, columns } from "./columns";
-import { DataTable } from "@/components/data-table";
+import { DataTable } from "./data-table";
 
 async function getData(): Promise<EmployeeData[]> {
   // Fetch data from your API here.
@@ -204,10 +204,12 @@ export default async function Dashboard() {
   const data = await getData();
 
   return (
-    <div className="w-full bg-white h-screen aspect-[1920/1080] text-[10vw] text-black flex justify-center items-center relative">
+    <div className="flex h-screen bg-stale-50">
       <Sidebar />
-      <div className="flex-grow">
-        <DataTable columns={columns} data={data} />
+      <div className="flex-grow overflow-auto flex items-start justify-center">
+        <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] p-[1.667vw] space-y-[1.25vw]">
+          <DataTable columns={columns} data={data} />
+        </div>
       </div>
     </div>
   );
