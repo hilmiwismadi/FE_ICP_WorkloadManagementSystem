@@ -12,6 +12,7 @@ import { ongoingData } from "../data-ongoing";
 import UserProfile from "../user-profile";
 import SearchAndFilter, { FilterOption } from "../search-filter";
 import SearchBar from '@/components/organisms/SearchBarActivity';
+import LoadingScreen from '@/components/organisms/LoadingScreen';
 
 interface Employee {
   employee_Id: string;
@@ -79,7 +80,7 @@ export default function Activity() {
   );
 
   if (!employee) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return <LoadingScreen />;
   }
 
   return (
