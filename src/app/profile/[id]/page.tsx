@@ -163,7 +163,7 @@ export default function ProfilePage() {
                   tasks={tasks}
                   className="bg-white rounded-[0.625vw] shadow-sm p-[1.25vw] sticky top-[1.25vw]"
                 />
-                <ActivityDetailsButton taskId={tasks[0]?.id} />
+                <ActivityDetailsButton employeeId={employee.employee_Id} />
               </div>
             </div>
           </div>
