@@ -69,7 +69,7 @@ export const columns: ColumnDef<EmployeeData>[] = [
             size="icon"
             className="bg-navy hover:bg-blue-500 w-[2vw] h-[2vw]"
             onClick={(e) => {
-              e.stopPropagation(); // Prevent row click from triggering
+              e.stopPropagation();
               const employeeId = row.original.employee_id;
               // You can use the router here if you import it,
               // or pass a handleClick function from the parent
