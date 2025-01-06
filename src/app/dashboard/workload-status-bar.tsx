@@ -2,11 +2,12 @@ import React from 'react';
 
 const WorkloadStatusBar = ({ value }: { value: number }) => {
   // Convert value (0-10) to percentage (0-100)
-  const percentage = (value / 10) * 100;
+  const normalize = value/15;
+  const percentage = normalize * 100 ;
   
   // Determine color based on workload percentage
   const getColor = () => {
-    if (percentage >= 70) return 'bg-red-500';
+    if (percentage >= 80) return 'bg-red-500';
     if (percentage >= 40) return 'bg-yellow-500';
     return 'bg-green-500';
   };
