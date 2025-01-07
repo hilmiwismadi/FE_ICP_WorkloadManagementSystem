@@ -13,26 +13,24 @@ export default function ProgrammingLanguages({ languages }: any) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 space-y-1 gap-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
           {displayLanguages.map((lang: any) => (
             <div
               key={lang.name}
-              className="flex items-center gap-2 bg-white rounded-full px-4 py-2.5 
-                         hover:bg-slate-50 transition-colors duration-200
-                         shadow-sm hover:shadow-md"
+              className="flex items-center justify-center bg-white rounded-[0.5vw] w-[10vw] h-[3vw]"
             >
-              <div className="relative flex-shrink-0">
+              <div className="relative flex justify-center items-center gap-[0.4vw]">
                 <Image
                   src={lang.icon}
                   alt={lang.name}
-                  width={20}
-                  height={20}
-                  className="h-5 w-5 object-contain"
+                  width={200}
+                  height={200}
+                  className="w-[2vw] h-auto"
                 />
+                <h1 className="text-[1vw] font-medium text-slate-700 whitespace-nowrap">
+                  {lang.name}
+                </h1>
               </div>
-              <span className="text-sm font-medium text-slate-700 whitespace-nowrap">
-                {lang.name}
-              </span>
             </div>
           ))}
         </div>

@@ -23,6 +23,12 @@ interface Employee {
   role: string;
   current_Workload: number;
   start_Date: string;
+  techStacks: Array<{
+    techStack_Id: number;
+    name: string;
+    image: string;
+    employee_Id: string;
+  }>;
 }
 
 export default function ProfilePage() {
@@ -58,12 +64,11 @@ export default function ProfilePage() {
     batch: "Batch 86" // Mock data
   };
 
-  const programmingLanguages = [
-    { name: "Express.js", icon: "/icons/express.svg" },
-    { name: "Laravel", icon: "/icons/laravel.svg" },
-    { name: "Golang", icon: "/icons/golang.svg" },
-    { name: "Django", icon: "/icons/django.svg" },
-  ];
+  // Dynamically map techStacks to programmingLanguages format
+  const programmingLanguages = employee?.techStacks.map((stack) => ({
+    name: stack.name,
+    icon: stack.image
+  })) || [];
 
   const workloadTrend = [
     { month: "Jan", value: 65 },
