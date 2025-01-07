@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, User } from "lucide-react";
+import Image from 'next/image';
+import Link from 'next/link';
+import { Eye, EyeOff, Lock, User, ArrowRight  } from "lucide-react";
 
 interface FormData {
   email: string;
@@ -148,95 +150,126 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-900 to-blue-800 flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-xl p-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">Welcome back</h2>
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
+    <div className="min-h-screen w-full bg-gradient-to-br from-navy to-blue-900 flex items-center justify-center p-6">
+      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl flex overflow-hidden">
+        {/* Left Side - Illustration */}
+        <div className="hidden lg:flex lg:w-1/2 bg-blue-50 p-12 items-center justify-center">
+        <div className="absolute h-[28vw] w-[28vw] bg-blue-100 rounded-full"></div>
+          <div className="relative w-[60vw] max-w-md transform transition-transform duration-500 hover:scale-105">            
+            <Image 
+              src="/img/assets/loginAssets.png" 
+              alt="Login"
+              width={500}
+              height={500}
+              className="relative z-10 w-full h-auto "
+              priority
+            />
           </div>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Email Input */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Email</label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-          </div>
+        </div>
 
-          {/* Password Input */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your password"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
-              </button>
-            </div>
-          </div>
+        {/* Right Side - Login Form */}
+        <div className="w-full lg:w-1/2 p-8 md:p-12">
+          <div className="max-w-md mx-auto">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
+            <p className="text-gray-600 mb-8">Please sign in to continue</p>
 
-          {/* Remember Me & Forgot Password */}
-          <div className="flex items-center justify-between">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                name="rememberMe"
-                checked={formData.rememberMe}
-                onChange={handleInputChange}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-600">Remember me</span>
-            </label>
-            <a
-              href="/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
-              Forgot password?
-            </a>
-          </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Username Input */}
+              <div className="relative">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                  Username
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="Enter your username"
+                    required
+                  />
+                </div>
+              </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-70"
-          >
-            {isLoading ? (
-              <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
-            ) : (
-              "Sign In"
-            )}
-          </button>
-        </form>
+              {/* Password Input */}
+              <div className="relative">
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Remember Me & Forgot Password */}
+              <div className="flex items-center justify-between">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="rememberMe"
+                    checked={formData.rememberMe}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-colors"
+                  />
+                  <span className="text-sm text-gray-600">Remember me</span>
+                </label>
+                <Link 
+                  href="/forgot-password" 
+                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              {/* Submit Button - Added more spacing and improved styling */}
+              <div className="pt-6 pb-2">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-navy hover:bg-blue-800 text-white font-medium py-3.5 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-70 shadow-lg hover:shadow-xl"
+                >
+                  {isLoading ? (
+                    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <span className="text-lg">Sign In</span>
+                      <ArrowRight className="h-5 w-5 ml-2" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Optional: Add a subtle separator */}
+              <div className="relative py-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );
