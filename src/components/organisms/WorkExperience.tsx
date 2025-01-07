@@ -27,7 +27,7 @@ const WorkExperience = ({ experience }: { experience: Experience }) => {
   const { years, months } = calculateExperience(experience.joinDate);
   
   return (
-    <Card className="bg-[#0A1D56] h-[13vw]">
+    <Card className="bg-[#0A1D56] h-[12.666vw]">
       <CardHeader className="space-y-[0.417vw]">
         <CardTitle className="text-[1.25vw] font-semibold text-white">Work Experience</CardTitle>
       </CardHeader>

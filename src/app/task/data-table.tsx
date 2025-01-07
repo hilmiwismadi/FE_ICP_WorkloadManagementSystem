@@ -58,7 +58,7 @@ const columns: ColumnDef<Task>[] = [
         <div className={`
           px-2 py-1 rounded-full text-center text-[0.7vw] w-fit mx-auto
           ${status.toLowerCase() === 'ongoing' ? 'bg-blue-100 text-blue-800' : 
-            status.toLowerCase() === 'completed' ? 'bg-green-100 text-green-800' : 
+            status.toLowerCase() === 'complete' ? 'bg-green-100 text-green-800' : 
             'bg-gray-100 text-gray-800'}
         `}>
           {status}
