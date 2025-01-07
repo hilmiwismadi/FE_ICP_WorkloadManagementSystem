@@ -198,9 +198,9 @@ export function DataTable({ tasks = [], isLoading = false, onTaskUpdate }: DataT
                 <AlertDialogTitle>Confirm Task Completion</AlertDialogTitle>
                 <AlertDialogDescription>
                   Are you sure you want to mark this task as complete?
-                  <div className="mt-2 text-sm">
+                  <span className="mt-2 text-sm">
                     <strong>Task:</strong> {task.description}
-                  </div>
+                  </span>
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -220,7 +220,12 @@ export function DataTable({ tasks = [], isLoading = false, onTaskUpdate }: DataT
   ]
 
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([
+    {
+      id: "status",
+      value: "Ongoing",
+    },
+  ])
 
   const table = useReactTable({
     data: tasks,
