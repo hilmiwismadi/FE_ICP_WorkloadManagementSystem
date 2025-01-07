@@ -13,7 +13,7 @@ export default function ProgrammingLanguages({ languages }: any) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+        <div className=" grid grid-cols-2 gap-[1vw]">
           {displayLanguages.map((lang: any) => (
             <div
               key={lang.name}

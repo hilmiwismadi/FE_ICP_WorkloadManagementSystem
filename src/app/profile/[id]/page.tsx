@@ -1,6 +1,6 @@
-"use client";
-import React from 'react';
-import { useEffect, useState } from 'react';
+"use client"
+
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
 import ProfileHeader from '@/components/organisms/ProfileHeader';
@@ -28,6 +28,17 @@ interface Employee {
     name: string;
     image: string;
     employee_Id: string;
+  }>;
+  tasks: Array<{
+    task_Id: string;
+    type: string;
+    description: string;
+    status: string;
+    workload: number;
+    start_Date: string;
+    end_Date: string;
+    employee_Id: string;
+    user_Id: string;
   }>;
 }
 
@@ -79,36 +90,13 @@ export default function ProfilePage() {
     { month: "Jun", value: 70 },
   ];
 
-  const tasks = [
-    {
-      id: "1",
-      title: "Fix Bug API Endpoint",
-      description: "Bertanggung jawab untuk menyelsaikan bug Aplikasi pada sisi Backend bersama 2 karyawan lain",
-      dueDate: "14/01/2025",
-      priority: "8.2",
-    },
-    {
-      id: "2",
-      title: "Fix Bug API Endpoint",
-      description: "Bertanggung jawab untuk menyelsaikan bug Aplikasi pada sisi Backend bersama 2 karyawan lain",
-      dueDate: "16/01/2025",
-      priority: "4.1",
-    },
-    {
-      id: "3",
-      title: "Fix Bug API Endpoint",
-      description: "Bertanggung jawab untuk menyelsaikan bug Aplikasi pada sisi Backend bersama 2 karyawan lain",
-      dueDate: "12/01/2025",
-      priority: "2.1",
-    },
-    {
-      id: "4",
-      title: "Fix Bug API Endpoint",
-      description: "Bertanggung jawab untuk menyelsaikan bug Aplikasi pada sisi Backend bersama 2 karyawan lain",
-      dueDate: "14/01/2025",
-      priority: "8.2",
-    }
-  ];
+  // Map tasks from API to match TaskList props
+  const tasks = employee?.tasks.map((task) => ({
+    id: task.task_Id,
+    title: task.description,
+    priority: task.workload.toString(), // Convert workload to string
+    dueDate: new Date(task.end_Date).toLocaleDateString() // Format date
+  })) || [];
 
   // Transform employee data for ProfileHeader component
   const employeeData = employee ? {
@@ -155,7 +143,7 @@ export default function ProfilePage() {
                   <div className="col-span-12 md:col-span-7">
                     <WorkloadOverview 
                       workloadTrend={workloadTrend}
-                      currentWorkload={employee.current_Workload}
+                      currentWorkload={Math.round((employee.current_Workload / 15) * 100)}
                       averageWorkload={42} // Mock data
                       className="bg-white rounded-[1vw] shadow-sm p-[1.25vw] h-full"
                     />
