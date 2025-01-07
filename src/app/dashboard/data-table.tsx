@@ -45,13 +45,13 @@ type WorkloadFilter = {
 };
 
 const filterOptions: FilterOption[] = [
-  { value: "employee_id", label: "Employee ID", type: "string" },
-  { value: "name", label: "Name", type: "string" },
-  { value: "email", label: "Email", type: "string" },
-  { value: "phone", label: "Phone", type: "string" },
-  { value: "team", label: "Team", type: "string" },
+  // { value: "employee_id", label: "Employee ID", type: "string" },
+  { value: "name", label: "Nama", type: "string" },
+  // { value: "email", label: "Email", type: "string" },
+  // { value: "phone", label: "Phone", type: "string" },
+  { value: "team", label: "Divisi", type: "string" },
   { value: "skill", label: "Skill", type: "string" },
-  { value: "current_workload", label: "Current Workload", type: "number" },
+  // { value: "current_workload", label: "Current Workload", type: "number" },
 ];
 
 const workloadOperators = [

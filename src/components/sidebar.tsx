@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -25,8 +25,17 @@ const sidebarItems = [
 
 const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [userData, setUserData] = useState<any>(null); // state to store user data
   const pathname = usePathname();
   const router = useRouter();
+
+  // Fetch user data from localStorage when the component mounts
+  useEffect(() => {
+    const storedUserData = localStorage.getItem("userData");
+    if (storedUserData) {
+      setUserData(JSON.parse(storedUserData)); // parse the data and set it to state
+    }
+  }, []);
 
   return (
     <div
@@ -68,10 +77,10 @@ const Sidebar = () => {
               height={40}
               className={`rounded-full transition-all duration-300 ${isExpanded ? 'w-[3vw] h-[3vw]' : 'w-[1vw] h-[1vw]'}`}
             />
-            {isExpanded && (
+            {isExpanded && userData && (
               <div className="flex flex-col text-white">
-                <span className="font-semibold text-[1.25vw]">PIC APKT</span>
-                <span className="text-[1vw]">ID-10009</span>
+                <span className="font-semibold text-[1.25vw]">{userData.name}</span>
+                <span className="text-[1vw]">{userData.user_Id}</span>
               </div>
             )}
           </div>
