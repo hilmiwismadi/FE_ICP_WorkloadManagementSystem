@@ -1,161 +1,212 @@
 "use client";
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Eye, EyeOff, Lock, User, ArrowRight } from 'lucide-react';
 
-export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    rememberMe: false
-  });
-  const [isLoading, setIsLoading] = useState(false);
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Lock, User } from "lucide-react";
+
+interface FormData {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+}
+
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface LoginResponse {
+  token: string;
+  user: UserData;
+}
+
+const Login = () => {
   const router = useRouter();
+
+  const [formData, setFormData] = useState<FormData>({
+    email: "",
+    password: "",
+    rememberMe: false,
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const rememberedUser = localStorage.getItem("rememberedUser");
+    if (rememberedUser) {
+      const { email, password } = JSON.parse(rememberedUser);
+      setFormData((prev) => ({
+        ...prev,
+        email,
+        password,
+        rememberMe: true,
+      }));
+    }
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await fetch(
+        "https://be-icpworkloadmanagementsystem.up.railway.app/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      const { succes } = data; // Access the nested result
+      const token = succes.accesToken; // Get the token
+      const user = succes; // User details
+      console.log(token, user)
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // Handle Remember Me
+      if (formData.rememberMe) {
+        localStorage.setItem(
+          "rememberedUser",
+          JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          })
+        );
+      } else {
+        localStorage.removeItem("rememberedUser");
+      }
+
+      // Store user session data
+      localStorage.setItem("token", token);
+      localStorage.setItem("userData", JSON.stringify(user));
+
+      // Redirect to home page
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Login error:", error);
+      setError(
+        error instanceof Error ? error.message : "An unexpected error occurred"
+      );
+    } finally {
       setIsLoading(false);
-      router.push('/dashboard');
-    }, 1500);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    }
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-navy to-blue-900 flex items-center justify-center p-6">
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl flex overflow-hidden">
-        {/* Left Side - Illustration */}
-        <div className="hidden lg:flex lg:w-1/2 bg-blue-50 p-12 items-center justify-center">
-          <div className="relative w-full max-w-md">
-            <div className="absolute inset-0 bg-blue-100 rounded-full animate-pulse"></div>
-            <Image 
-              src="/img/login-illustration.svg" 
-              alt="Login"
-              width={500}
-              height={500}
-              className="relative z-10 w-full h-auto "
-              priority
-            />
+    <div className="min-h-screen w-full bg-gradient-to-br from-blue-900 to-blue-800 flex items-center justify-center p-6">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-xl p-8">
+        <h2 className="text-3xl font-bold text-gray-900 mb-6">Welcome back</h2>
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
           </div>
-        </div>
-
-        {/* Right Side - Login Form */}
-        <div className="w-full lg:w-1/2 p-8 md:p-12">
-          <div className="max-w-md mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
-            <p className="text-gray-600 mb-8">Please sign in to continue</p>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Username Input */}
-              <div className="relative">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
-                  Username
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    placeholder="Enter your username"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Password Input */}
-              <div className="relative">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    placeholder="Enter your password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="rememberMe"
-                    checked={formData.rememberMe}
-                    onChange={handleChange}
-                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-colors"
-                  />
-                  <span className="text-sm text-gray-600">Remember me</span>
-                </label>
-                <Link 
-                  href="/forgot-password" 
-                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-
-              {/* Submit Button - Added more spacing and improved styling */}
-              <div className="pt-6 pb-2">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-navy hover:bg-blue-800 text-white font-medium py-3.5 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-70 shadow-lg hover:shadow-xl"
-                >
-                  {isLoading ? (
-                    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <>
-                      <span className="text-lg">Sign In</span>
-                      <ArrowRight className="h-5 w-5 ml-2" />
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Optional: Add a subtle separator */}
-              <div className="relative py-4">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-200"></div>
-                </div>
-              </div>
-            </form>
+        )}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email Input */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Email</label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
           </div>
-        </div>
+
+          {/* Password Input */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                className="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Remember Me & Forgot Password */}
+          <div className="flex items-center justify-between">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                name="rememberMe"
+                checked={formData.rememberMe}
+                onChange={handleInputChange}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-600">Remember me</span>
+            </label>
+            <a
+              href="/forgot-password"
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              Forgot password?
+            </a>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-70"
+          >
+            {isLoading ? (
+              <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
+            ) : (
+              "Sign In"
+            )}
+          </button>
+        </form>
       </div>
     </div>
   );
-}
+};
+
+export default Login;
