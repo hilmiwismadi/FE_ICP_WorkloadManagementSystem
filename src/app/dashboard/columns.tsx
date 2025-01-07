@@ -46,7 +46,8 @@ export const columns: ColumnDef<EmployeeData>[] = [
     header: "Workload",
     cell: ({ getValue }) => {
       const value = getValue<number>();
-      const percentage = value * 10; // Calculate percentage
+      const normalize = value / 15;
+      const percentage = (normalize * 100).toFixed(1); // Calculate percentage
       return `${percentage}%`; // Display as percentage
     },
   },

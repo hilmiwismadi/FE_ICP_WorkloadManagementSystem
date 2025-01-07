@@ -62,7 +62,7 @@ export default function WorkloadOverview({ workloadTrend, currentWorkload, avera
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-[1.25vw] h-[13vw]">
+      <div className="grid grid-cols-2 gap-[1.25vw] h-[12.666vw]">
         {/* Current Workloads */}
         <Card className="bg-[#0A1D56] space-y-[4vw] font-semibold">
           <CardHeader>

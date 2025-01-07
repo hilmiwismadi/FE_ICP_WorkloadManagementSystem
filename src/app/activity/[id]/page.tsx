@@ -3,15 +3,23 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import axios from "axios";
-import { Icon } from "@iconify/react";
 import Sidebar from "../../../components/sidebar";
 import { TaskData, columns } from "../columns";
 import { DataTableHalf } from "@/app/activity/data-table-half";
-import { historyData } from "../data-history";
-import { ongoingData } from "../data-ongoing";
 import UserProfile from "../user-profile";
-import SearchAndFilter, { FilterOption } from "../search-filter";
-import SearchBar from '@/components/organisms/SearchBarActivity';
+import SearchBar from "@/components/organisms/SearchBarActivity";
+import LoadingScreen from "@/components/organisms/LoadingScreen";
+
+interface Task {
+  task_Id: string;
+  description: string;
+  employee_Id: string;
+  end_Date: Date;
+  start_Date: Date;
+  status: string;
+  type: string;
+  workload: number;
+}
 
 interface Employee {
   employee_Id: string;
@@ -26,23 +34,12 @@ interface Employee {
   start_Date: string;
 }
 
-const filterOptions: FilterOption[] = [
-  { value: "task_id", label: "Task_ID", type: "string" as const },
-  { value: "name", label: "Name", type: "string" as const },
-  { value: "description", label: "Deskripsi", type: "string" as const },
-  {
-    value: "current_workload",
-    label: "Current Workload",
-    type: "number" as const,
-  },
-];
-
 export default function Activity() {
   const { id } = useParams();
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [activeTab, setActiveTab] = useState<"ongoing" | "history">("ongoing");
-  const [selectedFilter, setSelectedFilter] = useState<string>("name");
-  const [filterValue, setFilterValue] = useState<string>("");
+  const [loading, setLoading] = useState(true);
 
   // Fetch employee data
   useEffect(() => {
@@ -51,7 +48,6 @@ export default function Activity() {
         const response = await axios.get(
           `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${id}`
         );
-
         if (response.data && response.data.data) {
           setEmployee(response.data.data);
         }
@@ -60,26 +56,36 @@ export default function Activity() {
       }
     };
 
+    const fetchTaskData = async () => {
+      try {
+        const response = await axios.get(
+          `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${id}`
+        );
+        if (response.data && response.data.data) {
+          setTasks(response.data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch task data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (id) {
       fetchEmployeeData();
+      fetchTaskData();
     }
   }, [id]);
 
-  const handleFilterChange = (value: string) => {
-    setSelectedFilter(value);
-    setFilterValue("");
-  };
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFilterValue(event.target.value);
-  };
-
-  const currentFilterOption = filterOptions.find(
-    (option) => option.value === selectedFilter
+  // Filter tasks based on active tab
+  const filteredTasks = tasks.filter((task) =>
+    activeTab === "ongoing"
+      ? task.status === "ongoing"
+      : task.status === "complete"
   );
 
-  if (!employee) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  if (loading) {
+    return <LoadingScreen />;
   }
 
   return (
@@ -89,7 +95,7 @@ export default function Activity() {
         <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] p-[1.667vw] space-y-[1.25vw]">
           <SearchBar />
 
-          <UserProfile employee={employee} />
+          {employee && <UserProfile employee={employee} />}
 
           {/* Tabs */}
           <div className="flex border-b mb-[1vw] w-full mx-auto">
@@ -118,7 +124,16 @@ export default function Activity() {
           <div className="flex-grow">
             <DataTableHalf
               columns={columns}
-              data={activeTab === "ongoing" ? ongoingData : historyData}
+              data={filteredTasks.map((task) => ({
+                task_id: task.task_Id, 
+                name: task.type,        
+                description: task.description,
+                workload: task.workload,
+                start_date: task.start_Date,
+                end_date: task.end_Date,       
+                status: task.status,
+                type: task.type,
+              }))}
             />
           </div>
         </div>

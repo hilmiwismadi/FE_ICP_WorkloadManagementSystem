@@ -11,7 +11,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { ArrowUpDown } from "lucide-react"
-import { useParams } from "next/navigation"
 
 import {
   Table,
@@ -23,82 +22,49 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 
-// Keep existing Task interface
+// Interface for the task data
 interface Task {
-  task_id: string
+  task_Id: string
   description: string
   workload: number
-  start_date: Date
-  end_date: Date
+  start_Date: string
+  end_Date: string
+  employee_Id: string
+  status: string
+  type: string
+  user_Id: string
 }
 
-// Keep existing data array
-const data: Task[] = [
-  {
-    task_id: "E001",
-    description: "Update client project plans and timelines.",
-    workload: 35,
-    start_date: new Date("2024-01-10"),
-    end_date: new Date("2024-01-15"),
-  },
-  {
-    task_id: "E002",
-    description: "Design UI components for the internal dashboard.",
-    workload: 25,
-    start_date: new Date("2024-01-12"),
-    end_date: new Date("2024-01-20"),
-  },
-  {
-    task_id: "E003",
-    description: "Refactor backend API to improve performance.",
-    workload: 40,
-    start_date: new Date("2024-01-15"),
-    end_date: new Date("2024-01-25"),
-  },
-  {
-    task_id: "E004",
-    description: "Test and debug the new authentication system.",
-    workload: 30,
-    start_date: new Date("2024-01-18"),
-    end_date: new Date("2024-01-30"),
-  },
-  {
-    task_id: "E005",
-    description: "Research and integrate a new payment gateway.",
-    workload: 20,
-    start_date: new Date("2024-01-20"),
-    end_date: new Date("2024-01-27"),
-  },
-  {
-    task_id: "E006",
-    description: "Create technical documentation for the API.",
-    workload: 15,
-    start_date: new Date("2024-01-22"),
-    end_date: new Date("2024-01-28"),
-  },
-]
+interface DataTableProps {
+  tasks?: Task[]
+  isLoading?: boolean
+}
 
-
-// Modified columns with additional sorting
 const columns: ColumnDef<Task>[] = [
-  {
-    accessorKey: "task_id",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-[0.8vw]"
-        >
-          Task ID
-          <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
-        </Button>
-      )
-    },
-  },
   {
     accessorKey: "description",
     header: "Description",
+  },
+  {
+    accessorKey: "type",
+    header: "Type",
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string
+      return (
+        <div className={`
+          px-2 py-1 rounded-full text-center text-[0.7vw] w-fit mx-auto
+          ${status.toLowerCase() === 'ongoing' ? 'bg-blue-100 text-blue-800' : 
+            status.toLowerCase() === 'complete' ? 'bg-green-100 text-green-800' : 
+            'bg-gray-100 text-gray-800'}
+        `}>
+          {status}
+        </div>
+      )
+    }
   },
   {
     accessorKey: "workload",
@@ -116,7 +82,7 @@ const columns: ColumnDef<Task>[] = [
     },
   },
   {
-    accessorKey: "start_date",
+    accessorKey: "start_Date",
     header: ({ column }) => {
       return (
         <Button
@@ -130,12 +96,12 @@ const columns: ColumnDef<Task>[] = [
       )
     },
     cell: ({ row }) => {
-      const date = row.getValue("start_date") as Date
+      const date = new Date(row.getValue("start_Date"))
       return date.toLocaleDateString()
     },
   },
   {
-    accessorKey: "end_date",
+    accessorKey: "end_Date",
     header: ({ column }) => {
       return (
         <Button
@@ -149,32 +115,18 @@ const columns: ColumnDef<Task>[] = [
       )
     },
     cell: ({ row }) => {
-      const date = row.getValue("end_date") as Date
+      const date = new Date(row.getValue("end_Date"))
       return date.toLocaleDateString()
     },
   },
 ]
 
-export function DataTable() {
-  const params = useParams()
-  const id = params?.id as string
-
+export function DataTable({ tasks = [], isLoading = false }: DataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  
-  React.useEffect(() => {
-    if (id) {
-      setColumnFilters([
-        {
-          id: 'task_id',
-          value: id
-        }
-      ])
-    }
-  }, [id])
 
   const table = useReactTable({
-    data,
+    data: tasks,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -186,13 +138,16 @@ export function DataTable() {
       sorting,
       columnFilters,
     },
-    // Set default pagination
     initialState: {
       pagination: {
         pageSize: 5,
       },
     },
   })
+
+  if (isLoading) {
+    return <div className="text-center py-4">Loading tasks...</div>
+  }
 
   return (
     <div className="w-full">
@@ -204,10 +159,12 @@ export function DataTable() {
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead 
-                        key={header.id}
-                        className={`text-[0.9vw] h-[0.8vw] ${
-                        header.column.id === "description" ? "text-left" : "text-center"
-                        }`}
+                      key={header.id}
+                      className={`text-[0.9vw] h-[0.8vw] ${
+                        ["status", "workload", "start_Date", "end_Date"].includes(header.column.id)
+                          ? "pl-[1vw] pr-[1vw] text-center"
+                          : "pl-[1vw] pr-[3vw]" 
+                      }`}
                     >
                       {header.isPlaceholder
                         ? null
@@ -230,10 +187,12 @@ export function DataTable() {
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
-                        key={cell.id}
-                        className={`text-[0.8vw] h-[0.8vw] ${
-                        cell.column.id === "description" ? "text-left" : "text-center"
-                        }`}
+                      key={cell.id}
+                      className={`text-[0.9vw] h-[0.8vw] ${
+                        ["status", "workload", "start_Date", "end_Date"].includes(cell.column.id)
+                          ? "px-[1vw] py-[0.5vw] text-center"
+                          : "px-[1vw] py-[0.5vw]" 
+                      }`}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -247,9 +206,9 @@ export function DataTable() {
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-[5vw] text-center"
+                  className="h-[5vw] text-left"
                 >
-                  No results.
+                  No tasks found.
                 </TableCell>
               </TableRow>
             )}

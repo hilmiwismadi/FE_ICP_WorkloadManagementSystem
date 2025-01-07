@@ -10,6 +10,7 @@ import WorkExperience from '@/components/organisms/WorkExperience';
 import TaskList from '@/components/organisms/TaskList';
 import Sidebar from '@/components/sidebar';
 import ActivityDetailsButton from '@/components/ui/ActivityDetailsButton';
+import LoadingScreen from '@/components/organisms/LoadingScreen';
 
 interface Employee {
   employee_Id: string;
@@ -118,7 +119,7 @@ export default function ProfilePage() {
   } : null;
 
   if (!employee) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return <LoadingScreen />;
   }
 
   return (
