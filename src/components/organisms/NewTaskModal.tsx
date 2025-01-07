@@ -128,7 +128,11 @@ export const NewTaskModal = ({
 
   const handleTypeChange = (value: string) => {
     setIsCustomType(value === "Other task...");
-    setFormData({ ...formData, type: value === "Other task..." ? formData.customType : value });
+    setFormData({
+      ...formData,
+      type: value === "Other task..." ? "" : value,
+      customType: value === "Other task..." ? "" : formData.customType,
+    });
   };
 
   return (
@@ -164,9 +168,14 @@ export const NewTaskModal = ({
                   {isCustomType && (
                     <Input
                       value={formData.customType}
-                      onChange={(e) =>
-                        setFormData({ ...formData, customType: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const customValue = e.target.value;
+                        setFormData({
+                          ...formData,
+                          customType: customValue,
+                          type: customValue, 
+                        });
+                      }}
                       placeholder="Enter custom task type"
                       className="h-[2.5vw] mt-[0.417vw]"
                       required
@@ -197,7 +206,7 @@ export const NewTaskModal = ({
                           setFormData({ ...formData, workload: value });
                         }
                       }}
-                      className="w-[4.167vw] h-[2.5vw]"
+                      className="w-[4.1vw] h-[2.5vw] px-[0.625vw]"
                       step="0.1"
                       min="0"
                       max="10"
