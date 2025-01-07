@@ -63,7 +63,6 @@ export default function TaskPage() {
             id: user.user_Id,
             name: user.name,
             position: user.role,
-            department: "APKT", // Assuming department is not provided in the API response
             avatar: user.image || '/placeholder-avatar.png'
           })));
         }

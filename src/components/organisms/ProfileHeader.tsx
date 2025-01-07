@@ -22,7 +22,7 @@ export default function ProfileHeader({ employee, showEditButton = true }: Profi
   }
 
   return (
-    <Card className="bg-[#0A1D56] w-full h-[20vh]">
+    <Card className="bg-[#0A1D56] w-full h-[21vh]">
       <CardContent className="p-[1.25vw]">
         <div className="flex items-start justify-between">
           <div className="flex items-start pl-[1vw] gap-[2vw]">

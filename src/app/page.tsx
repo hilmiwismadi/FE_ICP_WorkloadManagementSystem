@@ -39,10 +39,10 @@ export default function LoginPage() {
       <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl flex overflow-hidden">
         {/* Left Side - Illustration */}
         <div className="hidden lg:flex lg:w-1/2 bg-blue-50 p-12 items-center justify-center">
-          <div className="relative w-full max-w-md">
-            <div className="absolute inset-0 bg-blue-100 rounded-full animate-pulse"></div>
+        <div className="absolute h-[28vw] w-[28vw] bg-blue-100 rounded-full"></div>
+          <div className="relative w-[60vw] max-w-md transform transition-transform duration-500 hover:scale-105">            
             <Image 
-              src="/img/login-illustration.svg" 
+              src="/img/assets/loginAssets.png" 
               alt="Login"
               width={500}
               height={500}
