@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import axios from 'axios';
-import { Button } from '@/components/ui/button';
-import SearchBar from '@/components/organisms/SearchBarTask';
-import ProfileHeader from '@/components/organisms/ProfileHeader';
-import Sidebar from '@/components/sidebar';
-import { DataTable } from '../data-table';
-import { NewTaskModal } from '@/components/organisms/NewTaskModal';
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import axios from "axios";
+import { Button } from "@/components/ui/button";
+import SearchBar from "@/components/organisms/SearchBarTask";
+import ProfileHeader from "@/components/organisms/ProfileHeader";
+import Sidebar from "@/components/sidebar";
+import { DataTable } from "../data-table";
+import { NewTaskModal } from "@/components/organisms/NewTaskModal";
 
 interface Employee {
   id: string;
@@ -69,7 +69,7 @@ export default function TaskPageId() {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const response = await axios.get<ApiResponse>(
           `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${id}`
         );
@@ -84,7 +84,7 @@ export default function TaskPageId() {
 
         if (result.data) {
           const user = result.data;
-          
+
           // Set employee data
           setSelectedEmployee({
             id: user.employee_Id,
@@ -96,14 +96,15 @@ export default function TaskPageId() {
             role: user.role,
             currentWorkload: user.current_Workload,
             startDate: user.start_Date,
-            avatar: user.image || '/placeholder-avatar.png'
+            avatar: user.image || "/placeholder-avatar.png",
           });
 
           // Set tasks data
           setTasks(user.tasks || []);
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+        const errorMessage =
+          error instanceof Error ? error.message : "An error occurred";
         setError(errorMessage);
         console.error("Failed to fetch employee data:", error);
       } finally {
@@ -114,35 +115,33 @@ export default function TaskPageId() {
     fetchEmployeeData();
   }, [id]);
 
-  const handleSubmit = async (taskData: {
-    name: string;
-    workload: string;
-    description: string;
-    startDate: string;
-    endDate: string;
-  }) => {
-    if (!selectedEmployee?.id) return;
+  const refreshTasks = async () => {
+    if (!id) return;
 
+    const response = await axios.get<ApiResponse>(
+      `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${id}`
+    );
+
+    const result = response.data;
+    if (result.data?.tasks) {
+      setTasks(result.data.tasks);
+    }
+  };
+
+  const handleSubmit = async () => {
     try {
-      // Here you would typically make an API call to create a new task
-      console.log('Submitted Task:', {
-        ...taskData,
-        employeeId: selectedEmployee.id
-      });
-
-      // After successful submission, refresh the task list
       const response = await axios.get<ApiResponse>(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${id}`
       );
-      
+
       if (response.data.data?.tasks) {
         setTasks(response.data.data.tasks);
       }
 
-      // Close the modal
+      refreshTasks();
       setIsModalOpen(false);
     } catch (error) {
-      console.error('Error submitting task:', error);
+      console.error("Error submitting task:", error);
     }
   };
 
@@ -163,15 +162,11 @@ export default function TaskPageId() {
       <div className="flex-grow overflow-auto flex items-start justify-center">
         <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] p-[1.667vw] space-y-[1.25vw]">
           <SearchBar />
-          
+
           {selectedEmployee && (
-            <ProfileHeader 
-              employee={selectedEmployee}
-              showEditButton={false}
-            />
+            <ProfileHeader employee={selectedEmployee} showEditButton={false} />
           )}
 
-          {/* Task Section */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-[1.25vw] py-[0.625vw]">
               <div className="flex justify-between items-center mb-[0.833vw]">
@@ -186,11 +181,11 @@ export default function TaskPageId() {
                 </Button>
               </div>
 
-              {/* Task Table */}
               <div className="rounded-lg p-[0.833vw]">
                 <DataTable 
-                  tasks={tasks}
-                  isLoading={isLoading}
+                  tasks={tasks} 
+                  isLoading={isLoading} 
+                  onTaskUpdate={refreshTasks} 
                 />
               </div>
             </div>
@@ -198,12 +193,10 @@ export default function TaskPageId() {
         </div>
       </div>
 
-      {/* New Task Modal */}
       <NewTaskModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleSubmit}
-        employeeId={selectedEmployee?.id}
+        onTaskSubmit={handleSubmit}
       />
     </div>
   );

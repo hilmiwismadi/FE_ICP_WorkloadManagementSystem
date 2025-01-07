@@ -1,4 +1,5 @@
 import * as React from "react"
+import axios from "axios"
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -10,7 +11,7 @@ import {
   getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ArrowUpDown } from "lucide-react"
+import { ArrowUpDown, CheckCircle } from "lucide-react"
 
 import {
   Table,
@@ -22,7 +23,18 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 
-// Interface for the task data
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
 interface Task {
   task_Id: string
   description: string
@@ -38,90 +50,175 @@ interface Task {
 interface DataTableProps {
   tasks?: Task[]
   isLoading?: boolean
+  onTaskUpdate?: () => void
 }
 
-const columns: ColumnDef<Task>[] = [
-  {
-    accessorKey: "description",
-    header: "Description",
-  },
-  {
-    accessorKey: "type",
-    header: "Type",
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as string
-      return (
-        <div className={`
-          px-2 py-1 rounded-full text-center text-[0.7vw] w-fit mx-auto
-          ${status.toLowerCase() === 'ongoing' ? 'bg-blue-100 text-blue-800' : 
-            status.toLowerCase() === 'complete' ? 'bg-green-100 text-green-800' : 
-            'bg-gray-100 text-gray-800'}
-        `}>
-          {status}
-        </div>
-      )
-    }
-  },
-  {
-    accessorKey: "workload",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-[0.8vw]"
-        >
-          Workload
-          <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
-        </Button>
-      )
-    },
-  },
-  {
-    accessorKey: "start_Date",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-[0.8vw]"
-        >
-          Start Date
-          <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const date = new Date(row.getValue("start_Date"))
-      return date.toLocaleDateString()
-    },
-  },
-  {
-    accessorKey: "end_Date",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-[0.8vw]"
-        >
-          End Date
-          <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const date = new Date(row.getValue("end_Date"))
-      return date.toLocaleDateString()
-    },
-  },
-]
+export function DataTable({ tasks = [], isLoading = false, onTaskUpdate }: DataTableProps) {
+  const [updating, setUpdating] = React.useState<string | null>(null)
+  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null)
 
-export function DataTable({ tasks = [], isLoading = false }: DataTableProps) {
+  const formatDateForDisplay = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString()
+  }
+
+  const formatDateForAPI = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toISOString().split('T')[0] // Returns YYYY-MM-DD format
+  }
+
+  const handleStatusChange = async (task: Task) => {
+    try {
+      setUpdating(task.task_Id)
+      
+      // Prepare the data with properly formatted dates
+      const updateData = {
+        status: "Complete",
+        start_Date: formatDateForAPI(task.start_Date),
+        end_Date: formatDateForAPI(task.end_Date),
+        description: task.description,
+        workload: task.workload,
+        type: task.type,
+        employee_Id: task.employee_Id,
+        user_Id: task.user_Id
+      }
+
+      await axios.put(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/edit/${task.task_Id}`,
+        updateData
+      )
+      onTaskUpdate?.()
+    } catch (error) {
+      console.error("Error updating task status:", error)
+    } finally {
+      setUpdating(null)
+      setSelectedTask(null)
+    }
+  }
+
+  const columns: ColumnDef<Task>[] = [
+    {
+      accessorKey: "description",
+      header: "Description",
+    },
+    {
+      accessorKey: "type",
+      header: "Type",
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string
+        return (
+          <div className={`
+            px-2 py-1 rounded-full text-center text-[0.7vw] w-fit mx-auto
+            ${status.toLowerCase() === 'ongoing' ? 'bg-blue-100 text-blue-800' : 
+              status.toLowerCase() === 'complete' ? 'bg-green-100 text-green-800' : 
+              'bg-gray-100 text-gray-800'}
+          `}>
+            {status}
+          </div>
+        )
+      }
+    },
+    {
+      accessorKey: "workload",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-[0.8vw]"
+          >
+            Workload
+            <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
+          </Button>
+        )
+      },
+    },
+    {
+      accessorKey: "start_Date",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-[0.8vw]"
+          >
+            Start Date
+            <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
+          </Button>
+        )
+      },
+      cell: ({ row }) => {
+        return formatDateForDisplay(row.getValue("start_Date"))
+      },
+    },
+    {
+      accessorKey: "end_Date",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-[0.8vw]"
+          >
+            End Date
+            <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
+          </Button>
+        )
+      },
+      cell: ({ row }) => {
+        return formatDateForDisplay(row.getValue("end_Date"))
+      },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const task = row.original
+        const isOngoing = task.status.toLowerCase() === "ongoing"
+        
+        return isOngoing ? (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-2 text-[0.8vw] text-green-600 hover:text-green-700 hover:bg-green-50"
+                disabled={updating === task.task_Id}
+              >
+                <CheckCircle className="h-4 w-4" />
+                {updating === task.task_Id ? "Updating..." : "Mark Complete"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="max-w-md">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirm Task Completion</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to mark this task as complete?
+                  <div className="mt-2 text-sm">
+                    <strong>Task:</strong> {task.description}
+                  </div>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="text-[0.8vw]">Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={() => handleStatusChange(task)}
+                  className="bg-green-600 hover:bg-green-700 text-[0.8vw]"
+                >
+                  Confirm
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        ) : null
+      },
+    },
+  ]
+
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
 
