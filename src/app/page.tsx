@@ -11,16 +11,31 @@ interface FormData {
 }
 
 interface UserData {
-  id: string;
+  user_Id: string;
   name: string;
   email: string;
   role: string;
+  image: string;
+  iat: number;
+  exp: number;
 }
 
-interface LoginResponse {
-  token: string;
-  user: UserData;
-}
+const decodeJWT = (token: string): UserData => {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("Error decoding JWT:", error);
+    throw new Error("Invalid token format");
+  }
+};
 
 const Login = () => {
   const router = useRouter();
@@ -76,34 +91,45 @@ const Login = () => {
       );
 
       const data = await response.json();
-      const { succes } = data; // Access the nested result
-      const token = succes.accesToken; // Get the token
-      const user = succes; // User details
-      console.log(token, user)
-
       if (!response.ok) {
         throw new Error(data.message || "Login failed");
       }
 
-      // Handle Remember Me
-      if (formData.rememberMe) {
-        localStorage.setItem(
-          "rememberedUser",
-          JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-          })
-        );
-      } else {
-        localStorage.removeItem("rememberedUser");
+      // Fix: Access the correct token path from the response
+      const token = data.succes.accesToken;
+
+      try {
+        // Decode the token and get user data
+        const userData = decodeJWT(token);
+        console.log("Decoded user data:", userData);
+
+        // Store token and user data
+        localStorage.setItem("token", token);
+        localStorage.setItem("userData", JSON.stringify(userData));
+
+        // Handle Remember Me
+        if (formData.rememberMe) {
+          localStorage.setItem(
+            "rememberedUser",
+            JSON.stringify({
+              email: formData.email,
+              password: formData.password,
+            })
+          );
+        } else {
+          localStorage.removeItem("rememberedUser");
+        }
+
+        // Redirect based on user role
+        if (userData.role) {
+          router.push("/dashboard");
+        } else {
+          throw new Error("User role not found");
+        }
+      } catch (decodeError) {
+        console.error("Token decode error:", decodeError);
+        throw new Error("Invalid token format");
       }
-
-      // Store user session data
-      localStorage.setItem("token", token);
-      localStorage.setItem("userData", JSON.stringify(user));
-
-      // Redirect to home page
-      router.push("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
       setError(
@@ -112,6 +138,13 @@ const Login = () => {
     } finally {
       setIsLoading(false);
     }
+
+    // Anywhere in your app where you need user data:
+    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    const userId = userData.user_Id;
+    const userRole = userData.role;
+    console.log("user id:", userId);
+    console.log("user role:", userRole);
   };
 
   return (
