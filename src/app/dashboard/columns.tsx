@@ -17,16 +17,16 @@ const WorkloadStatusBar = ({ value }: { value: number }) => {
 
   if (value === 0) {
     return (
-      <div className="flex items-center space-x-2 justify-center">
-        <div className="w-28 h-2 bg-gray-200 rounded-full" />
+      <div className="flex items-center space-x-2 justify-start">
+        <div className="w-full h-2 bg-gray-200 rounded-full" />
         <span className="text-gray-500 text-sm">Idle</span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center space-x-2 justify-center">
-      <div className="w-28 h-2 bg-gray-200 rounded-full">
+    <div className="flex items-center space-x-2 justify-start">
+      <div className="w-full h-2 bg-gray-200 rounded-full">
         <div
           className={`h-full rounded-full ${getColor()}`}
           style={{ width: `${percentage}%` }}
@@ -79,10 +79,10 @@ export const columns: ColumnDef<EmployeeData>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting()}
-          className="text-[0.8vw]"
+          className="text-[1vw] px-0"
         >
           Workload
-          <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
+          <ArrowUpDown className="text-[1vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
         </Button>
       )
     },

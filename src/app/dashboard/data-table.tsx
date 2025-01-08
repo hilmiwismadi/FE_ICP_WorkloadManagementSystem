@@ -119,11 +119,11 @@ const ColumnFilterDropdown = ({
           variant="ghost"
           size="sm"
           className={cn(
-            "h-[2.083vw] border-none hover:bg-gray-100 transition-all duration-200",
+            "px-0 flex flex-row justify-start items-center h-[2.083vw] border-none hover:bg-gray-100 transition-all duration-200",
             selectedValues.length > 0 && "text-blue-600 font-medium"
           )}
         >
-          <span className="mr-[0.521vw]">Divisi</span>
+          <span className="mr-[0.521vw] text-[1vw]">Divisi</span>
           {selectedValues.length > 0 && (
             <Badge 
               variant="secondary" 
@@ -133,7 +133,7 @@ const ColumnFilterDropdown = ({
             </Badge>
           )}
           <ChevronDown className={cn(
-            "h-[1.042vw] w-[1.042vw] ml-[0.521vw] transition-transform duration-200",
+            "h-[1.042vw] w-[1.042vw] ml-[0.521vw] text-[1vw] transition-transform duration-200",
             popoverOpen && "transform rotate-180"
           )} />
         </Button>
