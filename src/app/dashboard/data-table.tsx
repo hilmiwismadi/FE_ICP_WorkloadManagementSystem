@@ -56,7 +56,6 @@ type FilterOption = {
 
 const filterOptions: FilterOption[] = [
   { value: "name", label: "Nama", type: "string" },
-  { value: "team", label: "Divisi", type: "string" },
   { value: "skill", label: "Skill", type: "string" },
 ];
 
