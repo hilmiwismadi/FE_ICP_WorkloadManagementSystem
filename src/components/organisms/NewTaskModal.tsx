@@ -126,6 +126,15 @@ export const NewTaskModal = ({
     setFormData({ ...formData, workload: value[0] });
   };
 
+  const handleWorkloadInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const parsedValue = parseFloat(value.replace(",", "."));
+    
+    if (!isNaN(parsedValue) && parsedValue >= 0 && parsedValue <= 10) {
+      setFormData({ ...formData, workload: parsedValue });
+    }
+  };
+
   const handleTypeChange = (value: string) => {
     setIsCustomType(value === "Other task...");
     setFormData({
@@ -200,12 +209,7 @@ export const NewTaskModal = ({
                     <Input
                       type="number"
                       value={formData.workload}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (value >= 0 && value <= 10) {
-                          setFormData({ ...formData, workload: value });
-                        }
-                      }}
+                      onChange={handleWorkloadInputChange}
                       className="w-[4.1vw] h-[2.5vw] px-[0.625vw]"
                       step="0.1"
                       min="0"
