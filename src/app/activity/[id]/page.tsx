@@ -78,10 +78,8 @@ export default function Activity() {
   }, [id]);
 
   // Filter tasks based on active tab
-  const filteredTasks = tasks.filter((task) =>
-    activeTab === "ongoing"
-      ? task.status === "ongoing"
-      : task.status === "complete"
+  const filteredTasks = tasks.filter(
+    (task) => (activeTab === "ongoing" ? task.status === "Ongoing" : true) // Show all tasks in history tab
   );
 
   if (loading) {
@@ -125,12 +123,11 @@ export default function Activity() {
             <DataTableHalf
               columns={columns}
               data={filteredTasks.map((task) => ({
-                task_id: task.task_Id, 
-                name: task.type,        
+                task_id: task.task_Id,
                 description: task.description,
                 workload: task.workload,
                 start_date: task.start_Date,
-                end_date: task.end_Date,       
+                end_date: task.end_Date,
                 status: task.status,
                 type: task.type,
               }))}
