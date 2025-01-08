@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import Link from 'next/link';
-import { Eye, EyeOff, Lock, User, ArrowRight  } from "lucide-react";
+import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
+import LoadingScreen from "@/components/organisms/LoadingScreen";  // Added import for LoadingScreen
 
 interface FormData {
   email: string;
@@ -97,19 +98,15 @@ const Login = () => {
         throw new Error(data.message || "Login failed");
       }
 
-      // Fix: Access the correct token path from the response
       const token = data.succes.accesToken;
 
       try {
-        // Decode the token and get user data
         const userData = decodeJWT(token);
         console.log("Decoded user data:", userData);
 
-        // Store token and user data
         localStorage.setItem("token", token);
         localStorage.setItem("userData", JSON.stringify(userData));
 
-        // Handle Remember Me
         if (formData.rememberMe) {
           localStorage.setItem(
             "rememberedUser",
@@ -122,7 +119,6 @@ const Login = () => {
           localStorage.removeItem("rememberedUser");
         }
 
-        // Redirect based on user role
         if (userData.role) {
           router.push("/dashboard");
         } else {
@@ -141,13 +137,17 @@ const Login = () => {
       setIsLoading(false);
     }
 
-    // Anywhere in your app where you need user data:
     const userData = JSON.parse(localStorage.getItem("userData") || "{}");
     const userId = userData.user_Id;
     const userRole = userData.role;
     console.log("user id:", userId);
     console.log("user role:", userRole);
   };
+
+  if (isLoading) {
+    return <LoadingScreen />;  // Added LoadingScreen component
+  }
+
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-navy to-blue-900 flex items-center justify-center p-6">
