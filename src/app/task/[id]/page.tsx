@@ -9,6 +9,7 @@ import ProfileHeader from "@/components/organisms/ProfileHeader";
 import Sidebar from "@/components/sidebar";
 import { DataTable } from "../data-table";
 import { NewTaskModal } from "@/components/organisms/NewTaskModal";
+import LoadingScreen from "@/components/organisms/LoadingScreen";
 
 interface Employee {
   id: string;
@@ -144,6 +145,10 @@ export default function TaskPageId() {
       console.error("Error submitting task:", error);
     }
   };
+
+  if (isLoading) {
+    return <LoadingScreen />; // Show loading screen while data is being fetched
+  }
 
   if (error) {
     return (
