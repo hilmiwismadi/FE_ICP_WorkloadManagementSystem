@@ -1,10 +1,12 @@
-"use client";
+"use client"
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import Link from 'next/link';
-import { Eye, EyeOff, Lock, User, ArrowRight  } from "lucide-react";
+import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
+import LoadingScreen from "@/components/organisms/LoadingScreen";
+import toast from 'react-hot-toast'; // Make sure this import is correct
 
 interface FormData {
   email: string;
@@ -34,14 +36,12 @@ const decodeJWT = (token: string): UserData => {
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
-    console.error("Error decoding JWT:", error);
     throw new Error("Invalid token format");
   }
 };
 
 const Login = () => {
   const router = useRouter();
-
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -49,7 +49,7 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   useEffect(() => {
     const rememberedUser = localStorage.getItem("rememberedUser");
@@ -75,7 +75,9 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+
+    // Create a loading toast that we can dismiss later
+    const loadingToastId = toast.loading('Signing in...');
 
     try {
       const response = await fetch(
@@ -93,23 +95,25 @@ const Login = () => {
       );
 
       const data = await response.json();
+      
+      // Dismiss the loading toast
+      toast.dismiss(loadingToastId);
+
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        // Show error toast and return early
+        toast.error(data.message || 'Invalid username or password');
+        setIsLoading(false);
+        return;
       }
 
-      // Fix: Access the correct token path from the response
       const token = data.succes.accesToken;
-
+    
       try {
-        // Decode the token and get user data
         const userData = decodeJWT(token);
-        console.log("Decoded user data:", userData);
 
-        // Store token and user data
         localStorage.setItem("token", token);
         localStorage.setItem("userData", JSON.stringify(userData));
 
-        // Handle Remember Me
         if (formData.rememberMe) {
           localStorage.setItem(
             "rememberedUser",
@@ -122,46 +126,45 @@ const Login = () => {
           localStorage.removeItem("rememberedUser");
         }
 
-        // Redirect based on user role
         if (userData.role) {
+          setIsAuthenticating(true);
+          toast.success('Successfully signed in!');
           router.push("/dashboard");
         } else {
-          throw new Error("User role not found");
+          toast.error('User role not found');
+          setIsLoading(false);
         }
       } catch (decodeError) {
-        console.error("Token decode error:", decodeError);
-        throw new Error("Invalid token format");
+        toast.error('Authentication failed');
+        setIsLoading(false);
       }
     } catch (error) {
-      console.error("Login error:", error);
-      setError(
-        error instanceof Error ? error.message : "An unexpected error occurred"
-      );
-    } finally {
+      // Dismiss the loading toast and show error
+      toast.dismiss(loadingToastId);
+      toast.error('Network error. Please try again.');
       setIsLoading(false);
     }
-
-    // Anywhere in your app where you need user data:
-    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-    const userId = userData.user_Id;
-    const userRole = userData.role;
-    console.log("user id:", userId);
-    console.log("user role:", userRole);
   };
+
+  // Show loading screen only during authentication and redirect
+  if (isAuthenticating) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-navy to-blue-900 flex items-center justify-center p-6">
+      {/* Rest of your JSX remains exactly the same */}
       <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl flex overflow-hidden">
         {/* Left Side - Illustration */}
         <div className="hidden lg:flex lg:w-1/2 bg-blue-50 p-12 items-center justify-center">
-        <div className="absolute h-[28vw] w-[28vw] bg-blue-100 rounded-full"></div>
+          <div className="absolute h-[28vw] w-[28vw] bg-blue-100 rounded-full"></div>
           <div className="relative w-[60vw] max-w-md transform transition-transform duration-500 hover:scale-105">            
             <Image 
               src="/img/assets/loginAssets.png" 
               alt="Login"
               width={500}
               height={500}
-              className="relative z-10 w-full h-auto "
+              className="relative z-10 w-full h-auto"
               priority
             />
           </div>
@@ -243,7 +246,7 @@ const Login = () => {
                 </Link>
               </div>
 
-              {/* Submit Button - Added more spacing and improved styling */}
+              {/* Submit Button */}
               <div className="pt-6 pb-2">
                 <button
                   type="submit"
@@ -261,7 +264,6 @@ const Login = () => {
                 </button>
               </div>
 
-              {/* Optional: Add a subtle separator */}
               <div className="relative py-4">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-200"></div>
