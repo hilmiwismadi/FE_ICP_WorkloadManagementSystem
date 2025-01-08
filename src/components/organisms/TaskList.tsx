@@ -12,7 +12,7 @@ export default function TaskList({ tasks }: any) {
   return (
     <Card className="bg-[#0A1D56]">
       <CardHeader>
-        <CardTitle className="text-white">Ongoing Task Summary</CardTitle>
+        <CardTitle className="text-white text-[1.25vw]">Ongoing Task Summary</CardTitle>
       </CardHeader>
       <CardContent className="h-[35.5vw] mr-[0.5vw] overflow-y-scroll scrollbar-thin scrollbar-thumb-white scrollbar-track-[#0A1D56]">
         {/* Scrollable content */}

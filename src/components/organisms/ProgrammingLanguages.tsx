@@ -8,7 +8,7 @@ export default function ProgrammingLanguages({ languages }: any) {
   return (
     <Card className="bg-[#0A1D56] min-h-[19vw]">
       <CardHeader>
-        <CardTitle className="text-white text-xl font-semibold">
+        <CardTitle className="text-white text-[1.25vw] font-semibold">
           Programming Language
         </CardTitle>
       </CardHeader>

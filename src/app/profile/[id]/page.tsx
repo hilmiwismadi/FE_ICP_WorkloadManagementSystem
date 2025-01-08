@@ -35,8 +35,8 @@ interface Employee {
     description: string;
     status: string;
     workload: number;
-    start_Date: string;
-    end_Date: string;
+    start_Date: string; 
+    end_Date: string;    
     employee_Id: string;
     user_Id: string;
   }>;
@@ -53,16 +53,19 @@ export default function ProfilePage() {
     const fetchAllEmployees = async () => {
       try {
         const response = await axios.get(
-          'https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read'
+          "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
         );
 
         if (response.data && response.data.data) {
           // Calculate average workload
           const employees = response.data.data;
-          const totalWorkload = employees.reduce((sum: number, emp: Employee) => {
-            const workloadPercentage = (emp.current_Workload / 15) * 100;
-            return sum + workloadPercentage;
-          }, 0);
+          const totalWorkload = employees.reduce(
+            (sum: number, emp: Employee) => {
+              const workloadPercentage = (emp.current_Workload / 15) * 100;
+              return sum + workloadPercentage;
+            },
+            0
+          );
 
           const calculatedAverage = totalWorkload / employees.length;
           setAverageWorkload(Math.round(calculatedAverage));
@@ -110,15 +113,6 @@ export default function ProfilePage() {
       icon: stack.image,
     })) || [];
 
-  const workloadTrend = [
-    { month: "Jan", value: 65 },
-    { month: "Feb", value: 85 },
-    { month: "Mar", value: 75 },
-    { month: "Apr", value: 45 },
-    { month: "May", value: 65 },
-    { month: "Jun", value: 70 },
-  ];
-
   const tasks =
     employee?.tasks
       .filter((task) => task.status === "Ongoing")
@@ -128,7 +122,11 @@ export default function ProfilePage() {
         title: task.description,
         priority: task.workload.toString(),
         dueDate: new Date(task.end_Date).toLocaleDateString(),
+        startDate: new Date(task.start_Date).toISOString(), 
+        endDate: new Date(task.end_Date).toISOString(),
       })) || [];
+      
+      console.log(tasks);
 
   const employeeData = employee
     ? {
@@ -152,7 +150,9 @@ export default function ProfilePage() {
     <div className="flex h-screen bg-stale-50">
       <Sidebar />
       <div className="flex-grow overflow-auto flex items-start justify-center">
-        <div className={`flex-1 max-h-screen p-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out`}>
+        <div
+          className={`flex-1 max-h-screen p-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out`}
+        >
           <div className="py-[0.625vw]">
             <div className="grid grid-cols-12 gap-[1.25vw]">
               <div className="col-span-12 xl:col-span-9 space-y-[1.25vw]">
@@ -167,12 +167,12 @@ export default function ProfilePage() {
                   </div>
                   <div className="col-span-12 md:col-span-7">
                     <WorkloadOverview
-                      workloadTrend={workloadTrend}
+                      tasks={employee.tasks}
                       currentWorkload={Math.round(
                         (employee.current_Workload / 15) * 100
                       )}
                       averageWorkload={averageWorkload}
-                      className="bg-white rounded-[1vw] shadow-sm p-[1.25vw] h-full"
+                      className="rounded-[1vw] shadow-sm p-[1.25vw] h-full"
                     />
                   </div>
                 </div>
