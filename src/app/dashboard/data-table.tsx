@@ -10,6 +10,7 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
   getFilteredRowModel,
+  getSortedRowModel,
   FilterFn,
   useReactTable,
 } from "@tanstack/react-table";
@@ -79,17 +80,12 @@ export function DataTable<TData, TValue>({
     operator: ">",
   });
 
-  const handleRowClick = (row: any) => {
-    const employeeId = row.original.employee_id;
-    router.push(`/profile/${employeeId}`);
-  };
-
-
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     state: {
@@ -111,6 +107,11 @@ export function DataTable<TData, TValue>({
       },
     },
   });
+
+  const handleRowClick = (row: any) => {
+    const employeeId = row.original.employee_id;
+    router.push(`/profile/${employeeId}`);
+  };
 
   const handleFilterChange = (value: string) => {
     setSelectedFilter(value);

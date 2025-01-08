@@ -35,6 +35,39 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+// WorkloadStatusBar Component
+const WorkloadStatusBar = ({ value }: { value: number }) => {
+  const normalize = value / 15;
+  const percentage = normalize * 100;
+  
+  const getColor = () => {
+    if (percentage >= 80) return 'bg-red-500';
+    if (percentage >= 40) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  if (value === 0) {
+    return (
+      <div className="flex items-center space-x-2 justify-center">
+        <div className="w-28 h-2 bg-gray-200 rounded-full" />
+        <span className="text-gray-500 text-sm">Idle</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center space-x-2 justify-center">
+      <div className="w-28 h-2 bg-gray-200 rounded-full">
+        <div
+          className={`h-full rounded-full ${getColor()}`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+      <span className="text-sm text-gray-600">{Number(percentage.toFixed(1))}%</span>
+    </div>
+  );
+};
+
 interface Task {
   task_Id: string
   description: string
@@ -64,14 +97,13 @@ export function DataTable({ tasks = [], isLoading = false, onTaskUpdate }: DataT
 
   const formatDateForAPI = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toISOString().split('T')[0] // Returns YYYY-MM-DD format
+    return date.toISOString().split('T')[0]
   }
 
   const handleStatusChange = async (task: Task) => {
     try {
       setUpdating(task.task_Id)
       
-      // Prepare the data with properly formatted dates
       const updateData = {
         status: "Complete",
         start_Date: formatDateForAPI(task.start_Date),
@@ -136,6 +168,10 @@ export function DataTable({ tasks = [], isLoading = false, onTaskUpdate }: DataT
           </Button>
         )
       },
+      cell: ({ row }) => {
+        const workload = row.getValue("workload") as number
+        return <WorkloadStatusBar value={workload} />;
+      }
     },
     {
       accessorKey: "start_Date",
