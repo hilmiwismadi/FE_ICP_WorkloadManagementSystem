@@ -45,9 +45,37 @@ interface Employee {
 export default function ProfilePage() {
   const { id } = useParams();
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [averageWorkload, setAverageWorkload] = useState<number>(0);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
 
-  // Fetch employee data
+  // Fetch all employees data to calculate average workload
+  useEffect(() => {
+    const fetchAllEmployees = async () => {
+      try {
+        const response = await axios.get(
+          'https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read'
+        );
+
+        if (response.data && response.data.data) {
+          // Calculate average workload
+          const employees = response.data.data;
+          const totalWorkload = employees.reduce((sum: number, emp: Employee) => {
+            const workloadPercentage = (emp.current_Workload / 15) * 100;
+            return sum + workloadPercentage;
+          }, 0);
+
+          const calculatedAverage = totalWorkload / employees.length;
+          setAverageWorkload(Math.round(calculatedAverage));
+        }
+      } catch (error) {
+        console.error("Failed to fetch employees data:", error);
+      }
+    };
+
+    fetchAllEmployees();
+  }, []);
+
+  // Fetch individual employee data
   useEffect(() => {
     const fetchEmployeeData = async () => {
       try {
@@ -68,14 +96,14 @@ export default function ProfilePage() {
     }
   }, [id]);
 
-  // Mock data that will be integrated later
   const workExperience = {
     role: employee?.role || "",
     joinDate: employee?.start_Date || "",
-    batch: "Batch 86", // Mock data
+    batch: employee?.start_Date
+      ? `Batch ${new Date(employee.start_Date).getFullYear() - 1938}`
+      : "Unknown Batch",
   };
 
-  // Dynamically map techStacks to programmingLanguages format
   const programmingLanguages =
     employee?.techStacks.map((stack) => ({
       name: stack.name,
@@ -91,20 +119,17 @@ export default function ProfilePage() {
     { month: "Jun", value: 70 },
   ];
 
-  // Map tasks from API to match TaskList props
-  // Map tasks from API to match TaskList props - with status filter
   const tasks =
     employee?.tasks
-      .filter((task) => task.status === "Ongoing") // Add this filter
+      .filter((task) => task.status === "Ongoing")
       .map((task) => ({
         id: task.task_Id,
         type: task.type,
         title: task.description,
-        priority: task.workload.toString(), // Convert workload to string
-        dueDate: new Date(task.end_Date).toLocaleDateString(), // Format date
+        priority: task.workload.toString(),
+        dueDate: new Date(task.end_Date).toLocaleDateString(),
       })) || [];
 
-  // Transform employee data for ProfileHeader component
   const employeeData = employee
     ? {
         id: employee.employee_Id,
@@ -114,7 +139,7 @@ export default function ProfilePage() {
         team: employee.team,
         role: employee.role,
         currentWorkload: employee.current_Workload,
-        averageWorkload: 42, // Mock data
+        averageWorkload: averageWorkload,
         avatar: employee.image,
       }
     : null;
@@ -127,12 +152,9 @@ export default function ProfilePage() {
     <div className="flex h-screen bg-stale-50">
       <Sidebar />
       <div className="flex-grow overflow-auto flex items-start justify-center">
-        <div
-          className={`flex-1 max-h-screen p-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out`}
-        >
+        <div className={`flex-1 max-h-screen p-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out`}>
           <div className="py-[0.625vw]">
             <div className="grid grid-cols-12 gap-[1.25vw]">
-              {/* Main Content Area */}
               <div className="col-span-12 xl:col-span-9 space-y-[1.25vw]">
                 <ProfileHeader employee={employeeData} showEditButton={true} />
                 <div className="grid grid-cols-12 gap-[1.25vw]">
@@ -149,14 +171,13 @@ export default function ProfilePage() {
                       currentWorkload={Math.round(
                         (employee.current_Workload / 15) * 100
                       )}
-                      averageWorkload={42} // Mock data
+                      averageWorkload={averageWorkload}
                       className="bg-white rounded-[1vw] shadow-sm p-[1.25vw] h-full"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Sidebar Content */}
               <div className="col-span-12 xl:col-span-3 space-y-[1.5vw]">
                 <TaskList
                   tasks={tasks}

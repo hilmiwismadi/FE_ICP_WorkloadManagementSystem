@@ -17,7 +17,7 @@ export default function ProgrammingLanguages({ languages }: any) {
           {displayLanguages.map((lang: any) => (
             <div
               key={lang.name}
-              className="flex items-center justify-center bg-white rounded-[0.5vw] w-[10vw] h-[3vw]"
+              className="flex items-center justify-center bg-white rounded-[0.5vw] w-full h-[3vw]"
             >
               <div className="relative flex justify-center items-center gap-[0.4vw]">
                 <Image
