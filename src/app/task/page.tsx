@@ -9,6 +9,7 @@ import ProfileHeader from "@/components/organisms/ProfileHeader";
 import Sidebar from "@/components/sidebar";
 import { DataTable } from "./data-table";
 import { NewTaskModal } from "@/components/organisms/NewTaskModal";
+import ProtectedRoute from "@/components/protected-route";
 
 interface Employee {
   id: string;
@@ -157,6 +158,7 @@ export default function TaskPageId() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="flex h-screen bg-stale-50">
       <Sidebar />
       <div className="flex-grow overflow-auto flex items-start justify-center">
@@ -199,5 +201,7 @@ export default function TaskPageId() {
         onTaskSubmit={handleSubmit}
       />
     </div>
+    </ProtectedRoute>
+
   );
 }

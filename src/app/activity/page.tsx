@@ -16,6 +16,7 @@ import {
   Cell,
 } from "recharts";
 import Sidebar from "@/components/sidebar";
+import ProtectedRoute from "@/components/protected-route";
 
 interface Employee {
   employee_Id: string;
@@ -217,61 +218,63 @@ export default function ActivityPage() {
   }
 
   return (
-    <div className="flex h-screen bg-stale-50">
-      <Sidebar />
-      <div className="flex-grow overflow-auto flex items-start justify-center">
-        <div className="flex-1 max-h-screen py-[1vw] px-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[0.5vw] transition-all duration-300 ease-in-out">
-          <SearchBar />
-          <div className="grid grid-cols-12 gap-[2vw]">
-            <div className="col-span-12 md:col-span-4 space-y-[1vw]">
-              <EmployeeMetricsCard
-                title="Employee with Highest Workload"
-                employees={topEmployees}
-                type="top"
-                onEmployeeClick={handleEmployeeClick}
-              />
-              <EmployeeMetricsCard
-                title="Employee with Lowest Workload"
-                employees={bottomEmployees}
-                type="bottom"
-                onEmployeeClick={handleEmployeeClick}
-              />
-            </div>
+    <ProtectedRoute>
+      <div className="flex h-screen bg-stale-50">
+        <Sidebar />
+        <div className="flex-grow overflow-auto flex items-start justify-center">
+          <div className="flex-1 max-h-screen py-[1vw] px-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[0.5vw] transition-all duration-300 ease-in-out">
+            <SearchBar />
+            <div className="grid grid-cols-12 gap-[2vw]">
+              <div className="col-span-12 md:col-span-4 space-y-[1vw]">
+                <EmployeeMetricsCard
+                  title="Employee with Highest Workload"
+                  employees={topEmployees}
+                  type="top"
+                  onEmployeeClick={handleEmployeeClick}
+                />
+                <EmployeeMetricsCard
+                  title="Employee with Lowest Workload"
+                  employees={bottomEmployees}
+                  type="bottom"
+                  onEmployeeClick={handleEmployeeClick}
+                />
+              </div>
 
-            <div className="col-span-12 md:col-span-8">
-              <Card className="w-full h-full">
-                <CardHeader>
-                  <CardTitle className="text-[1.25vw] font-semibold">
-                    Division Performance Rankings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="h-[30vw]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={divisionMetrics}
-                      layout="vertical"
-                      margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" domain={[0, 100]} />
-                      <YAxis dataKey="name" type="category" />
-                      <Tooltip />
-                      <Bar dataKey="averageWorkload" radius={[0, 4, 4, 0]}>
-                        {divisionMetrics.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={getBarColor(index)}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              <div className="col-span-12 md:col-span-8">
+                <Card className="w-full h-full">
+                  <CardHeader>
+                    <CardTitle className="text-[1.25vw] font-semibold">
+                      Division Performance Rankings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="h-[30vw]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={divisionMetrics}
+                        layout="vertical"
+                        margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" domain={[0, 100]} />
+                        <YAxis dataKey="name" type="category" />
+                        <Tooltip />
+                        <Bar dataKey="averageWorkload" radius={[0, 4, 4, 0]}>
+                          {divisionMetrics.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={getBarColor(index)}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

@@ -11,6 +11,7 @@ import TaskList from "@/components/organisms/TaskList";
 import Sidebar from "@/components/sidebar";
 import ActivityDetailsButton from "@/components/ui/ActivityDetailsButton";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
+import ProtectedRoute from "@/components/protected-route";
 
 interface Employee {
   employee_Id: string;
@@ -35,8 +36,8 @@ interface Employee {
     description: string;
     status: string;
     workload: number;
-    start_Date: string; 
-    end_Date: string;    
+    start_Date: string;
+    end_Date: string;
     employee_Id: string;
     user_Id: string;
   }>;
@@ -122,11 +123,11 @@ export default function ProfilePage() {
         title: task.description,
         priority: task.workload.toString(),
         dueDate: new Date(task.end_Date).toLocaleDateString(),
-        startDate: new Date(task.start_Date).toISOString(), 
+        startDate: new Date(task.start_Date).toISOString(),
         endDate: new Date(task.end_Date).toISOString(),
       })) || [];
-      
-      console.log(tasks);
+
+  console.log(tasks);
 
   const employeeData = employee
     ? {
@@ -147,48 +148,53 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex h-screen bg-stale-50">
-      <Sidebar />
-      <div className="flex-grow overflow-auto flex items-start justify-center">
-        <div
-          className={`flex-1 max-h-screen py-[1vw] px-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out`}
-        >
-          <div className="">
-            <div className="grid grid-cols-12 gap-[1.25vw]">
-              <div className="col-span-12 xl:col-span-9 space-y-[1.25vw]">
-                <ProfileHeader employee={employeeData} showEditButton={true} />
-                <div className="grid grid-cols-12 gap-[1.25vw]">
-                  <div className="col-span-12 md:col-span-5 space-y-[1.25vw]">
-                    <ProgrammingLanguages
-                      languages={programmingLanguages}
-                      className="bg-white rounded-full shadow-sm p-[1.25vw] min-h-[24vw]"
-                    />
-                    <WorkExperience experience={workExperience} />
-                  </div>
-                  <div className="col-span-12 md:col-span-7">
-                    <WorkloadOverview
-                      tasks={employee.tasks}
-                      currentWorkload={Math.round(
-                        (employee.current_Workload / 15) * 100
-                      )}
-                      averageWorkload={averageWorkload}
-                      className="rounded-[1vw] shadow-sm p-[1.25vw] h-full"
-                    />
+    <ProtectedRoute>
+      <div className="flex h-screen bg-stale-50">
+        <Sidebar />
+        <div className="flex-grow overflow-auto flex items-start justify-center">
+          <div
+            className={`flex-1 max-h-screen py-[1vw] px-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out`}
+          >
+            <div className="">
+              <div className="grid grid-cols-12 gap-[1.25vw]">
+                <div className="col-span-12 xl:col-span-9 space-y-[1.25vw]">
+                  <ProfileHeader
+                    employee={employeeData}
+                    showEditButton={true}
+                  />
+                  <div className="grid grid-cols-12 gap-[1.25vw]">
+                    <div className="col-span-12 md:col-span-5 space-y-[1.25vw]">
+                      <ProgrammingLanguages
+                        languages={programmingLanguages}
+                        className="bg-white rounded-full shadow-sm p-[1.25vw] min-h-[24vw]"
+                      />
+                      <WorkExperience experience={workExperience} />
+                    </div>
+                    <div className="col-span-12 md:col-span-7">
+                      <WorkloadOverview
+                        tasks={employee.tasks}
+                        currentWorkload={Math.round(
+                          (employee.current_Workload / 15) * 100
+                        )}
+                        averageWorkload={averageWorkload}
+                        className="rounded-[1vw] shadow-sm p-[1.25vw] h-full"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="col-span-12 xl:col-span-3 space-y-[1vw]">
-                <TaskList
-                  tasks={tasks}
-                  className="bg-white rounded-[0.625vw] shadow-sm p-[1.25vw] sticky top-[1.25vw]"
-                />
-                <ActivityDetailsButton employeeId={employee.employee_Id} />
+                <div className="col-span-12 xl:col-span-3 space-y-[1vw]">
+                  <TaskList
+                    tasks={tasks}
+                    className="bg-white rounded-[0.625vw] shadow-sm p-[1.25vw] sticky top-[1.25vw]"
+                  />
+                  <ActivityDetailsButton employeeId={employee.employee_Id} />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

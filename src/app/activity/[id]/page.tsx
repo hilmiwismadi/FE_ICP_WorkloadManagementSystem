@@ -9,6 +9,7 @@ import { DataTableHalf } from "@/app/activity/data-table-half";
 import UserProfile from "../user-profile";
 import SearchBar from "@/components/organisms/SearchBarActivity";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
+import ProtectedRoute from "@/components/protected-route";
 
 interface Task {
   task_Id: string;
@@ -87,54 +88,56 @@ export default function Activity() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-grow overflow-auto flex items-start justify-center">
-        <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] py-[1vw] px-[1.667vw] space-y-[1.25vw]">
-          <SearchBar />
+    <ProtectedRoute>
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex-grow overflow-auto flex items-start justify-center">
+          <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] py-[1vw] px-[1.667vw] space-y-[1.25vw]">
+            <SearchBar />
 
-          {employee && <UserProfile employee={employee} />}
+            {employee && <UserProfile employee={employee} />}
 
-          {/* Tabs */}
-          <div className="flex border-b mb-[1vw] w-full mx-auto">
-            <button
-              className={`px-[3vw] py-[0.3vw] text-[1vw] font-medium w-6/12 ${
-                activeTab === "ongoing"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500"
-              }`}
-              onClick={() => setActiveTab("ongoing")}
-            >
-              On Going
-            </button>
-            <button
-              className={`px-[3vw] py-[0.3vw] text-[1vw] font-medium w-6/12 ${
-                activeTab === "history"
-                  ? "border-b-2 border-blue-500 text-blue-500"
-                  : "text-gray-500"
-              }`}
-              onClick={() => setActiveTab("history")}
-            >
-              History
-            </button>
-          </div>
+            {/* Tabs */}
+            <div className="flex border-b mb-[1vw] w-full mx-auto">
+              <button
+                className={`px-[3vw] py-[0.3vw] text-[1vw] font-medium w-6/12 ${
+                  activeTab === "ongoing"
+                    ? "border-b-2 border-blue-500 text-blue-500"
+                    : "text-gray-500"
+                }`}
+                onClick={() => setActiveTab("ongoing")}
+              >
+                On Going
+              </button>
+              <button
+                className={`px-[3vw] py-[0.3vw] text-[1vw] font-medium w-6/12 ${
+                  activeTab === "history"
+                    ? "border-b-2 border-blue-500 text-blue-500"
+                    : "text-gray-500"
+                }`}
+                onClick={() => setActiveTab("history")}
+              >
+                History
+              </button>
+            </div>
 
-          <div className="flex-grow">
-            <DataTableHalf
-              columns={columns}
-              data={filteredTasks.map((task) => ({
-                task_id: task.task_Id,
-                description: task.description,
-                workload: task.workload,
-                start_date: task.start_Date,
-                end_date: task.end_Date,
-                status: task.status,
-                type: task.type,
-              }))}
-            />
+            <div className="flex-grow">
+              <DataTableHalf
+                columns={columns}
+                data={filteredTasks.map((task) => ({
+                  task_id: task.task_Id,
+                  description: task.description,
+                  workload: task.workload,
+                  start_date: task.start_Date,
+                  end_date: task.end_Date,
+                  status: task.status,
+                  type: task.type,
+                }))}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }
