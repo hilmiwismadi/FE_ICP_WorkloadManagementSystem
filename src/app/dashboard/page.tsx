@@ -1,45 +1,59 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import axios from "axios";
-import Image from "next/image";
-import { Icon } from "@iconify/react";
 import Sidebar from "../../components/sidebar";
 import { EmployeeData, columns } from "./columns";
 import { DataTable } from "./data-table";
 import ProtectedRoute from "@/components/protected-route";
+import LoadingScreen from "@/components/organisms/LoadingScreen";
 
-async function getData(): Promise<EmployeeData[]> {
-  try {
-    const response = await axios.get(
-      "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
-    );
+export default function Dashboard() {
+  const [data, setData] = useState<EmployeeData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-    const result = response.data;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
+        );
 
-    if (result.error) {
-      console.error("API Error:", result.error);
-      return [];
-    }
+        const result = response.data;
 
-    return result.data.map((emp: any) => ({
-      employee_id: emp.employee_Id,
-      name: emp.name,
-      team: emp.team,
-      skill: emp.skill,
-      current_workload: emp.current_Workload,
-      email: emp.email,
-      phone: emp.phone,
-    }));
-  } catch (error) {
-    console.error("Failed to fetch data:", error);
-    return [];
+        if (result.error) {
+          console.error("API Error:", result.error);
+          setData([]);
+        } else {
+          setData(
+            result.data.map((emp: any) => ({
+              employee_id: emp.employee_Id,
+              name: emp.name,
+              team: emp.team,
+              skill: emp.skill,
+              current_workload: emp.current_Workload,
+              email: emp.email,
+              phone: emp.phone,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        setData([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return <LoadingScreen />;
   }
-}
-
-export default async function Dashboard() {
-  const data = await getData();
 
   return (
     <ProtectedRoute>
-      {" "}
       <div className="flex h-screen bg-stale-50">
         <Sidebar />
         <div className="flex-grow overflow-auto flex items-start justify-center">

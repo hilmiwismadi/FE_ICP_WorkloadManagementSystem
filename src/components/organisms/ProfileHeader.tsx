@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import Image from "next/image";
 // import EditEmployeeModal from "./EditEmployeeModal";
 
 interface ProfileHeaderProps {
@@ -28,7 +29,7 @@ export default function ProfileHeader({ employee, showEditButton = true }: Profi
           <div className="flex items-start pl-[1vw] gap-[2vw]">
             <div className="h-[7vw] w-[7vw] rounded-full bg-slate-100 overflow-hidden border-[0.5vw] border-[#29A6DE]">
               {/* Add avatar image here */}
-              <img
+              <Image
                 src={employee.avatar || "/img/sidebar/UserProfile.png"}
                 alt="Avatar"
                 className="h-full w-full object-cover"
