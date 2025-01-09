@@ -10,6 +10,7 @@ import Sidebar from "@/components/sidebar";
 import { DataTable } from "../data-table";
 import { NewTaskModal } from "@/components/organisms/NewTaskModal";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
+import ProtectedRoute from "@/components/protected-route";
 
 interface Employee {
   id: string;
@@ -58,7 +59,9 @@ export default function TaskPageId() {
   const router = useRouter();
   const { id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  );
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -162,47 +165,52 @@ export default function TaskPageId() {
   }
 
   return (
-    <div className="flex h-screen bg-stale-50">
-      <Sidebar />
-      <div className="flex-grow overflow-auto flex items-start justify-center">
-        <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] py-[1vw] px-[1.667vw] space-y-[1.25vw]">
-          <SearchBar />
+    <ProtectedRoute>
+      <div className="flex h-screen bg-stale-50">
+        <Sidebar />
+        <div className="flex-grow overflow-auto flex items-start justify-center">
+          <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] py-[1vw] px-[1.667vw] space-y-[1.25vw]">
+            <SearchBar />
 
-          {selectedEmployee && (
-            <ProfileHeader employee={selectedEmployee} showEditButton={false} />
-          )}
+            {selectedEmployee && (
+              <ProfileHeader
+                employee={selectedEmployee}
+                showEditButton={false}
+              />
+            )}
 
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-[1.25vw] py-[0.625vw]">
-              <div className="flex justify-between items-center mb-[0.833vw]">
-                <h3 className="text-[1.25vw] ml-[0.833vw] mt-[1.25vw] font-medium">
-                  On Going Task
-                </h3>
-                <Button
-                  onClick={() => setIsModalOpen(true)}
-                  className="bg-green-500 hover:bg-green-600 text-white text-[0.8vw] px-[0.833vw] h-[2.5vw] mr-[0.833vw] mt-[1.25vw] rounded-[0.5vw]"
-                >
-                  Assign New Task
-                </Button>
-              </div>
+            <div className="bg-white rounded-lg shadow">
+              <div className="px-[1.25vw] py-[0.625vw]">
+                <div className="flex justify-between items-center mb-[0.833vw]">
+                  <h3 className="text-[1.25vw] ml-[0.833vw] mt-[1.25vw] font-medium">
+                    On Going Task
+                  </h3>
+                  <Button
+                    onClick={() => setIsModalOpen(true)}
+                    className="bg-green-500 hover:bg-green-600 text-white text-[0.8vw] px-[0.833vw] h-[2.5vw] mr-[0.833vw] mt-[1.25vw] rounded-[0.5vw]"
+                  >
+                    Assign New Task
+                  </Button>
+                </div>
 
-              <div className="rounded-lg p-[0.833vw]">
-                <DataTable 
-                  tasks={tasks} 
-                  isLoading={isLoading} 
-                  onTaskUpdate={refreshTasks} 
-                />
+                <div className="rounded-lg p-[0.833vw]">
+                  <DataTable
+                    tasks={tasks}
+                    isLoading={isLoading}
+                    onTaskUpdate={refreshTasks}
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <NewTaskModal
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onTaskSubmit={handleSubmit}
-      />
-    </div>
+        <NewTaskModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onTaskSubmit={handleSubmit}
+        />
+      </div>
+    </ProtectedRoute>
   );
 }
