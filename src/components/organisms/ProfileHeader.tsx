@@ -32,7 +32,10 @@ export default function ProfileHeader({ employee, showEditButton = true }: Profi
               <Image
                 src={employee.avatar || "/img/sidebar/UserProfile.png"}
                 alt="Avatar"
+                width={50}
+                height={50}
                 className="h-full w-full object-cover"
+                priority
               />
             </div>
             <div className="space-y-[0.208vw]">
