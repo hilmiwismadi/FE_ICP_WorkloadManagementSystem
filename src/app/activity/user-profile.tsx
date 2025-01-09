@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface Employee {
   employee_Id: string;
   name: string;
@@ -20,7 +22,7 @@ export default function UserProfile({ employee }: UserProfileProps) {
     <div className="bg-[#15234A] rounded-[0.8vw] text-white mb-[1vw] py-[1vw] w-full mx-auto">
       <div className="flex items-center mx-[2vw] mb-[1vw]">
         <div className="flex items-center gap-[2vw]">
-          <img
+          <Image
             src={employee.image || "/img/sidebar/UserProfile.png"}
             alt="User Avatar"
             className="rounded-full w-[7vw] h-[7vw]"

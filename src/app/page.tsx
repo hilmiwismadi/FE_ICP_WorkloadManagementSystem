@@ -257,7 +257,7 @@ const Login = () => {
                     onChange={handleInputChange}
                     className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-colors"
                   />
-                  <span className="text-sm text-gray-600">Remember me</span>
+                  <span className="text-[0.875vw] text-gray-600">Remember me</span>
                 </label>
               </div>
 

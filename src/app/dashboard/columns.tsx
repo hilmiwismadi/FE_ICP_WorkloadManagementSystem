@@ -32,7 +32,7 @@ const WorkloadStatusBar = ({ value }: { value: number }) => {
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <span className="text-sm text-gray-600">{Number(percentage.toFixed(1))}%</span>
+      <span className="text-[0.875vw] text-gray-600">{Number(percentage.toFixed(1))}%</span>
     </div>
   );
 };
