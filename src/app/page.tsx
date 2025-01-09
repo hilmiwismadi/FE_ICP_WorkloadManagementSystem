@@ -259,12 +259,6 @@ const Login = () => {
                   />
                   <span className="text-sm text-gray-600">Remember me</span>
                 </label>
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                  Forgot password?
-                </Link>
               </div>
 
               {/* Submit Button */}
