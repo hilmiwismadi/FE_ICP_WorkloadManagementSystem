@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from "next/image";
+import Link from "next/link";
 import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 import { useNotification } from "@/components/context/notification-context";
@@ -43,7 +43,7 @@ const decodeJWT = (token: string): UserData => {
 const Login = () => {
   const router = useRouter();
   const { showNotification } = useNotification(); // Add this hook
-  
+
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -52,6 +52,10 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
 
   useEffect(() => {
     const rememberedUser = localStorage.getItem("rememberedUser");
@@ -96,13 +100,16 @@ const Login = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        showNotification(data.message || 'Invalid username or password', 'error');
+        setAlertMessage({
+          message: data.message || "Invalid username or password",
+          type: "error",
+        });
         setIsLoading(false);
         return;
       }
 
       const token = data.succes.accesToken;
-    
+
       try {
         const userData = decodeJWT(token);
 
@@ -123,18 +130,24 @@ const Login = () => {
 
         if (userData.role) {
           setIsAuthenticating(true);
-          showNotification('Successfully signed in!', 'success');
+          setAlertMessage({
+            message: "Successfully signed in!",
+            type: "success",
+          });
           router.push("/dashboard");
         } else {
-          showNotification('User role not found', 'error');
+          setAlertMessage({ message: "User role not found", type: "error" });
           setIsLoading(false);
         }
       } catch (decodeError) {
-        showNotification('Authentication failed', 'error');
+        setAlertMessage({ message: "Authentication failed", type: "error" });
         setIsLoading(false);
       }
     } catch (error) {
-      showNotification('Network error. Please try again.', 'error');
+      setAlertMessage({
+        message: "Network error. Please try again.",
+        type: "error",
+      });
       setIsLoading(false);
     }
   };
@@ -150,9 +163,9 @@ const Login = () => {
         {/* Left Side - Illustration */}
         <div className="hidden lg:flex lg:w-1/2 bg-blue-50 p-12 items-center justify-center">
           <div className="absolute h-[28vw] w-[28vw] bg-blue-100 rounded-full"></div>
-          <div className="relative w-[60vw] max-w-md transform transition-transform duration-500 hover:scale-105">            
-            <Image 
-              src="/img/assets/loginAssets.png" 
+          <div className="relative w-[60vw] max-w-md transform transition-transform duration-500 hover:scale-105">
+            <Image
+              src="/img/assets/loginAssets.png"
               alt="Login"
               width={500}
               height={500}
@@ -165,7 +178,9 @@ const Login = () => {
         {/* Right Side - Login Form */}
         <div className="w-full lg:w-1/2 p-8 md:p-12">
           <div className="max-w-md mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome back
+            </h2>
             <p className="text-gray-600 mb-8">Please sign in to continue</p>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -217,7 +232,20 @@ const Login = () => {
                   </button>
                 </div>
               </div>
-              
+
+              {alertMessage && (
+                <div
+                  className={`mb-4 rounded-lg text-red-500 text-[1vw] ${
+                    alertMessage.type === "error"
+                      ? "bg-white"
+                      : alertMessage.type === "success"
+                      ? "bg-green-500"
+                      : "bg-blue-500"
+                  }`}
+                >
+                  {alertMessage.message}
+                </div>
+              )}
 
               {/* Remember Me & Forgot Password */}
               <div className="flex items-center justify-between">
@@ -231,8 +259,8 @@ const Login = () => {
                   />
                   <span className="text-sm text-gray-600">Remember me</span>
                 </label>
-                <Link 
-                  href="/forgot-password" 
+                <Link
+                  href="/forgot-password"
                   className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
                 >
                   Forgot password?
