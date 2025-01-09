@@ -25,7 +25,10 @@ export default function UserProfile({ employee }: UserProfileProps) {
           <Image
             src={employee.image || "/img/sidebar/UserProfile.png"}
             alt="User Avatar"
+            width={50}
+            height={50}
             className="rounded-full w-[7vw] h-[7vw]"
+            priority
           />
           <div>
             <h2 className="text-[2vw] font-semibold">
