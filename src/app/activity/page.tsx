@@ -1,114 +1,75 @@
-"use client"
+"use client";
 
-import React from 'react';
-import SearchBar from '@/components/organisms/SearchBarActivity';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import SearchBar from "@/components/organisms/SearchBarActivity";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import Sidebar from '@/components/sidebar';
+import LoadingScreen from "@/components/organisms/LoadingScreen";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
+import Sidebar from "@/components/sidebar";
 
-// Interfaces
 interface Employee {
-  id: string;
+  employee_Id: string;
   name: string;
   role: string;
-  division: string;
-  taskCount: number;
-  totalWorkload: number;
-  aggregateScore: number;
+  team: string;
+  current_Workload: number;
+  taskCount?: number;
+  workloadPercentage?: number;
+}
+
+interface Task {
+  task_Id: string;
+  type: string;
+  status: string;
+  workload: number;
+  employee_Id: string;
 }
 
 interface DivisionMetrics {
   name: string;
-  taskCount: number;
-  totalWorkload: number;
-  aggregateScore: number;
+  averageWorkload: number;
+  color: string;
 }
 
-// Mock data
-const topEmployees: Employee[] = [
-  { 
-    id: "12003",
-    name: "Varick Zahir",
-    role: "Backend Engineer",
-    division: "Backend",
-    taskCount: 15,
-    totalWorkload: 850,
-    aggregateScore: 92
-  },
-  {
-    id: "12004",
-    name: "John Doe",
-    role: "Frontend Engineer",
-    division: "Frontend",
-    taskCount: 12,
-    totalWorkload: 780,
-    aggregateScore: 88
-  },
-  {
-    id: "12005",
-    name: "Jane Smith",
-    role: "DevOps Engineer",
-    division: "DevOps",
-    taskCount: 10,
-    totalWorkload: 720,
-    aggregateScore: 85
-  }
-];
-
-const bottomEmployees: Employee[] = [
-  {
-    id: "12006",
-    name: "Alice Johnson",
-    role: "QA Engineer",
-    division: "QA",
-    taskCount: 4,
-    totalWorkload: 220,
-    aggregateScore: 45
-  },
-  {
-    id: "12007",
-    name: "Bob Wilson",
-    role: "Frontend Engineer",
-    division: "Frontend",
-    taskCount: 3,
-    totalWorkload: 180,
-    aggregateScore: 42
-  },
-  {
-    id: "12008",
-    name: "Carol Brown",
-    role: "Backend Engineer",
-    division: "Backend",
-    taskCount: 2,
-    totalWorkload: 150,
-    aggregateScore: 38
-  }
-];
-
-const divisionMetrics: DivisionMetrics[] = [
-  { name: "Backend", taskCount: 45, totalWorkload: 2800, aggregateScore: 88 },
-  { name: "Frontend", taskCount: 38, totalWorkload: 2400, aggregateScore: 82 },
-  { name: "DevOps", taskCount: 32, totalWorkload: 2100, aggregateScore: 78 },
-  { name: "QA", taskCount: 28, totalWorkload: 1800, aggregateScore: 72 }
-].sort((a, b) => b.aggregateScore - a.aggregateScore);
-
-const EmployeeMetricsCard = ({ title, employees, type }: { 
-  title: string, 
-  employees: Employee[], 
-  type: 'top' | 'bottom' 
+const EmployeeMetricsCard = ({
+  title,
+  employees,
+  type,
+  onEmployeeClick,
+}: {
+  title: string;
+  employees: Employee[];
+  type: "top" | "bottom";
+  onEmployeeClick: (employeeId: string) => void;
 }) => (
   <Card className="w-full">
     <CardHeader>
       <CardTitle className="text-[1.25vw] font-semibold">{title}</CardTitle>
     </CardHeader>
     <CardContent>
-      <div className="space-y-[0.625vw]">
+      <div className="space-y-[0.625vw] max-h-[13vw] overflow-y-auto pr-2">
         {employees.map((employee, index) => (
-          <div key={employee.id} className="flex items-center justify-between py-[0.5vw] px-[1.5vw] bg-gray-50 rounded-[1vw]">
+          <div
+            key={employee.employee_Id}
+            className="flex items-center justify-between py-[0.5vw] px-[1.5vw] bg-gray-50 rounded-[1vw] cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+            onClick={() => onEmployeeClick(employee.employee_Id)}
+          >
             <div className="flex items-center gap-[0.8vw]">
-              <span className={`text-[1vw] font-bold ${
-                type === 'top' ? 'text-green-500' : 'text-red-500'
-              }`}>
+              <span
+                className={`text-[1vw] font-bold ${
+                  type === "top" ? "text-red-500" : "text-green-500"
+                }`}
+              >
                 #{index + 1}
               </span>
               <div>
@@ -117,8 +78,10 @@ const EmployeeMetricsCard = ({ title, employees, type }: {
               </div>
             </div>
             <div className="text-right">
-              <p className="font-semibold">{employee.aggregateScore}%</p>
-              <p className="text-[0.8vw] text-gray-500">{employee.taskCount} tasks</p>
+              <p className="font-semibold">{employee.workloadPercentage}%</p>
+              <p className="text-[0.8vw] text-gray-500">
+                {employee.taskCount} tasks
+              </p>
             </div>
           </div>
         ))}
@@ -128,28 +91,153 @@ const EmployeeMetricsCard = ({ title, employees, type }: {
 );
 
 export default function ActivityPage() {
+  const router = useRouter();
+  const [topEmployees, setTopEmployees] = useState<Employee[]>([]);
+  const [bottomEmployees, setBottomEmployees] = useState<Employee[]>([]);
+  const [divisionMetrics, setDivisionMetrics] = useState<DivisionMetrics[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const getBarColor = (index: number) => {
+    const colors = ["#22c55e", "#eab308", "#ef4444"];
+    return colors[index % colors.length];
+  };
+
+  const handleEmployeeClick = (employeeId: string) => {
+    router.push(`/activity/${employeeId}`);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [employeesResponse, tasksResponse] = await Promise.all([
+          fetch(
+            "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
+          ),
+          fetch(
+            "https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read"
+          ),
+        ]);
+
+        const employeesResult = await employeesResponse.json();
+        const tasksResult = await tasksResponse.json();
+
+        const employeesData = employeesResult.data || employeesResult;
+        const tasksData = tasksResult.data || tasksResult;
+
+        if (!Array.isArray(employeesData)) {
+          throw new Error(
+            `Expected employees data to be an array, got: ${typeof employeesData}`
+          );
+        }
+
+        if (!Array.isArray(tasksData)) {
+          throw new Error(
+            `Expected tasks data to be an array, got: ${typeof tasksData}`
+          );
+        }
+
+        const processedEmployees = employeesData.map((emp: Employee) => {
+          const employeeTasks = tasksData.filter(
+            (task: Task) =>
+              task.employee_Id === emp.employee_Id && task.status === "Ongoing"
+          );
+
+          return {
+            ...emp,
+            taskCount: employeeTasks.length,
+            workloadPercentage: Math.round((emp.current_Workload / 15) * 100),
+          };
+        });
+
+        const sortedEmployees = [...processedEmployees].sort(
+          (a, b) => (b.workloadPercentage || 0) - (a.workloadPercentage || 0)
+        );
+
+        setTopEmployees(sortedEmployees.slice(0, 5));
+        setBottomEmployees([...sortedEmployees].reverse().slice(0, 5));
+
+        const divisionData: { [key: string]: number[] } =
+          processedEmployees.reduce(
+            (acc: { [key: string]: number[] }, emp: Employee) => {
+              if (!acc[emp.team]) {
+                acc[emp.team] = [];
+              }
+              acc[emp.team].push(emp.workloadPercentage || 0);
+              return acc;
+            },
+            {}
+          );
+
+        const divisionAverages = Object.entries(divisionData)
+          .map(([name, workloads], index) => ({
+            name,
+            averageWorkload: Math.round(
+              workloads.reduce((sum, val) => sum + val, 0) / workloads.length
+            ),
+            color: getBarColor(index),
+          }))
+          .sort((a, b) => b.averageWorkload - a.averageWorkload);
+
+        setDivisionMetrics(divisionAverages);
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError(
+          error instanceof Error
+            ? error.message
+            : "An error occurred while fetching data"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen bg-stale-50">
+        <Sidebar />
+        <div className="flex-grow p-4">
+          <Card className="w-full">
+            <CardContent className="p-4">
+              <p className="text-red-500">Error: {error}</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-stale-50">
       <Sidebar />
       <div className="flex-grow overflow-auto flex items-start justify-center">
-        <div className="flex-1 max-h-screen p-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out">
+        <div className="flex-1 max-h-screen py-[1vw] px-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out">
           <SearchBar />
           <div className="grid grid-cols-12 gap-[2vw]">
-            {/* Left Column - Employee Rankings */}
             <div className="col-span-12 md:col-span-4 space-y-[1.5vw]">
-              <EmployeeMetricsCard 
-                title="Top Performing Employees"
+              <EmployeeMetricsCard
+                title="Employee with Highest Workload"
                 employees={topEmployees}
                 type="top"
+                onEmployeeClick={handleEmployeeClick}
               />
-              <EmployeeMetricsCard 
-                title="Employees Needing Support"
+              <EmployeeMetricsCard
+                title="Employee with Lowest Workload"
                 employees={bottomEmployees}
                 type="bottom"
+                onEmployeeClick={handleEmployeeClick}
               />
             </div>
 
-            {/* Right Column - Division Rankings */}
             <div className="col-span-12 md:col-span-8">
               <Card className="w-full h-full">
                 <CardHeader>
@@ -168,11 +256,14 @@ export default function ActivityPage() {
                       <XAxis type="number" domain={[0, 100]} />
                       <YAxis dataKey="name" type="category" />
                       <Tooltip />
-                      <Bar 
-                        dataKey="aggregateScore" 
-                        fill="#4ECDC4"
-                        radius={[0, 4, 4, 0]}
-                      />
+                      <Bar dataKey="averageWorkload" radius={[0, 4, 4, 0]}>
+                        {divisionMetrics.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={getBarColor(index)}
+                          />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
