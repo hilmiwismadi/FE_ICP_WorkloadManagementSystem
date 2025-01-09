@@ -55,10 +55,11 @@ interface ApiResponse {
 }
 
 export default function TaskPageId() {
-  const router = useRouter();
   const { id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  );
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -139,15 +140,17 @@ export default function TaskPageId() {
         setTasks(response.data.data.tasks);
       }
 
-      refreshTasks();
-      setIsModalOpen(false);
+      await refreshTasks(); 
+      setIsLoading(false); 
+      setIsModalOpen(false); 
     } catch (error) {
       console.error("Error submitting task:", error);
+      setIsLoading(false); 
     }
   };
 
   if (isLoading) {
-    return <LoadingScreen />; // Show loading screen while data is being fetched
+    return <LoadingScreen />;
   }
 
   if (error) {
@@ -187,10 +190,10 @@ export default function TaskPageId() {
               </div>
 
               <div className="rounded-lg p-[0.833vw]">
-                <DataTable 
-                  tasks={tasks} 
-                  isLoading={isLoading} 
-                  onTaskUpdate={refreshTasks} 
+                <DataTable
+                  tasks={tasks}
+                  isLoading={isLoading}
+                  onTaskUpdate={refreshTasks}
                 />
               </div>
             </div>

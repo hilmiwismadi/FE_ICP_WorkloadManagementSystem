@@ -1,11 +1,10 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { useToast } from "@/components/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -23,8 +22,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogOverlay,
 } from "@/components/ui/alert-dialog";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle2 } from "lucide-react";
 
 const taskTypes = [
   "Backend",
@@ -47,6 +48,7 @@ export const NewTaskModal = ({
   onTaskSubmit,
 }: NewTaskModalProps) => {
   const params = useParams();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     type: "",
     customType: "",
@@ -58,6 +60,7 @@ export const NewTaskModal = ({
   const [isCustomType, setIsCustomType] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -86,7 +89,7 @@ export const NewTaskModal = ({
       const generateTaskData = (formData: any, params: any, userId: string) => {
         return {
           task_Id: undefined,
-          type: formData.type,
+          type: isCustomType ? formData.customType : formData.type,
           description: formData.description,
           status: "Ongoing",
           workload: formData.workload,
@@ -112,14 +115,39 @@ export const NewTaskModal = ({
         throw new Error(errorData.message || "Failed to create task");
       }
 
-      onTaskSubmit();
-      onClose();
+      setShowSuccess(true);
+      toast({
+        title: "Success!",
+        description: "Task assigned successfully",
+        duration: 3000,
+      });
+
+      setTimeout(() => {
+        setShowSuccess(false);
+        onTaskSubmit();
+        onClose();
+      }, 1500);
+
     } catch (error) {
       console.error("Error creating task:", error);
+      toast({
+        title: "Error",
+        description: "Failed to assign task. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
       setShowConfirmation(false);
     }
+  };
+
+  const handleTypeChange = (value: string) => {
+    setIsCustomType(value === "Other task...");
+    setFormData({
+      ...formData,
+      type: value === "Other task..." ? "" : value,
+      customType: value === "Other task..." ? "" : formData.customType,
+    });
   };
 
   const handleWorkloadChange = (value: number[]) => {
@@ -135,23 +163,41 @@ export const NewTaskModal = ({
     }
   };
 
-  const handleTypeChange = (value: string) => {
-    setIsCustomType(value === "Other task...");
-    setFormData({
-      ...formData,
-      type: value === "Other task..." ? "" : value,
-      customType: value === "Other task..." ? "" : formData.customType,
-    });
-  };
-
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="p-[1vw] overflow-hidden rounded-[0.833vw]">
           <form
             onSubmit={handleFormSubmit}
-            className="p-[1.25vw] space-y-[1.25vw]"
+            className="p-[1.25vw] space-y-[1.25vw] relative"
           >
+            <AnimatePresence>
+              {showSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50"
+                >
+                  <motion.div
+                    initial={{ y: 20 }}
+                    animate={{ y: 0 }}
+                    className="flex flex-col items-center space-y-[1vw]"
+                  >
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <CheckCircle2 className="w-[4vw] h-[4vw] text-green-500" />
+                    </motion.div>
+                    <p className="text-[1.2vw] font-semibold text-green-600">
+                      Task assigned successfully!
+                    </p>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <DialogTitle className="text-[1.33vw] font-bold pt-[1.25vw]">
               Add new task
             </DialogTitle>
@@ -175,20 +221,25 @@ export const NewTaskModal = ({
                     </SelectContent>
                   </Select>
                   {isCustomType && (
-                    <Input
-                      value={formData.customType}
-                      onChange={(e) => {
-                        const customValue = e.target.value;
-                        setFormData({
-                          ...formData,
-                          customType: customValue,
-                          type: customValue, 
-                        });
-                      }}
-                      placeholder="Enter custom task type"
-                      className="h-[2.5vw] mt-[0.417vw]"
-                      required
-                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <Input
+                        value={formData.customType}
+                        onChange={(e) => {
+                          const customValue = e.target.value;
+                          setFormData({
+                            ...formData,
+                            customType: customValue,
+                            type: customValue,
+                          });
+                        }}
+                        placeholder="Enter custom task type"
+                        className="h-[2.5vw] mt-[0.417vw]"
+                        required
+                      />
+                    </motion.div>
                   )}
                 </div>
 
@@ -246,7 +297,7 @@ export const NewTaskModal = ({
                     onChange={(e) =>
                       setFormData({ ...formData, endDate: e.target.value })
                     }
-                    className="h-12"
+                    className="h-[2.5vw]"
                     required
                   />
                 </div>
@@ -295,45 +346,74 @@ export const NewTaskModal = ({
       </Dialog>
 
       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <AlertDialogContent className="max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Task Assignment</AlertDialogTitle>
-            <div className="space-y-4">
-              <AlertDialogDescription>
-                Are you sure you want to assign this task?
-              </AlertDialogDescription>
-              <div className="space-y-2 text-sm border rounded-md p-3 bg-gray-50">
-                <div>
-                  <strong>Type:</strong>{" "}
-                  {isCustomType ? formData.customType : formData.type}
-                </div>
-                <div>
-                  <strong>Description:</strong> {formData.description}
-                </div>
-                <div>
-                  <strong>Workload:</strong> {formData.workload}
-                </div>
-                <div>
-                  <strong>Start Date:</strong> {formatDate(formData.startDate)}
-                </div>
-                <div>
-                  <strong>End Date:</strong> {formatDate(formData.endDate)}
-                </div>
+        <AlertDialogOverlay className="bg-black/50 fixed inset-0" />
+        <AlertDialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[30vw] max-w-none z-50 bg-white rounded-[0.8vw] p-[1.5vw] shadow-lg">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: '1vw' }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: '1vw' }}
+            transition={{ duration: 0.2 }}
+          >
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-[1.5vw] font-semibold mb-[1vw]">
+                Confirm Task Assignment
+              </AlertDialogTitle>
+              <div className="space-y-[1vw]">
+                <AlertDialogDescription className="text-[1vw]">
+                  Please review the task details below:
+                </AlertDialogDescription>
+                <motion.div 
+                  className="space-y-[0.8vw] text-[0.9vw] border rounded-[0.4vw] p-[1vw] bg-gray-50"
+                  initial={{ y: '1vw', opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <div>
+                    <strong>Type:</strong>{" "}
+                    {isCustomType ? formData.customType : formData.type}
+                  </div>
+                  <div>
+                    <strong>Description:</strong> {formData.description}
+                  </div>
+                  <div>
+                    <strong>Workload:</strong> {formData.workload}
+                  </div>
+                  <div>
+                    <strong>Start Date:</strong> {formatDate(formData.startDate)}
+                  </div>
+                  <div>
+                    <strong>End Date:</strong> {formatDate(formData.endDate)}
+                  </div>
+                </motion.div>
               </div>
-            </div>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSubmitting} className="text-[0.8vw]">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmedSubmit}
-              disabled={isSubmitting}
-              className="bg-[#38BDF8] hover:bg-[#32a8dd] text-[0.8vw]"
-            >
-              {isSubmitting ? "Assigning..." : "Confirm Assignment"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="mt-[1vw]">
+              <AlertDialogCancel 
+                disabled={isSubmitting}
+                className="text-[0.8vw]"
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmedSubmit}
+                disabled={isSubmitting}
+                className="bg-[#38BDF8] hover:bg-[#32a8dd] text-[0.8vw]"
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center gap-[0.417vw]">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-[0.833vw] h-[0.833vw] border-[0.417vw] border-white border-t-transparent rounded-full"
+                    />
+                    Assigning...
+                  </div>
+                ) : (
+                  "Confirm Assignment"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </motion.div>
         </AlertDialogContent>
       </AlertDialog>
     </>
