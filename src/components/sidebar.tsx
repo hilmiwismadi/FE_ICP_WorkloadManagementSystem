@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, LayoutDashboard, Users, ClipboardList, LogOut } from 'lucide-react';
+import { ChevronLeft, ArrowLeft , LayoutDashboard, Users, ClipboardList, LogOut } from 'lucide-react';
 
 const sidebarItems = [
   {
@@ -25,7 +25,7 @@ const sidebarItems = [
 
 const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [userData, setUserData] = useState<any>(null); // state to store user data
+  const [userData, setUserData] = useState<any>(null); 
   const pathname = usePathname();
   const router = useRouter();
 
@@ -33,41 +33,46 @@ const Sidebar = () => {
   useEffect(() => {
     const storedUserData = localStorage.getItem("userData");
     if (storedUserData) {
-      setUserData(JSON.parse(storedUserData)); // parse the data and set it to state
+      setUserData(JSON.parse(storedUserData));
     }
   }, []);
 
   return (
     <div
-      className={`relative min-h-screen bg-navy transition-all duration-300 ease-in-out ${
+      className={`relative min-h-screen bg-navy transition-all duration-300 ease-in-out cursor-pointer ${
         isExpanded ? 'w-[16vw]' : 'w-[5vw]'
       }`}
+      onClick={() => setIsExpanded(!isExpanded)}
     >
-      {/* Toggle Button */}
+      {/* Back Button */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="absolute -right-[0.625vw] top-[1.667vw] bg-white rounded-full p-[0.208vw] border border-gray-200 hover:bg-gray-100 transition-colors duration-200"
+        onClick={(e) => {
+          e.stopPropagation();
+          router.back();
+        }}
+        className="absolute -right-[0.625vw] top-[1.667vw] bg-white rounded-full py-[0.5vw] px-[0.75vw] border border-gray-200 hover:bg-gray-100 hover:scale-125 transition-transform duration-200"
       >
-        {isExpanded ? (
-          <ChevronLeft className="h-[1vw] w-[1vw] text-navy" />
-        ) : (
-          <ChevronRight className="h-[1vw] w-[1vw] text-navy" />
-        )}
+        <ArrowLeft  className="h-[1vw] w-[1vw] text-navy font-bold" />
       </button>
 
       {/* Logo */}
-      <div className="flex justify-center py-[2.5vw]">
+      <div 
+        className="flex justify-center py-[2.5vw]"
+      >
         <Image
           src="/img/sidebar/Logo_IconPlus.png"
           alt="logo"
           width={isExpanded ? 120 : 40}
           height={isExpanded ? 120 : 40}
-          className={`transition-all duration-300 ${isExpanded ? 'w-[8vw] h-[3vw]' : 'w-[3vw] h-[1.25vw]'}`}
+          className={`transition-all duration-300 ${isExpanded ? 'w-[8vw] h-[3vw]' : 'w-[3vw] h-[1.25vw]'} ${isExpanded ? 'mt-[0vw]' : 'mt-[2.5vw]'}`}
         />
       </div>
 
       {/* User Profile */}
-      <div className="mx-[1vw] mb-[1.667vw]">
+      <div 
+        className="mx-[1vw] mb-[1.667vw]"
+        onClick={(e) => e.stopPropagation()} 
+      >
         <div className="bg-[#243F80] rounded-[1vw] p-[1vw] transition-all duration-300">
           <div className="flex items-center gap-[0.625vw]">
             <Image
@@ -88,7 +93,10 @@ const Sidebar = () => {
       </div>
 
       {/* Navigation Items */}
-      <nav className="px-[1vw] space-y-[1vw]">
+      <nav 
+        className="px-[1vw] space-y-[1vw]"
+        onClick={(e) => e.stopPropagation()} 
+      >
         {sidebarItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.link;
@@ -113,7 +121,10 @@ const Sidebar = () => {
       </nav>
 
       {/* Logout Button */}
-      <div className="absolute bottom-[1.667vw] w-full px-[0.833vw]">
+      <div 
+        className="absolute bottom-[1.667vw] w-full px-[0.833vw]"
+        onClick={(e) => e.stopPropagation()} 
+      >
         <button
           onClick={() => router.push('/')}
           className="flex items-center gap-[1vw] p-[1vw] w-full text-red-500 hover:bg-red-500/10 rounded-[1vw] transition-all duration-200"

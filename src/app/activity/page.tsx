@@ -220,10 +220,10 @@ export default function ActivityPage() {
     <div className="flex h-screen bg-stale-50">
       <Sidebar />
       <div className="flex-grow overflow-auto flex items-start justify-center">
-        <div className="flex-1 max-h-screen py-[1vw] px-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out">
+        <div className="flex-1 max-h-screen py-[1vw] px-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[0.5vw] transition-all duration-300 ease-in-out">
           <SearchBar />
           <div className="grid grid-cols-12 gap-[2vw]">
-            <div className="col-span-12 md:col-span-4 space-y-[1.5vw]">
+            <div className="col-span-12 md:col-span-4 space-y-[1vw]">
               <EmployeeMetricsCard
                 title="Employee with Highest Workload"
                 employees={topEmployees}
