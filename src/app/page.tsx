@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from "next/image";
+import Link from "next/link";
 import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
-import toast from 'react-hot-toast'; // Make sure this import is correct
+import { useNotification } from "@/components/context/notification-context";
 
 interface FormData {
   email: string;
@@ -42,6 +42,8 @@ const decodeJWT = (token: string): UserData => {
 
 const Login = () => {
   const router = useRouter();
+  const { showNotification } = useNotification(); // Add this hook
+
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -50,6 +52,10 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<{
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
 
   useEffect(() => {
     const rememberedUser = localStorage.getItem("rememberedUser");
@@ -76,9 +82,6 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Create a loading toast that we can dismiss later
-    const loadingToastId = toast.loading('Signing in...');
-
     try {
       const response = await fetch(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/auth/login",
@@ -95,19 +98,18 @@ const Login = () => {
       );
 
       const data = await response.json();
-      
-      // Dismiss the loading toast
-      toast.dismiss(loadingToastId);
 
       if (!response.ok) {
-        // Show error toast and return early
-        toast.error(data.message || 'Invalid username or password');
+        setAlertMessage({
+          message: data.message || "Invalid username or password",
+          type: "error",
+        });
         setIsLoading(false);
         return;
       }
 
       const token = data.succes.accesToken;
-    
+
       try {
         const userData = decodeJWT(token);
 
@@ -128,25 +130,28 @@ const Login = () => {
 
         if (userData.role) {
           setIsAuthenticating(true);
-          toast.success('Successfully signed in!');
+          setAlertMessage({
+            message: "Successfully signed in!",
+            type: "success",
+          });
           router.push("/dashboard");
         } else {
-          toast.error('User role not found');
+          setAlertMessage({ message: "User role not found", type: "error" });
           setIsLoading(false);
         }
       } catch (decodeError) {
-        toast.error('Authentication failed');
+        setAlertMessage({ message: "Authentication failed", type: "error" });
         setIsLoading(false);
       }
     } catch (error) {
-      // Dismiss the loading toast and show error
-      toast.dismiss(loadingToastId);
-      toast.error('Network error. Please try again.');
+      setAlertMessage({
+        message: "Network error. Please try again.",
+        type: "error",
+      });
       setIsLoading(false);
     }
   };
 
-  // Show loading screen only during authentication and redirect
   if (isAuthenticating) {
     return <LoadingScreen />;
   }
@@ -158,9 +163,9 @@ const Login = () => {
         {/* Left Side - Illustration */}
         <div className="hidden lg:flex lg:w-1/2 bg-blue-50 p-12 items-center justify-center">
           <div className="absolute h-[28vw] w-[28vw] bg-blue-100 rounded-full"></div>
-          <div className="relative w-[60vw] max-w-md transform transition-transform duration-500 hover:scale-105">            
-            <Image 
-              src="/img/assets/loginAssets.png" 
+          <div className="relative w-[60vw] max-w-md transform transition-transform duration-500 hover:scale-105">
+            <Image
+              src="/img/assets/loginAssets.png"
               alt="Login"
               width={500}
               height={500}
@@ -173,7 +178,9 @@ const Login = () => {
         {/* Right Side - Login Form */}
         <div className="w-full lg:w-1/2 p-8 md:p-12">
           <div className="max-w-md mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome back
+            </h2>
             <p className="text-gray-600 mb-8">Please sign in to continue</p>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -226,6 +233,20 @@ const Login = () => {
                 </div>
               </div>
 
+              {alertMessage && (
+                <div
+                  className={`mb-4 rounded-lg text-red-500 text-[1vw] ${
+                    alertMessage.type === "error"
+                      ? "bg-white"
+                      : alertMessage.type === "success"
+                      ? "bg-green-500"
+                      : "bg-blue-500"
+                  }`}
+                >
+                  {alertMessage.message}
+                </div>
+              )}
+
               {/* Remember Me & Forgot Password */}
               <div className="flex items-center justify-between">
                 <label className="flex items-center space-x-2 cursor-pointer">
@@ -238,6 +259,12 @@ const Login = () => {
                   />
                   <span className="text-sm text-gray-600">Remember me</span>
                 </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  Forgot password?
+                </Link>
               </div>
 
               {/* Submit Button */}
