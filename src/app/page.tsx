@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
-import toast from 'react-hot-toast'; // Make sure this import is correct
+import { useNotification } from "@/components/context/notification-context";
 
 interface FormData {
   email: string;
@@ -42,6 +42,8 @@ const decodeJWT = (token: string): UserData => {
 
 const Login = () => {
   const router = useRouter();
+  const { showNotification } = useNotification(); // Add this hook
+  
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -76,9 +78,6 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Create a loading toast that we can dismiss later
-    const loadingToastId = toast.loading('Signing in...');
-
     try {
       const response = await fetch(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/auth/login",
@@ -95,13 +94,9 @@ const Login = () => {
       );
 
       const data = await response.json();
-      
-      // Dismiss the loading toast
-      toast.dismiss(loadingToastId);
 
       if (!response.ok) {
-        // Show error toast and return early
-        toast.error(data.message || 'Invalid username or password');
+        showNotification(data.message || 'Invalid username or password', 'error');
         setIsLoading(false);
         return;
       }
@@ -128,25 +123,22 @@ const Login = () => {
 
         if (userData.role) {
           setIsAuthenticating(true);
-          toast.success('Successfully signed in!');
+          showNotification('Successfully signed in!', 'success');
           router.push("/dashboard");
         } else {
-          toast.error('User role not found');
+          showNotification('User role not found', 'error');
           setIsLoading(false);
         }
       } catch (decodeError) {
-        toast.error('Authentication failed');
+        showNotification('Authentication failed', 'error');
         setIsLoading(false);
       }
     } catch (error) {
-      // Dismiss the loading toast and show error
-      toast.dismiss(loadingToastId);
-      toast.error('Network error. Please try again.');
+      showNotification('Network error. Please try again.', 'error');
       setIsLoading(false);
     }
   };
 
-  // Show loading screen only during authentication and redirect
   if (isAuthenticating) {
     return <LoadingScreen />;
   }
