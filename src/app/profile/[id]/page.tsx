@@ -151,9 +151,9 @@ export default function ProfilePage() {
       <Sidebar />
       <div className="flex-grow overflow-auto flex items-start justify-center">
         <div
-          className={`flex-1 max-h-screen p-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out`}
+          className={`flex-1 max-h-screen py-[1vw] px-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out`}
         >
-          <div className="py-[0.625vw]">
+          <div className="">
             <div className="grid grid-cols-12 gap-[1.25vw]">
               <div className="col-span-12 xl:col-span-9 space-y-[1.25vw]">
                 <ProfileHeader employee={employeeData} showEditButton={true} />
@@ -178,7 +178,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="col-span-12 xl:col-span-3 space-y-[1.5vw]">
+              <div className="col-span-12 xl:col-span-3 space-y-[1vw]">
                 <TaskList
                   tasks={tasks}
                   className="bg-white rounded-[0.625vw] shadow-sm p-[1.25vw] sticky top-[1.25vw]"
