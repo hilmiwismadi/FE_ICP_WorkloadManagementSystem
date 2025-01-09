@@ -64,7 +64,7 @@ const Sidebar = () => {
           alt="logo"
           width={isExpanded ? 120 : 40}
           height={isExpanded ? 120 : 40}
-          className={`transition-all duration-300 ${isExpanded ? 'w-[8vw] h-[3vw]' : 'w-[3vw] h-[1.25vw]'}`}
+          className={`transition-all duration-300 ${isExpanded ? 'w-[8vw] h-[3vw]' : 'w-[3vw] h-[1.25vw]'} ${isExpanded ? 'mt-[0vw]' : 'mt-[2.5vw]'}`}
         />
       </div>
 
