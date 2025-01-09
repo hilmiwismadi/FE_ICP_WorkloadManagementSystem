@@ -16,7 +16,6 @@ import {
   Cell,
 } from "recharts";
 import Sidebar from "@/components/sidebar";
-import BackButton from "@/components/BackButton";
 
 interface Employee {
   employee_Id: string;
