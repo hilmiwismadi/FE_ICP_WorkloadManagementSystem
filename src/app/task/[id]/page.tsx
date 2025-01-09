@@ -56,7 +56,6 @@ interface ApiResponse {
 }
 
 export default function TaskPageId() {
-  const router = useRouter();
   const { id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
@@ -142,15 +141,17 @@ export default function TaskPageId() {
         setTasks(response.data.data.tasks);
       }
 
-      refreshTasks();
+      await refreshTasks();
+      setIsLoading(false);
       setIsModalOpen(false);
     } catch (error) {
       console.error("Error submitting task:", error);
+      setIsLoading(false);
     }
   };
 
   if (isLoading) {
-    return <LoadingScreen />; // Show loading screen while data is being fetched
+    return <LoadingScreen />;
   }
 
   if (error) {
@@ -204,7 +205,6 @@ export default function TaskPageId() {
             </div>
           </div>
         </div>
-
         <NewTaskModal
           open={isModalOpen}
           onClose={() => setIsModalOpen(false)}
