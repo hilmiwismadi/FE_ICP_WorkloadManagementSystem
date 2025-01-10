@@ -2,19 +2,22 @@
 
 import { useAuth } from './context/auth-context';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import LoadingScreen from './organisms/LoadingScreen';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth(); 
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/please-login'); // Redirect to a custom message page
+    if (!isLoading && !isAuthenticated) {
+      router.push('/'); 
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
 
-  if (!isAuthenticated) return null; // Show nothing while redirecting
+  if (isLoading) return <LoadingScreen />; 
+
+  if (!isAuthenticated) return null;
 
   return <>{children}</>;
 };

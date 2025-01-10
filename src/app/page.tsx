@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
 import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 import { useNotification } from "@/components/context/notification-context";
+import Cookies from 'js-cookie';
 
 interface FormData {
   email: string;
@@ -42,7 +42,7 @@ const decodeJWT = (token: string): UserData => {
 
 const Login = () => {
   const router = useRouter();
-  const { showNotification } = useNotification(); // Add this hook
+  const { showNotification } = useNotification();
 
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -112,10 +112,12 @@ const Login = () => {
 
       try {
         const userData = decodeJWT(token);
-
-        localStorage.setItem("token", token);
-        localStorage.setItem("userData", JSON.stringify(userData));
-
+        Cookies.set('auth_token', token, { 
+          expires: 1/24, // 1 hour in days
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict'
+        });
+        
         if (formData.rememberMe) {
           localStorage.setItem(
             "rememberedUser",
