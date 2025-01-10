@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
+import Cookies from "js-cookie";
+import cookie from "cookie";
 import {
   ChevronLeft,
   ArrowLeft,
@@ -37,17 +40,23 @@ const Sidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Fetch user data from localStorage when the component mounts
   useEffect(() => {
-    const storedUserData = localStorage.getItem("userData");
-    if (storedUserData) {
-      setUserData(JSON.parse(storedUserData));
+    const cookies = document.cookie;
+    const parsedCookies = cookie.parse(cookies);
+    const token = parsedCookies.auth_token;
+
+    if (token) {
+      try {
+        const decodedToken: any = jwtDecode(token);
+        setUserData(decodedToken);
+      } catch (error) {
+        console.error("Invalid token:", error);
+      }
     }
   }, []);
 
   const handleLogout = () => {
-    // Clear local storage and navigate to the home page
-    localStorage.clear();
+    Cookies.remove("auth_token");
     router.push("/");
   };
 

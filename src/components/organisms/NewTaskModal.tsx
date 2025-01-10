@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
 
 const taskTypes = [
   "Backend",
@@ -78,14 +79,23 @@ export const NewTaskModal = ({
   const handleConfirmedSubmit = async () => {
     try {
       setIsSubmitting(true);
-      const token = localStorage.getItem("token");
-      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-      const userId = userData.user_Id;
-
+  
+      const token = document.cookie
+        .split("; ")
+        .find(row => row.startsWith("auth_token="))
+        ?.split("=")[1];
+  
       if (!token) {
         throw new Error("No authentication token found");
       }
-
+  
+      const decodedToken: { user_Id: string } = jwtDecode(token);
+      const userId = decodedToken.user_Id;
+  
+      if (!userId) {
+        throw new Error("User ID not found in token");
+      }
+  
       const generateTaskData = (formData: any, params: any, userId: string) => {
         return {
           task_Id: undefined,
@@ -98,36 +108,36 @@ export const NewTaskModal = ({
           employee_Id: params.id,
         };
       };
-
+  
       const response = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/add/${userId}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(generateTaskData(formData, params, userId)),
         }
       );
-
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to create task");
       }
-
+  
       setShowSuccess(true);
       toast({
         title: "Success!",
         description: "Task assigned successfully",
         duration: 3000,
       });
-
+  
       setTimeout(() => {
         setShowSuccess(false);
         onTaskSubmit();
         onClose();
       }, 1500);
-
     } catch (error) {
       console.error("Error creating task:", error);
       toast({
