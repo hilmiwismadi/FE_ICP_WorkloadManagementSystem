@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 const LoadingScreen = () => {
   const [isMounted, setIsMounted] = useState(false);
-  const [countdown, setCountdown] = useState(2); // Match the 2000ms timeout
+  const [countdown, setCountdown] = useState(5); // Match the 2000ms timeout
 
   useEffect(() => {
     let mounted = true;
@@ -75,9 +75,9 @@ const LoadingScreen = () => {
         <div className="text-xl font-semibold text-yellow-300 animate-pulse">
           Loading....
         </div>
-        <div className="text-lg text-yellow-200">
+        {/* <div className="text-lg text-yellow-200">
           Authenticating in {countdown}s
-        </div>
+        </div> */}
       </div>
 
       {/* Electric particles */}
