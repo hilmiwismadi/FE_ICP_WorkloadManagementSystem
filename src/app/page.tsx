@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
-import LoadingScreen from "@/components/organisms/LoadingScreen";
 import { useNotification } from "@/components/context/notification-context";
 import Cookies from 'js-cookie';
+import dynamic from 'next/dynamic';
 
 interface FormData {
   email: string;
@@ -40,9 +40,18 @@ const decodeJWT = (token: string): UserData => {
   }
 };
 
+const LoadingScreen = dynamic(() => import('@/components/organisms/LoadingScreen'), {
+  ssr: false
+});
+
 const Login = () => {
   const router = useRouter();
   const { showNotification } = useNotification();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -78,6 +87,26 @@ const Login = () => {
     }));
   };
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const rememberedUser = localStorage.getItem("rememberedUser");
+      if (rememberedUser) {
+        try {
+          const { email, password } = JSON.parse(rememberedUser);
+          setFormData((prev) => ({
+            ...prev,
+            email,
+            password,
+            rememberMe: true,
+          }));
+        } catch (error) {
+          console.error('Error parsing remembered user:', error);
+          localStorage.removeItem("rememberedUser");
+        }
+      }
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -112,8 +141,6 @@ const Login = () => {
   
       try {
         const userData = decodeJWT(token);
-        
-        // Set authentication state before cookie
         setIsAuthenticating(true);
         
         // Add a delay before setting the cookie and redirecting
@@ -163,8 +190,10 @@ const Login = () => {
       setIsAuthenticating(false);
     }
   };
-  
 
+  if (!mounted) {
+    return null;
+  }
   if (isAuthenticating) {
     return <LoadingScreen />;
   }

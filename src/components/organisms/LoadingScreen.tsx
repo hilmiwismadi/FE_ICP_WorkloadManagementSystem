@@ -1,15 +1,13 @@
 import { Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 
-
 const LoadingScreen = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     setIsMounted(true);
-    
-    // Start countdown
+
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -20,9 +18,12 @@ const LoadingScreen = () => {
       });
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+    };
   }, []);
 
+  // Don't render anything on the server
   if (!isMounted) {
     return null;
   }
@@ -44,7 +45,7 @@ const LoadingScreen = () => {
         <div className="absolute inset-0 animate-pulse">
           <div className="w-24 h-24 rounded-full bg-yellow-300/20 blur-xl" />
         </div>
-        
+
         {/* Lightning icon with animation */}
         <div className="animate-bounce">
           <div className="relative">
@@ -56,7 +57,7 @@ const LoadingScreen = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Loading text with countdown */}
       <div className="mt-8 flex flex-col items-center space-y-2">
         <div className="text-xl font-semibold text-yellow-300 animate-pulse">
@@ -66,7 +67,7 @@ const LoadingScreen = () => {
           Authenticating in {countdown}s
         </div>
       </div>
-      
+
       {/* Electric particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {particles.map((particle, i) => (
