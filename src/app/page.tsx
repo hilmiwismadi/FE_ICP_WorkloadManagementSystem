@@ -89,20 +89,22 @@ const Login = () => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const rememberedUser = localStorage.getItem("rememberedUser");
-      if (rememberedUser) {
-        try {
-          const { email, password } = JSON.parse(rememberedUser);
-          setFormData((prev) => ({
-            ...prev,
-            email,
-            password,
-            rememberMe: true,
-          }));
-        } catch (error) {
-          console.error('Error parsing remembered user:', error);
-          localStorage.removeItem("rememberedUser");
+      try {
+        const rememberedUser = localStorage.getItem("rememberedUser");
+        if (rememberedUser) {
+          const parsedUser = JSON.parse(rememberedUser);
+          if (parsedUser && parsedUser.email && parsedUser.password) {
+            setFormData((prev) => ({
+              ...prev,
+              email: parsedUser.email,
+              password: parsedUser.password,
+              rememberMe: true,
+            }));
+          }
         }
+      } catch (error) {
+        console.error('Error reading remembered user:', error);
+        localStorage.removeItem("rememberedUser");
       }
     }
   }, []);
@@ -137,53 +139,73 @@ const Login = () => {
         return;
       }
   
+      if (!data?.succes?.accesToken) {
+        throw new Error("Token not found in response");
+      }
+  
       const token = data.succes.accesToken;
   
       try {
         const userData = decodeJWT(token);
         setIsAuthenticating(true);
-        
-        // Add a delay before setting the cookie and redirecting
-        setTimeout(() => {
-          Cookies.set('auth_token', token, { 
-            expires: 1/24, // 1 hour in days
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
-          });
-          
-          if (formData.rememberMe) {
-            localStorage.setItem(
-              "rememberedUser",
-              JSON.stringify({
-                email: formData.email,
-                password: formData.password,
-              })
-            );
-          } else {
-            localStorage.removeItem("rememberedUser");
-          }
   
-          if (userData.role) {
-            setAlertMessage({
-              message: "Successfully signed in!",
-              type: "success",
-            });
-            router.push("/dashboard");
-          } else {
-            setAlertMessage({ message: "User role not found", type: "error" });
-            setIsAuthenticating(false);
-            setIsLoading(false);
-          }
-        }, 2000); // 3 second delay
+        // Wrap in try-catch and add type checking
+        try {
+          if (typeof window !== 'undefined') {
+            setTimeout(() => {
+              try {
+                // Set cookie with more restrictive options
+                Cookies.set('auth_token', token, { 
+                  expires: 1/24,
+                  secure: true,
+                  sameSite: 'strict'
+                });
   
+                if (formData.rememberMe) {
+                  const userDataToStore = {
+                    email: formData.email,
+                    password: formData.password,
+                  };
+                  localStorage.setItem(
+                    "rememberedUser",
+                    JSON.stringify(userDataToStore)
+                  );
+                } else {
+                  localStorage.removeItem("rememberedUser");
+                }
+  
+                if (userData?.role) {
+                  setAlertMessage({
+                    message: "Successfully signed in!",
+                    type: "success",
+                  });
+                  router.push("/dashboard");
+                } else {
+                  throw new Error("User role not found");
+                }
+              } catch (storageError) {
+                console.error('Storage error:', storageError);
+                setAlertMessage({ 
+                  message: "Error saving authentication data", 
+                  type: "error" 
+                });
+                setIsAuthenticating(false);
+                setIsLoading(false);
+              }
+            }, 2000);
+          }
+        } catch (cookieError) {
+          console.error('Cookie error:', cookieError);
+          throw new Error("Error setting authentication cookie");
+        }
       } catch (decodeError) {
-        setAlertMessage({ message: "Authentication failed", type: "error" });
-        setIsLoading(false);
-        setIsAuthenticating(false);
+        console.error('Decode error:', decodeError);
+        throw new Error("Error decoding authentication token");
       }
     } catch (error) {
+      console.error('Login error:', error);
       setAlertMessage({
-        message: "Network error. Please try again.",
+        message: error instanceof Error ? error.message : "An unexpected error occurred",
         type: "error",
       });
       setIsLoading(false);

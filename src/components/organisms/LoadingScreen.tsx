@@ -1,29 +1,41 @@
+"use client";
+
 import { Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const LoadingScreen = () => {
   const [isMounted, setIsMounted] = useState(false);
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(2); // Match the 2000ms timeout
 
   useEffect(() => {
-    setIsMounted(true);
+    let mounted = true;
+
+    const mount = () => {
+      if (mounted) {
+        setIsMounted(true);
+      }
+    };
+
+    mount();
 
     const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
+      if (mounted) {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }
     }, 1000);
 
     return () => {
+      mounted = false;
       clearInterval(timer);
     };
   }, []);
 
-  // Don't render anything on the server
   if (!isMounted) {
     return null;
   }
