@@ -45,6 +45,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { AddEmployeeModal } from "@/components/organisms/AddEmployeeModal";
 
 const TEAM_OPTIONS = ["Pelayanan Pelanggan", "Korporat 1", "Korporat 2"];
 
@@ -280,6 +281,9 @@ export function DataTable<TData>({
               ))}
             </SelectContent>
           </Select>
+          <div className="flex justify-end"> 
+            <AddEmployeeModal />
+          </div>
         </div>
 
         {/* Table */}
