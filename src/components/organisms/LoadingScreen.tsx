@@ -1,6 +1,7 @@
 import { Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 
+
 const LoadingScreen = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [countdown, setCountdown] = useState(3);
@@ -59,7 +60,7 @@ const LoadingScreen = () => {
       {/* Loading text with countdown */}
       <div className="mt-8 flex flex-col items-center space-y-2">
         <div className="text-xl font-semibold text-yellow-300 animate-pulse">
-          Loading...
+          Loading....
         </div>
         <div className="text-lg text-yellow-200">
           Authenticating in {countdown}s
