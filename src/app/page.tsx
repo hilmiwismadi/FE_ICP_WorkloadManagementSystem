@@ -81,7 +81,7 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     try {
       const response = await fetch(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/auth/login",
@@ -96,9 +96,9 @@ const Login = () => {
           }),
         }
       );
-
+  
       const data = await response.json();
-
+  
       if (!response.ok) {
         setAlertMessage({
           message: data.message || "Invalid username or password",
@@ -107,43 +107,52 @@ const Login = () => {
         setIsLoading(false);
         return;
       }
-
+  
       const token = data.succes.accesToken;
-
+  
       try {
         const userData = decodeJWT(token);
-        Cookies.set('auth_token', token, { 
-          expires: 1/24, // 1 hour in days
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict'
-        });
         
-        if (formData.rememberMe) {
-          localStorage.setItem(
-            "rememberedUser",
-            JSON.stringify({
-              email: formData.email,
-              password: formData.password,
-            })
-          );
-        } else {
-          localStorage.removeItem("rememberedUser");
-        }
-
-        if (userData.role) {
-          setIsAuthenticating(true);
-          setAlertMessage({
-            message: "Successfully signed in!",
-            type: "success",
+        // Set authentication state before cookie
+        setIsAuthenticating(true);
+        
+        // Add a delay before setting the cookie and redirecting
+        setTimeout(() => {
+          Cookies.set('auth_token', token, { 
+            expires: 1/24, // 1 hour in days
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
           });
-          router.push("/dashboard");
-        } else {
-          setAlertMessage({ message: "User role not found", type: "error" });
-          setIsLoading(false);
-        }
+          
+          if (formData.rememberMe) {
+            localStorage.setItem(
+              "rememberedUser",
+              JSON.stringify({
+                email: formData.email,
+                password: formData.password,
+              })
+            );
+          } else {
+            localStorage.removeItem("rememberedUser");
+          }
+  
+          if (userData.role) {
+            setAlertMessage({
+              message: "Successfully signed in!",
+              type: "success",
+            });
+            router.push("/dashboard");
+          } else {
+            setAlertMessage({ message: "User role not found", type: "error" });
+            setIsAuthenticating(false);
+            setIsLoading(false);
+          }
+        }, 2000); // 3 second delay
+  
       } catch (decodeError) {
         setAlertMessage({ message: "Authentication failed", type: "error" });
         setIsLoading(false);
+        setIsAuthenticating(false);
       }
     } catch (error) {
       setAlertMessage({
@@ -151,8 +160,10 @@ const Login = () => {
         type: "error",
       });
       setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
+  
 
   if (isAuthenticating) {
     return <LoadingScreen />;
