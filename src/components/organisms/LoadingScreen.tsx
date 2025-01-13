@@ -3,10 +3,28 @@ import { useEffect, useState } from "react";
 
 const LoadingScreen = () => {
   const [isMounted, setIsMounted] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     setIsMounted(true);
+    
+    // Start countdown
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, []);
+
+  if (!isMounted) {
+    return null;
+  }
 
   const particles = [
     { left: "20%", top: "20%", delay: "0s", duration: "1.5s" },
@@ -16,10 +34,6 @@ const LoadingScreen = () => {
     { left: "30%", top: "40%", delay: "0.8s", duration: "1.7s" },
     { left: "70%", top: "80%", delay: "1s", duration: "1.9s" },
   ];
-
-  if (!isMounted) {
-    return null;
-  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900">
@@ -42,9 +56,14 @@ const LoadingScreen = () => {
         </div>
       </div>
       
-      {/* Loading text */}
-      <div className="mt-8 text-xl font-semibold text-yellow-300 animate-pulse">
-        Loading...
+      {/* Loading text with countdown */}
+      <div className="mt-8 flex flex-col items-center space-y-2">
+        <div className="text-xl font-semibold text-yellow-300 animate-pulse">
+          Loading...
+        </div>
+        <div className="text-lg text-yellow-200">
+          Authenticating in {countdown}s
+        </div>
       </div>
       
       {/* Electric particles */}
