@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
-import LoadingScreen from "@/components/organisms/LoadingScreen";
 import { useNotification } from "@/components/context/notification-context";
 import Cookies from 'js-cookie';
+import dynamic from 'next/dynamic';
 
 interface FormData {
   email: string;
@@ -40,9 +40,18 @@ const decodeJWT = (token: string): UserData => {
   }
 };
 
+const LoadingScreen = dynamic(() => import('@/components/organisms/LoadingScreen'), {
+  ssr: false
+});
+
 const Login = () => {
   const router = useRouter();
   const { showNotification } = useNotification();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -78,10 +87,32 @@ const Login = () => {
     }));
   };
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const rememberedUser = localStorage.getItem("rememberedUser");
+        if (rememberedUser) {
+          const parsedUser = JSON.parse(rememberedUser);
+          if (parsedUser && parsedUser.email && parsedUser.password) {
+            setFormData((prev) => ({
+              ...prev,
+              email: parsedUser.email,
+              password: parsedUser.password,
+              rememberMe: true,
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error reading remembered user:', error);
+        localStorage.removeItem("rememberedUser");
+      }
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-
+  
     try {
       const response = await fetch(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/auth/login",
@@ -96,9 +127,9 @@ const Login = () => {
           }),
         }
       );
-
+  
       const data = await response.json();
-
+  
       if (!response.ok) {
         setAlertMessage({
           message: data.message || "Invalid username or password",
@@ -107,53 +138,84 @@ const Login = () => {
         setIsLoading(false);
         return;
       }
-
+  
+      if (!data?.succes?.accesToken) {
+        throw new Error("Token not found in response");
+      }
+  
       const token = data.succes.accesToken;
-
+  
       try {
         const userData = decodeJWT(token);
-        Cookies.set('auth_token', token, { 
-          expires: 1/24, // 1 hour in days
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict'
-        });
-        
-        if (formData.rememberMe) {
-          localStorage.setItem(
-            "rememberedUser",
-            JSON.stringify({
-              email: formData.email,
-              password: formData.password,
-            })
-          );
-        } else {
-          localStorage.removeItem("rememberedUser");
-        }
-
-        if (userData.role) {
-          setIsAuthenticating(true);
-          setAlertMessage({
-            message: "Successfully signed in!",
-            type: "success",
-          });
-          router.push("/dashboard");
-        } else {
-          setAlertMessage({ message: "User role not found", type: "error" });
-          setIsLoading(false);
+        setIsAuthenticating(true);
+  
+        // Wrap in try-catch and add type checking
+        try {
+          if (typeof window !== 'undefined') {
+            setTimeout(() => {
+              try {
+                // Set cookie with more restrictive options
+                Cookies.set('auth_token', token, { 
+                  expires: 1/24,
+                  secure: true,
+                  sameSite: 'strict'
+                });
+  
+                if (formData.rememberMe) {
+                  const userDataToStore = {
+                    email: formData.email,
+                    password: formData.password,
+                  };
+                  localStorage.setItem(
+                    "rememberedUser",
+                    JSON.stringify(userDataToStore)
+                  );
+                } else {
+                  localStorage.removeItem("rememberedUser");
+                }
+  
+                if (userData?.role) {
+                  setAlertMessage({
+                    message: "Successfully signed in!",
+                    type: "success",
+                  });
+                  router.push("/dashboard");
+                } else {
+                  throw new Error("User role not found");
+                }
+              } catch (storageError) {
+                console.error('Storage error:', storageError);
+                setAlertMessage({ 
+                  message: "Error saving authentication data", 
+                  type: "error" 
+                });
+                setIsAuthenticating(false);
+                setIsLoading(false);
+              }
+            }, 2000);
+          }
+        } catch (cookieError) {
+          console.error('Cookie error:', cookieError);
+          throw new Error("Error setting authentication cookie");
         }
       } catch (decodeError) {
-        setAlertMessage({ message: "Authentication failed", type: "error" });
-        setIsLoading(false);
+        console.error('Decode error:', decodeError);
+        throw new Error("Error decoding authentication token");
       }
     } catch (error) {
+      console.error('Login error:', error);
       setAlertMessage({
-        message: "Network error. Please try again.",
+        message: error instanceof Error ? error.message : "An unexpected error occurred",
         type: "error",
       });
       setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
 
+  if (!mounted) {
+    return null;
+  }
   if (isAuthenticating) {
     return <LoadingScreen />;
   }
