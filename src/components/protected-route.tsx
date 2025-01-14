@@ -2,17 +2,20 @@
 
 import { useAuth } from './context/auth-context';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import LoadingScreen from './organisms/LoadingScreen';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth(); 
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/'); 
+    if (!isLoading && !isAuthenticated) {
+      router.push('/');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
+
+  if (isLoading) return <LoadingScreen />
 
   return <>{children}</>;
 };

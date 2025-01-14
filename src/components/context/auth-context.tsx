@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { jwtDecode } from "jwt-decode";
 
 interface AuthContextType {
   user: any;
@@ -23,51 +24,35 @@ interface UserData {
   exp: number;
 }
 
-const decodeJWT = (token: string): UserData => {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    throw new Error("Invalid token format");
-  }
-};
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Added loading state
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const storedToken = Cookies.get('auth_token'); // Get token from cookies
+    const storedToken = Cookies.get('auth_token');
     if (storedToken) {
       setToken(storedToken);
-      const decodedUser = decodeJWT(storedToken);
+      const decodedUser: UserData = jwtDecode(storedToken);
       setUser(decodedUser);
     }
-    setIsLoading(false); // Set loading to false once the check is done
+    setIsLoading(false);
   }, []);
 
   const login = (token: string, userData: any) => {
-    Cookies.set('auth_token', token); // Store token in cookies
+    Cookies.set('auth_token', token);
     setToken(token);
     setUser(userData);
   };
 
   const logout = () => {
-    Cookies.remove('auth_token'); // Remove token from cookies
+    Cookies.remove('auth_token');
     setToken(null);
     setUser(null);
-    router.push('/login'); // Redirect to login page
+    router.push('/login');
   };
 
   return (
@@ -78,7 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         login,
         logout,
         isAuthenticated: !!user,
-        isLoading, // Provide loading state to context
+        isLoading,
       }}
     >
       {children}
