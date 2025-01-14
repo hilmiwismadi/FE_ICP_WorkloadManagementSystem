@@ -43,39 +43,30 @@ const Login = () => {
   } | null>(null);
 
   useEffect(() => {
-    // Check for existing authentication
-    const token = Cookies.get("auth_token");
-    if (token) {
-      try {
-        const decoded = jwtDecode<UserData>(token);
-        const currentTime = Date.now() / 1000;
-
-        if (decoded.exp > currentTime) {
-          // Token is valid, redirect to dashboard
-          router.push("/dashboard");
-          return;
-        } else {
-          // Token is expired, clear it
+    const checkAuthentication = () => {
+      const token = Cookies.get("auth_token");
+      if (token) {
+        try {
+          const decoded = jwtDecode<UserData>(token);
+          const currentTime = Date.now() / 1000;
+  
+          if (decoded.exp > currentTime) {
+            // Token is valid, navigate to dashboard
+            router.push("/dashboard");
+          } else {
+            // Expired token, remove it
+            Cookies.remove("auth_token");
+          }
+        } catch (error) {
+          // Invalid token, clear it
           Cookies.remove("auth_token");
         }
-      } catch (error) {
-        // Invalid token, clear it
-        Cookies.remove("auth_token");
       }
-    }
-
-    // Check remembered user
-    const rememberedUser = localStorage.getItem("rememberedUser");
-    if (rememberedUser) {
-      const { email, password } = JSON.parse(rememberedUser);
-      setFormData((prev) => ({
-        ...prev,
-        email,
-        password,
-        rememberMe: true,
-      }));
-    }
+    };
+  
+    checkAuthentication();
   }, [router]);
+  
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
