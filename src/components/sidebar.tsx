@@ -94,29 +94,30 @@ const Sidebar = () => {
 
       {/* User Profile */}
       <div
-        className="mx-[1vw] mb-[1.667vw]"
-        onClick={(e) => e.stopPropagation()}
+        className="mx-[1vw] mb-[1.667vw] border-2 border-[#243F80] rounded-[1vw] p-[1vw] bg-[#243F80] transition-all duration-300 hover:bg-[#1A2F60] cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          window.location.href = "/edit-profile/emp001";
+        }}
       >
-        <div className="bg-[#243F80] rounded-[1vw] p-[1vw] transition-all duration-300">
-          <div className="flex items-center gap-[0.625vw]">
-            <Image
-              src="/img/sidebar/UserProfile.png"
-              alt="profile"
-              width={40}
-              height={40}
-              className={`rounded-full transition-all duration-300 ${
-                isExpanded ? "w-[3vw] h-[3vw]" : "w-[1vw] h-[1vw]"
-              }`}
-            />
-            {isExpanded && userData && (
-              <div className="flex flex-col text-white">
-                <span className="font-semibold text-[1.25vw]">
-                  {userData.name}
-                </span>
-                <span className="text-[1vw]">{userData.user_Id}</span>
-              </div>
-            )}
-          </div>
+        <div className="flex items-center gap-[0.625vw]">
+          <Image
+            src="/img/sidebar/UserProfile.png"
+            alt="profile"
+            width={40}
+            height={40}
+            className={`rounded-full transition-all duration-300 ${
+              isExpanded ? "w-[3vw] h-[3vw]" : "w-[1vw] h-[1vw]"
+            }`}
+          />
+          {isExpanded && userData && (
+            <div className="flex flex-col text-white">
+              <span className="font-semibold text-[1.25vw]">
+                {userData.name}
+              </span>
+              <span className="text-[1vw]">{userData.user_Id}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -168,7 +169,9 @@ const Sidebar = () => {
       {isLogoutPopupOpen && (
         <div className="fixed inset-0 bg-black/75 flex justify-center items-center z-50 text-[1vw]">
           <div className="bg-white p-[2.5vw] rounded-lg shadow-lg w-[90vw] sm:w-[400px] text-center">
-            <h2 className="text-[1.5vw] font-semibold mb-[0.833vw]">Confirm Logout</h2>
+            <h2 className="text-[1.5vw] font-semibold mb-[0.833vw]">
+              Confirm Logout
+            </h2>
             <p className="text-gray-600 mb-[1.25vw]">
               Are you sure you want to log out?
             </p>
