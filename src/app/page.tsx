@@ -6,7 +6,8 @@ import Image from "next/image";
 import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 import { useNotification } from "@/components/context/notification-context";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
 interface FormData {
   email: string;
@@ -23,22 +24,6 @@ interface UserData {
   iat: number;
   exp: number;
 }
-
-const decodeJWT = (token: string): UserData => {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    throw new Error("Invalid token format");
-  }
-};
 
 const Login = () => {
   const router = useRouter();
@@ -58,6 +43,28 @@ const Login = () => {
   } | null>(null);
 
   useEffect(() => {
+    // Check for existing authentication
+    const token = Cookies.get("auth_token");
+    if (token) {
+      try {
+        const decoded = jwtDecode<UserData>(token);
+        const currentTime = Date.now() / 1000;
+
+        if (decoded.exp > currentTime) {
+          // Token is valid, redirect to dashboard
+          router.push("/dashboard");
+          return;
+        } else {
+          // Token is expired, clear it
+          Cookies.remove("auth_token");
+        }
+      } catch (error) {
+        // Invalid token, clear it
+        Cookies.remove("auth_token");
+      }
+    }
+
+    // Check remembered user
     const rememberedUser = localStorage.getItem("rememberedUser");
     if (rememberedUser) {
       const { email, password } = JSON.parse(rememberedUser);
@@ -68,7 +75,7 @@ const Login = () => {
         rememberMe: true,
       }));
     }
-  }, []);
+  }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -81,7 +88,7 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-  
+
     try {
       const response = await fetch(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/auth/login",
@@ -96,9 +103,9 @@ const Login = () => {
           }),
         }
       );
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
         setAlertMessage({
           message: data.message || "Invalid username or password",
@@ -107,23 +114,20 @@ const Login = () => {
         setIsLoading(false);
         return;
       }
-  
+
       const token = data.succes.accesToken;
-  
+
       try {
-        const userData = decodeJWT(token);
-        
-        // Set authentication state before cookie
+        const userData = jwtDecode<UserData>(token);
         setIsAuthenticating(true);
-        
-        // Add a delay before setting the cookie and redirecting
+
         setTimeout(() => {
-          Cookies.set('auth_token', token, { 
-            expires: 1/24, // 1 hour in days
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
+          Cookies.set("auth_token", token, {
+            expires: 1 / 24,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
           });
-          
+
           if (formData.rememberMe) {
             localStorage.setItem(
               "rememberedUser",
@@ -135,7 +139,7 @@ const Login = () => {
           } else {
             localStorage.removeItem("rememberedUser");
           }
-  
+
           if (userData.role) {
             setAlertMessage({
               message: "Successfully signed in!",
@@ -147,8 +151,7 @@ const Login = () => {
             setIsAuthenticating(false);
             setIsLoading(false);
           }
-        }, 2000); // 3 second delay
-  
+        }, 2000);
       } catch (decodeError) {
         setAlertMessage({ message: "Authentication failed", type: "error" });
         setIsLoading(false);
@@ -163,20 +166,17 @@ const Login = () => {
       setIsAuthenticating(false);
     }
   };
-  
 
-  if (isAuthenticating) {
+  if (isAuthenticating || isLoading) {
     return <LoadingScreen />;
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-navy to-blue-900 flex items-center justify-center p-6">
-      {/* Rest of your JSX remains exactly the same */}
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl flex overflow-hidden">
-        {/* Left Side - Illustration */}
-        <div className="hidden lg:flex lg:w-1/2 bg-blue-50 p-12 items-center justify-center">
+    <div className="min-h-screen w-full bg-gradient-to-br from-navy to-blue-900 flex items-center justify-center p-[3vw]">
+      <div className="w-full max-w-[80vw] bg-white rounded-[1vw] shadow-2xl flex overflow-hidden">
+        <div className="hidden lg:flex lg:w-1/2 bg-blue-50 p-[3vw] items-center justify-center">
           <div className="absolute h-[28vw] w-[28vw] bg-blue-100 rounded-full"></div>
-          <div className="relative w-[60vw] max-w-md transform transition-transform duration-500 hover:scale-105">
+          <div className="relative w-[30vw] max-w-[40vw] transform transition-transform duration-500 hover:scale-105">
             <Image
               src="/img/assets/loginAssets.png"
               alt="Login"
@@ -188,13 +188,14 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Right Side - Login Form */}
-        <div className="w-full lg:w-1/2 p-8 md:p-12">
-          <div className="max-w-md mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="w-full lg:w-1/2 p-[2vw] md:p-[3vw]">
+          <div className="max-w-[30vw] mx-auto">
+            <h2 className="text-[2vw] font-bold text-gray-900 mb-[1vw]">
               Welcome back
             </h2>
-            <p className="text-gray-600 mb-8">Please sign in to continue</p>
+            <p className="text-[1vw] text-gray-600 mb-[2vw]">
+              Please sign in to continue
+            </p>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email Input */}
@@ -270,7 +271,9 @@ const Login = () => {
                     onChange={handleInputChange}
                     className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-colors"
                   />
-                  <span className="text-[0.875vw] text-gray-600">Remember me</span>
+                  <span className="text-[0.875vw] text-gray-600">
+                    Remember me
+                  </span>
                 </label>
               </div>
 
