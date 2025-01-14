@@ -53,16 +53,16 @@ export const columns: ColumnDef<EmployeeData>[] = [
     header: "ID",
   },
   {
+    accessorKey: "name",
+    header: "Nama",
+  },
+  {
     accessorKey: "email",
     header: "E-mail",
   },
   {
     accessorKey: "phone",
     header: "Contact",
-  },
-  {
-    accessorKey: "name",
-    header: "Nama",
   },
   {
     accessorKey: "team",
