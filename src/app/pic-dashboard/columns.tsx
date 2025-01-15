@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { EditEmployeeModal } from "./edit-pic-modal";
 import { DeleteConfirmModal } from "./delete-pic-modal";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 export type EmployeeData = {
   employee_id: string;

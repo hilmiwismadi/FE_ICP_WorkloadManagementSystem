@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/components/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { EmployeeData } from "./columns";
 
 interface EditEmployeeModalProps {

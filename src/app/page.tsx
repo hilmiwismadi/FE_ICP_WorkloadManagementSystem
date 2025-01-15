@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
-import { useNotification } from "@/components/context/notification-context";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import { encryptData, decryptData  } from "@/utils/securityHelpers" 
 
 interface FormData {
   email: string;
@@ -27,7 +27,6 @@ interface UserData {
 
 const Login = () => {
   const router = useRouter();
-  const { showNotification } = useNotification();
 
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -121,13 +120,7 @@ const Login = () => {
           });
 
           if (formData.rememberMe) {
-            localStorage.setItem(
-              "rememberedUser",
-              JSON.stringify({
-                email: formData.email,
-                password: formData.password,
-              })
-            );
+            localStorage.setItem("rememberedUser", encryptData(JSON.stringify(formData)));
           } else {
             localStorage.removeItem("rememberedUser");
           }
@@ -158,6 +151,18 @@ const Login = () => {
       setIsAuthenticating(false);
     }
   };
+
+  useEffect(() => {
+    const encryptedUser = localStorage.getItem("rememberedUser");
+    if (encryptedUser) {
+      try {
+        const decryptedUser = JSON.parse(decryptData(encryptedUser));
+        setFormData(decryptedUser);
+      } catch (error) {
+        console.error("Failed to decrypt remembered user data", error);
+      }
+    }
+  }, []);
 
   if (isAuthenticating || isLoading) {
     return <LoadingScreen />;

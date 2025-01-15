@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { toast } from "@/components/hooks/use-toast"
+import { toast } from "@/hooks/use-toast"
 
 interface DeleteConfirmModalProps {
   employeeId: string
