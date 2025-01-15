@@ -1,15 +1,25 @@
 import CryptoJS from "crypto-js";
 import Cookies from "js-cookie";
 
-// Encryption Helper
 export const encryptData = (data: string): string => {
-  return CryptoJS.AES.encrypt(data, process.env.NEXT_PUBLIC_SECRET_KEY!).toString();
+  try {
+    const secretKey = CryptoJS.enc.Utf8.parse(process.env.NEXT_PUBLIC_SECRET_KEY!);
+    return CryptoJS.AES.encrypt(data, secretKey, { mode: CryptoJS.mode.ECB }).toString();
+  } catch (error) {
+    console.error("Encryption error:", error);
+    return "";
+  }
 };
 
-// Decryption Helper
 export const decryptData = (cipherText: string): string => {
-  const bytes = CryptoJS.AES.decrypt(cipherText, process.env.NEXT_PUBLIC_SECRET_KEY!);
-  return bytes.toString(CryptoJS.enc.Utf8);
+  try {
+    const secretKey = CryptoJS.enc.Utf8.parse(process.env.NEXT_PUBLIC_SECRET_KEY!);
+    const bytes = CryptoJS.AES.decrypt(cipherText, secretKey, { mode: CryptoJS.mode.ECB });
+    return bytes.toString(CryptoJS.enc.Utf8);
+  } catch (error) {
+    console.error("Decryption error:", error);
+    return "";
+  }
 };
 
 // Set Encrypted Cookie
