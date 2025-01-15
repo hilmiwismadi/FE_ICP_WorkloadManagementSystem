@@ -62,10 +62,30 @@ const Login = () => {
         }
       }
     };
+
+    const loadRememberedUser = () => {
+      const rememberedUserData = localStorage.getItem("rememberedUser");
+      if (rememberedUserData) {
+        try {
+          const decryptedData = decryptData(rememberedUserData);
+          if (decryptedData) {
+            const parsedData = JSON.parse(decryptedData) as FormData;
+            setFormData({
+              email: parsedData.email,
+              password: parsedData.password,
+              rememberMe: true
+            });
+          }
+        } catch (error) {
+          console.error("Error loading remembered user:", error);
+          localStorage.removeItem("rememberedUser");
+        }
+      }
+    };
   
     checkAuthentication();
+    loadRememberedUser();
   }, [router]);
-  
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -151,19 +171,7 @@ const Login = () => {
       setIsAuthenticating(false);
     }
   };
-
-  useEffect(() => {
-    const encryptedUser = localStorage.getItem("rememberedUser");
-    if (encryptedUser) {
-      try {
-        const decryptedUser = JSON.parse(decryptData(encryptedUser));
-        setFormData(decryptedUser);
-      } catch (error) {
-        console.error("Failed to decrypt remembered user data", error);
-      }
-    }
-  }, []);
-
+  
   if (isAuthenticating || isLoading) {
     return <LoadingScreen />;
   }
