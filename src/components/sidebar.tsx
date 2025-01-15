@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 import { parse } from 'cookie';
+import axios from "axios";
 import {
   ChevronLeft,
   ArrowLeft,
@@ -14,6 +15,16 @@ import {
   ClipboardList,
   LogOut,
 } from "lucide-react";
+
+interface Employee {
+  employee_Id: string;
+  name: string;
+  image?: string;
+  users: Array<{
+    user_Id: string;
+    role: string;
+  }>;
+}
 
 const sidebarItems = [
   {
@@ -35,24 +46,34 @@ const sidebarItems = [
 
 const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [userData, setUserData] = useState<any>(null);
+  const [employeeData, setEmployeeData] = useState<Employee | null>(null);
   const [isLogoutPopupOpen, setIsLogoutPopupOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    const cookies = document.cookie;
-    const parsedCookies = parse(cookies);
-    const token = parsedCookies.auth_token;
+    const fetchEmployeeData = async () => {
+      const cookies = document.cookie;
+      const parsedCookies = parse(cookies);
+      const token = parsedCookies.auth_token;
 
-    if (token) {
-      try {
-        const decodedToken: any = jwtDecode(token);
-        setUserData(decodedToken);
-      } catch (error) {
-        console.error("Invalid token:", error);
+      if (token) {
+        try {
+          const decodedToken: any = jwtDecode(token);
+          const response = await axios.get(
+            `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${decodedToken.employee_Id}`
+          );
+          
+          if (response.data && response.data.data) {
+            setEmployeeData(response.data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching employee data:", error);
+        }
       }
-    }
+    };
+
+    fetchEmployeeData();
   }, []);
 
   const handleLogout = () => {
@@ -97,12 +118,14 @@ const Sidebar = () => {
         className="mx-[1vw] mb-[1.667vw] border-2 border-[#243F80] rounded-[1vw] p-[1vw] bg-[#243F80] transition-all duration-300 hover:bg-[#1A2F60] cursor-pointer"
         onClick={(e) => {
           e.stopPropagation();
-          window.location.href = "/edit-profile/emp001";
+          if (employeeData) {
+            window.location.href = `/edit-profile/${employeeData.employee_Id}`;
+          }
         }}
       >
         <div className="flex items-center gap-[0.625vw]">
           <Image
-            src="/img/sidebar/UserProfile.png"
+            src={employeeData?.image || "/img/sidebar/UserProfile.png"}
             alt="profile"
             width={40}
             height={40}
@@ -110,18 +133,21 @@ const Sidebar = () => {
               isExpanded ? "w-[3vw] h-[3vw]" : "w-[1vw] h-[1vw]"
             }`}
           />
-          {isExpanded && userData && (
+          {isExpanded && employeeData && (
             <div className="flex flex-col text-white">
               <span className="font-semibold text-[1.25vw]">
-                {userData.name}
+                {employeeData.name}
               </span>
-              <span className="text-[1vw]">{userData.user_Id}</span>
+              <span className="text-[1vw]">ID-{employeeData.employee_Id}</span>
+              <span className="text-[0.8vw] text-gray-300">
+                {employeeData.users[0]?.role}
+              </span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Navigation Items */}
+      {/* Rest of the component remains the same */}
       <nav
         className="px-[1vw] space-y-[1vw]"
         onClick={(e) => e.stopPropagation()}
