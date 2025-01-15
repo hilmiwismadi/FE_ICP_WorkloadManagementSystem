@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
-import cookie from "cookie";
+import { parse } from 'cookie';
 import {
   ChevronLeft,
   ArrowLeft,
@@ -42,7 +42,7 @@ const Sidebar = () => {
 
   useEffect(() => {
     const cookies = document.cookie;
-    const parsedCookies = cookie.parse(cookies);
+    const parsedCookies = parse(cookies);
     const token = parsedCookies.auth_token;
 
     if (token) {
