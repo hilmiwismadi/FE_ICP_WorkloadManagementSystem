@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { PencilIcon, Lock } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
+import { parse } from "cookie";
 
 interface Employee {
   employee_Id: string;
@@ -53,7 +55,9 @@ export default function EditUserProfile({ employee }: UserProfileProps) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePasswordInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const { name, value } = e.target;
     setPasswordForm((prev) => ({ ...prev, [name]: value }));
     setPasswordError("");
@@ -119,13 +123,35 @@ export default function EditUserProfile({ employee }: UserProfileProps) {
     }
 
     try {
+      // Get the token from cookies
+      const cookies = document.cookie;
+      const parsedCookies = parse(cookies);
+      const token = parsedCookies.auth_token;
+
+      if (!token) {
+        setPasswordError("User is not authenticated");
+        return;
+      }
+
+      // Decode the token to get the user_Id
+      const decodedToken: any = jwtDecode(token);
+      const userId = decodedToken.user_Id;
+
+      console.log(userId);
+
+      if (!userId) {
+        setPasswordError("Invalid token: user ID not found");
+        return;
+      }
+
+      // Send the password update request
       const response = await fetch(
-        `https://be-icpworkloadmanagementsystem.up.railway.app/api/users/change-password/${employee.users[0]?.user_Id}`,
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/user/updatePass/${userId}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            oldPassword: passwordForm.previousPassword,
+            currentPassword: passwordForm.previousPassword,
             newPassword: passwordForm.newPassword,
           }),
         }
@@ -141,7 +167,11 @@ export default function EditUserProfile({ employee }: UserProfileProps) {
         });
       } else {
         const data = await response.json();
-        setPasswordError(data.error || "Failed to change password");
+        setPasswordError(
+          typeof data.error === "string"
+            ? data.error
+            : "Failed to change password"
+        );
       }
     } catch (error) {
       console.error("Error changing password:", error);
@@ -246,9 +276,10 @@ export default function EditUserProfile({ employee }: UserProfileProps) {
         <div className="fixed inset-0 bg-black/75 flex justify-center items-center z-50">
           <Card className="w-[90vw] max-w-md p-6">
             <h2 className="text-xl font-semibold mb-4">Change Password</h2>
-            {passwordError && (
+            {passwordError && typeof passwordError === "string" && (
               <p className="text-red-500 mb-4 text-sm">{passwordError}</p>
             )}
+
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Previous Password</label>
@@ -271,7 +302,9 @@ export default function EditUserProfile({ employee }: UserProfileProps) {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Confirm New Password</label>
+                <label className="text-sm font-medium">
+                  Confirm New Password
+                </label>
                 <input
                   type="password"
                   name="confirmPassword"
