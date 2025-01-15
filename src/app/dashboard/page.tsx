@@ -32,7 +32,7 @@ export default function Dashboard() {
               team: emp.team,
               skill: emp.skill,
               current_workload: emp.current_Workload,
-              email: emp.email,
+              email: emp.users[0]?.email || "N/A",
               phone: emp.phone,
             }))
           );
