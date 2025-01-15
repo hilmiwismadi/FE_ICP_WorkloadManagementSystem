@@ -4,6 +4,7 @@ import Sidebar from "@/components/sidebar";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import EditUserProfile from "../edit-user-profile";
+import LoadingScreen from "@/components/organisms/LoadingScreen";
 import axios from "axios";
 
 interface Employee {
@@ -22,7 +23,6 @@ interface Employee {
     email: string;
     role: string;
   }>;
-  
 }
 
 export default function PleaseLoginPage() {
@@ -41,12 +41,19 @@ export default function PleaseLoginPage() {
         }
       } catch (error) {
         console.error("Failed to fetch employee data:", error);
+      } finally {
+        setLoading(false);
       }
     };
+
     if (id) {
       fetchEmployeeData();
     }
   }, [id]);
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">
