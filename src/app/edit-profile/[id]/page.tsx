@@ -17,6 +17,12 @@ interface Employee {
   role: string;
   current_Workload: number;
   start_Date: string;
+  users: Array<{
+    user_Id: string;
+    email: string;
+    role: string;
+  }>;
+  
 }
 
 export default function PleaseLoginPage() {
