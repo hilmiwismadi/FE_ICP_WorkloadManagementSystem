@@ -27,7 +27,7 @@ interface UserData {
 
 const Login = () => {
   const router = useRouter();
-
+  const [isInitialized, setIsInitialized] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -42,49 +42,53 @@ const Login = () => {
   } | null>(null);
 
   useEffect(() => {
-    const checkAuthentication = () => {
-      const token = Cookies.get("auth_token");
-      if (token) {
-        try {
+    const checkAuthAndRememberedUser = async () => {
+      try {
+        // First check if there's a valid auth token
+        const token = Cookies.get("auth_token");
+        if (token) {
           const decoded = jwtDecode<UserData>(token);
           const currentTime = Date.now() / 1000;
-  
+          
           if (decoded.exp > currentTime) {
-            // Token is valid, navigate to dashboard
             router.push("/dashboard");
+            return; // Stop here if user is already authenticated
           } else {
-            // Expired token, remove it
+            // Clean up expired token
             Cookies.remove("auth_token");
           }
-        } catch (error) {
-          // Invalid token, clear it
-          Cookies.remove("auth_token");
         }
-      }
-    };
 
-    const loadRememberedUser = () => {
-      const rememberedUserData = Cookies.get("remembered_user");
-      if (rememberedUserData) {
-        try {
+        // Then try to load remembered user data
+        const rememberedUserData = Cookies.get("remembered_user");
+        if (rememberedUserData) {
           const decryptedData = decryptCookieData(rememberedUserData);
           if (decryptedData) {
             const parsedData = JSON.parse(decryptedData) as FormData;
-            setFormData({
-              email: parsedData.email,
-              password: parsedData.password,
-              rememberMe: true
-            });
+            // Validate the decrypted data
+            if (parsedData.email && parsedData.password) {
+              setFormData({
+                email: parsedData.email,
+                password: parsedData.password,
+                rememberMe: true
+              });
+            } else {
+              // Invalid data structure, remove the cookie
+              Cookies.remove("remembered_user");
+            }
           }
-        } catch (error) {
-          console.error("Error loading remembered user:", error);
-          Cookies.remove("remembered_user");
         }
+      } catch (error) {
+        // Clean up cookies if there's any error
+        Cookies.remove("auth_token");
+        Cookies.remove("remembered_user");
+        console.error("Error during initialization:", error);
+      } finally {
+        setIsInitialized(true);
       }
     };
-  
-    checkAuthentication();
-    loadRememberedUser();
+
+    checkAuthAndRememberedUser();
   }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,6 +97,14 @@ const Login = () => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+
+    if (name === "rememberMe" && !checked) {
+      Cookies.remove("remembered_user", {
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict"
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
