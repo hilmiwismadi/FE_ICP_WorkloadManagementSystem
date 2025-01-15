@@ -7,7 +7,7 @@ import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-import { encryptData, decryptData  } from "@/utils/securityHelpers" 
+import { encryptCookieData, decryptCookieData } from "@/utils/securityHelpers";
 
 interface FormData {
   email: string;
@@ -64,10 +64,10 @@ const Login = () => {
     };
 
     const loadRememberedUser = () => {
-      const rememberedUserData = localStorage.getItem("rememberedUser");
+      const rememberedUserData = Cookies.get("remembered_user");
       if (rememberedUserData) {
         try {
-          const decryptedData = decryptData(rememberedUserData);
+          const decryptedData = decryptCookieData(rememberedUserData);
           if (decryptedData) {
             const parsedData = JSON.parse(decryptedData) as FormData;
             setFormData({
@@ -78,7 +78,7 @@ const Login = () => {
           }
         } catch (error) {
           console.error("Error loading remembered user:", error);
-          localStorage.removeItem("rememberedUser");
+          Cookies.remove("remembered_user");
         }
       }
     };
@@ -140,9 +140,20 @@ const Login = () => {
           });
 
           if (formData.rememberMe) {
-            localStorage.setItem("rememberedUser", encryptData(JSON.stringify(formData)));
+            const rememberData = {
+              email: formData.email,
+              password: formData.password,
+              rememberMe: true
+            };
+            const encryptedData = encryptCookieData(JSON.stringify(rememberData));
+            Cookies.set("remembered_user", encryptedData, {
+              expires: 7, // 7 days
+              path: "/",
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "strict",
+            });
           } else {
-            localStorage.removeItem("rememberedUser");
+            Cookies.remove("remembered_user");
           }
 
           if (userData.role) {
