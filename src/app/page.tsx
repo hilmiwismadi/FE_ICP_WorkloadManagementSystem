@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
-import { useNotification } from "@/components/context/notification-context";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import { encryptData, decryptData  } from "@/utils/securityHelpers" 
 
 interface FormData {
   email: string;
@@ -27,7 +27,6 @@ interface UserData {
 
 const Login = () => {
   const router = useRouter();
-  const { showNotification } = useNotification();
 
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -115,18 +114,13 @@ const Login = () => {
         setTimeout(() => {
           Cookies.set("auth_token", token, {
             expires: 1 / 24,
+            path: "/",
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
           });
 
           if (formData.rememberMe) {
-            localStorage.setItem(
-              "rememberedUser",
-              JSON.stringify({
-                email: formData.email,
-                password: formData.password,
-              })
-            );
+            localStorage.setItem("rememberedUser", encryptData(JSON.stringify(formData)));
           } else {
             localStorage.removeItem("rememberedUser");
           }
@@ -158,6 +152,18 @@ const Login = () => {
     }
   };
 
+  useEffect(() => {
+    const encryptedUser = localStorage.getItem("rememberedUser");
+    if (encryptedUser) {
+      try {
+        const decryptedUser = JSON.parse(decryptData(encryptedUser));
+        setFormData(decryptedUser);
+      } catch (error) {
+        console.error("Failed to decrypt remembered user data", error);
+      }
+    }
+  }, []);
+
   if (isAuthenticating || isLoading) {
     return <LoadingScreen />;
   }
@@ -188,20 +194,20 @@ const Login = () => {
               Please sign in to continue
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-[1.25vw]">
               {/* Email Input */}
               <div className="relative">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                <label className="text-[1vw] font-medium text-gray-700 mb-[0.208vw] block">
                   Email
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <User className="absolute left-[0.625vw] top-1/2 -translate-y-1/2 h-[1.042vw] w-[1.042vw] text-gray-400" />
                   <input
                     type="text"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full pl-[2.083vw] pr-[2.5vw] py-[0.521vw] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     placeholder="Enter your email"
                     required
                   />
@@ -210,29 +216,29 @@ const Login = () => {
 
               {/* Password Input */}
               <div className="relative">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                <label className="text-[1vw] font-medium text-gray-700 mb-[0.208vw] block">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Lock className="absolute left-[0.625vw] top-1/2 -translate-y-1/2 h-[1.042vw] w-[1.042vw] text-gray-400" />
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-12 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full pl-[2.083vw] pr-[2.5vw] py-[0.521vw] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                     placeholder="Enter your password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-[0.625vw] top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
+                      <EyeOff className="h-[1.042vw] w-[1.042vw]" />
                     ) : (
-                      <Eye className="h-5 w-5" />
+                      <Eye className="h-[1.042vw] w-[1.042vw]" />
                     )}
                   </button>
                 </div>
@@ -240,7 +246,7 @@ const Login = () => {
 
               {alertMessage && (
                 <div
-                  className={`mb-4 rounded-lg text-red-500 text-[1vw] ${
+                  className={`mb-[0.833vw] rounded-lg text-red-500 text-[1vw] ${
                     alertMessage.type === "error"
                       ? "bg-white"
                       : alertMessage.type === "success"
@@ -254,13 +260,13 @@ const Login = () => {
 
               {/* Remember Me & Forgot Password */}
               <div className="flex items-center justify-between">
-                <label className="flex items-center space-x-2 cursor-pointer">
+                <label className="flex items-center space-x-[0.417vw] cursor-pointer">
                   <input
                     type="checkbox"
                     name="rememberMe"
                     checked={formData.rememberMe}
                     onChange={handleInputChange}
-                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-colors"
+                    className="w-[0.833vw] h-[0.833vw] rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-colors"
                   />
                   <span className="text-[0.875vw] text-gray-600">
                     Remember me
@@ -269,24 +275,24 @@ const Login = () => {
               </div>
 
               {/* Submit Button */}
-              <div className="pt-6 pb-2">
+              <div className="pt-[1.25vw] pb-[0.417vw]">
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-navy hover:bg-blue-800 text-white font-medium py-3.5 px-4 rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-70 shadow-lg hover:shadow-xl"
+                  className="w-full bg-navy hover:bg-blue-800 text-white font-medium py-[0.729vw] px-[0.833vw] rounded-lg transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-70 shadow-lg hover:shadow-xl"
                 >
                   {isLoading ? (
-                    <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="h-[1.042vw] w-[1.042vw] border-[0.104vw] border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <>
-                      <span className="text-lg">Sign In</span>
-                      <ArrowRight className="h-5 w-5 ml-2" />
+                      <span className="text-[1vw]">Sign In</span>
+                      <ArrowRight className="h-[1.042vw] w-[1.042vw] ml-[0.417vw]" />
                     </>
                   )}
                 </button>
               </div>
 
-              <div className="relative py-4">
+              <div className="relative py-[0.833vw]">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-200"></div>
                 </div>
