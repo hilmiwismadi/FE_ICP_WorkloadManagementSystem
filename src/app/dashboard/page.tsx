@@ -8,6 +8,19 @@ import { DataTable } from "./data-table";
 import ProtectedRoute from "@/components/protected-route";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 
+interface ApiEmployeeData {
+  employee_Id: string;
+  name: string;
+  team: string;
+  skill: string;
+  current_Workload: number;
+  phone: string;
+  users: Array<{
+    email: string;
+    role: string;
+  }>;
+}
+
 export default function Dashboard() {
   const [data, setData] = useState<EmployeeData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,13 +39,13 @@ export default function Dashboard() {
           setData([]);
         } else {
           setData(
-            result.data.map((emp: any) => ({
+            result.data.map((emp: ApiEmployeeData) => ({
               employee_id: emp.employee_Id,
               name: emp.name,
               team: emp.team,
               skill: emp.skill,
               current_workload: emp.current_Workload,
-              email: emp.email,
+              email: emp.users[0]?.email || "N/A", // Get email from users array
               phone: emp.phone,
             }))
           );
