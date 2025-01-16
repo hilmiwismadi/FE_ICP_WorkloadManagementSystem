@@ -26,40 +26,66 @@ interface Employee {
   }>;
 }
 
-const sidebarItems = [
+interface DecodedToken {
+  employee_Id: string;
+  role: string;
+}
+
+interface MenuItem {
+  title: string;
+  link: string;
+  icon: any;
+  allowedRoles: string[];
+}
+
+const menuItems: MenuItem[] = [
   {
     title: "Dashboard",
     link: "/dashboard",
     icon: LayoutDashboard,
+    allowedRoles: ["Manager", "PIC"],
+  },
+  {
+    title: "PIC Dashboard",
+    link: "/pic-dashboard",
+    icon: LayoutDashboard,
+    allowedRoles: ["Manager"],
   },
   {
     title: "Employee Activity",
     link: "/activity",
     icon: Users,
+    allowedRoles: ["Manager", "PIC"],
   },
   {
     title: "Task Management",
     link: "/task",
     icon: ClipboardList,
+    allowedRoles: ["Manager", "PIC"],
   },
 ];
 
 const Sidebar = () => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [employeeData, setEmployeeData] = useState<Employee | null>(null);
+  const [userRole, setUserRole] = useState<string>("");
+  const [employeeId, setEmployeeId] = useState<string>("");
   const [isLogoutPopupOpen, setIsLogoutPopupOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    const fetchEmployeeData = async () => {
+    const initializeSidebar = async () => {
       const cookies = document.cookie;
       const parsedCookies = parse(cookies);
       const token = parsedCookies.auth_token;
 
       if (token) {
         try {
-          const decodedToken: any = jwtDecode(token);
+          const decodedToken = jwtDecode(token) as DecodedToken;
+          setUserRole(decodedToken.role);
+          setEmployeeId(decodedToken.employee_Id);
+
           const response = await axios.get(
             `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${decodedToken.employee_Id}`
           );
@@ -68,17 +94,30 @@ const Sidebar = () => {
             setEmployeeData(response.data.data);
           }
         } catch (error) {
-          console.error("Error fetching employee data:", error);
+          console.error("Error initializing sidebar:", error);
         }
       }
     };
 
-    fetchEmployeeData();
+    initializeSidebar();
   }, []);
 
   const handleLogout = () => {
     Cookies.remove("auth_token");
     router.push("/");
+  };
+
+  // Get filtered menu items based on user role
+  const getFilteredMenuItems = () => {
+    if (userRole === "Employee") {
+      return [{
+        title: "My Tasks",
+        link: `/task-lists/${employeeId}`,
+        icon: ClipboardList,
+        allowedRoles: ["Employee"],
+      }];
+    }
+    return menuItems.filter(item => item.allowedRoles.includes(userRole));
   };
 
   return (
@@ -140,19 +179,19 @@ const Sidebar = () => {
               </span>
               <span className="text-[1vw]">ID-{employeeData.employee_Id}</span>
               <span className="text-[0.8vw] text-gray-300">
-                {employeeData.users[0]?.role}
+                {userRole}
               </span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Rest of the component remains the same */}
+      {/* Navigation Menu */}
       <nav
         className="px-[1vw] space-y-[1vw]"
         onClick={(e) => e.stopPropagation()}
       >
-        {sidebarItems.map((item) => {
+        {getFilteredMenuItems().map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.link;
 
