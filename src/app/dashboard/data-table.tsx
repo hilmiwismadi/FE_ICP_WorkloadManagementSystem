@@ -60,9 +60,10 @@ const filterOptions: FilterOption[] = [
   { value: "skill", label: "Skill", type: "string" },
 ];
 
-interface DataTableProps<TData> {
-  columns: ColumnDef<TData, any>[];
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  addEmployeeModal: React.ReactNode;
 }
 
 // Define the custom filter function type
@@ -197,10 +198,11 @@ const ColumnFilterDropdown = ({
   );
 };
 
-export function DataTable<TData>({
+export function DataTable<TData, TValue>({
   columns,
   data,
-}: DataTableProps<TData>) {
+  addEmployeeModal
+}: DataTableProps<TData, TValue>) {
   const router = useRouter();
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [selectedFilter, setSelectedFilter] = React.useState<string>("name");

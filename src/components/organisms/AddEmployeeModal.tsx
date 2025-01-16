@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, CheckCircle2 } from "lucide-react";
+import { X, Plus, CheckCircle2, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,61 +37,80 @@ import {
 interface NewEmployeeData {
   id: string;
   name: string;
-  image: string;
-  email: string;
+  image: File | null;
   phone: string;
   team: string;
   skill: string;
-  role: string;
-  current_Workload: number;
   start_Date: string;
+  email: string;
+  role: string;
+}
+
+interface AddEmployeeModalProps {
+  onSuccess?: () => void;
 }
 
 const TEAM_OPTIONS = ["Pelayanan Pelanggan", "Korporat 1", "Korporat 2"];
 const SKILL_OPTIONS = [
-  "Backend",
-  "Frontend",
-  "Full-stack",
-  "UI/UX Design",
-  "QA",
-  "Testing & Acceptance",
+  "Backend Engineer",
+  "Frontend Engineer",
+  "Full-stack Engineer",
+  "UI/UX Designer",
+  "QA Engineer",
+  "Testing Engineer",
   "System Administrator",
   "Data Analyst",
   "Data Engineer",
 ];
-const ROLE_OPTIONS = [
-  "Junior Technical",
-  "Senior Technical",
-  "Lead Technical",
-  "Assistant Manager",
-  "Manager",
-];
 
-export function AddEmployeeModal() {
+export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { toast } = useToast();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   const [formData, setFormData] = useState<NewEmployeeData>({
     id: "",
     name: "",
-    image: "",
-    email: "",
+    image: null,
     phone: "",
     team: "",
     skill: "",
-    role: "",
-    current_Workload: 0.0,
     start_Date: "",
+    email: "",
+    role: "Employee",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload only JPG, JPEG, or PNG files",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedFile(file);
+      setFormData((prev) => ({ ...prev, image: file }));
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -103,9 +122,8 @@ export function AddEmployeeModal() {
   };
 
   const validateFormData = () => {
-    if (!formData.start_Date) {
-      return "Start date is required";
-    }
+    if (!formData.start_Date) return "Start date is required";
+    if (!formData.image && !selectedFile) return "Image is required";
     if (formData.name.length > 30)
       return "Name must be less than 30 characters";
     if (formData.email.length > 30)
@@ -116,9 +134,6 @@ export function AddEmployeeModal() {
       return "Team must be less than 30 characters";
     if (formData.skill.length > 30)
       return "Skill must be less than 30 characters";
-    if (formData.role.length > 30)
-      return "Role must be less than 30 characters";
-
     return null;
   };
 
@@ -138,16 +153,27 @@ export function AddEmployeeModal() {
 
   const handleConfirmedSubmit = async () => {
     setIsSubmitting(true);
-    console.log(formData);
     try {
+      const formDataToSend = new FormData();
+      
+      formDataToSend.append("id", formData.id);
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("phone", formData.phone);
+      formDataToSend.append("team", formData.team);
+      formDataToSend.append("skill", formData.skill);
+      formDataToSend.append("start_Date", formData.start_Date);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("role", formData.role);
+
+      if (selectedFile) {
+        formDataToSend.append("image", selectedFile);
+      }
+
       const response = await fetch(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/add",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
+          body: formDataToSend, 
         }
       );
 
@@ -163,6 +189,9 @@ export function AddEmployeeModal() {
         description: "Employee added successfully",
         duration: 3000,
       });
+      if (onSuccess) {
+        onSuccess();
+      }
 
       setTimeout(() => {
         setShowSuccess(false);
@@ -170,15 +199,16 @@ export function AddEmployeeModal() {
         setFormData({
           id: "",
           name: "",
-          image: "",
-          email: "",
+          image: null,
           phone: "",
           team: "",
           skill: "",
-          role: "",
-          current_Workload: 0.0,
           start_Date: "",
+          email: "",
+          role: "Employee",
         });
+        setSelectedFile(null);
+        setImagePreview("");
       }, 1500);
     } catch (error) {
       console.error("Error adding employee:", error);
@@ -317,31 +347,6 @@ export function AddEmployeeModal() {
               </div>
               <div className="space-y-[0.25vw]">
                 <label className="text-[1vw] font-medium">
-                  Role <span className="text-red-500">*</span>
-                </label>
-                <Select
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, role: value }))
-                  }
-                >
-                  <SelectTrigger className="h-[2.5vw] text-[0.8vw]">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLE_OPTIONS.map((role) => (
-                      <SelectItem
-                        key={role}
-                        value={role}
-                        className="text-[0.8vw]"
-                      >
-                        {role}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-[0.25vw]">
-                <label className="text-[1vw] font-medium">
                   Email <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -380,23 +385,42 @@ export function AddEmployeeModal() {
               </div>
               <div className="space-y-[0.25vw]">
                 <label className="text-[1vw] font-medium">
-                  Image URL <span className="text-red-500">*</span>
+                  Profile Image <span className="text-red-500">*</span>
                 </label>
-                <Input
-                  name="image"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  required
-                  className="h-[2.5vw] text-[0.8vw]"
-                />
+                <div className="relative">
+                  <Input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png"
+                    onChange={handleFileChange}
+                    className="h-[2.5vw] text-[0.8vw] hidden"
+                    id="image-upload"
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className="flex items-center justify-center h-[2.5vw] px-4 border rounded-md cursor-pointer hover:bg-gray-50"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    <span className="text-[0.8vw]">
+                      {selectedFile ? selectedFile.name : "Upload Image"}
+                    </span>
+                  </label>
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="h-[5vw] w-auto object-cover rounded-md"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             <div className="flex justify-end gap-[0.833vw] pt-[0.833vw]">
               <Button
                 type="button"
-                onClick={() => setIsOpen(false)}
-                variant="ghost"
+                onClick={() => setIsOpen(false)}variant="ghost"
                 className="text-red-500 hover:text-red-600 hover:bg-transparent text-[0.8vw]"
               >
                 Cancel
@@ -449,10 +473,10 @@ export function AddEmployeeModal() {
                     <strong>Skill:</strong> {formData.skill}
                   </div>
                   <div>
-                    <strong>Role:</strong> {formData.role}
+                    <strong>Email:</strong> {formData.email}
                   </div>
                   <div>
-                    <strong>Email:</strong> {formData.email}
+                    <strong>Role:</strong> {formData.role}
                   </div>
                   <div>
                     <strong>Phone:</strong> {formData.phone}
@@ -463,6 +487,11 @@ export function AddEmployeeModal() {
                       ? formatDate(formData.start_Date)
                       : "Not specified"}
                   </div>
+                  {selectedFile && (
+                    <div>
+                      <strong>Selected Image:</strong> {selectedFile.name}
+                    </div>
+                  )}
                 </motion.div>
               </div>
             </AlertDialogHeader>
