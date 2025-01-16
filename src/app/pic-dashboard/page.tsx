@@ -25,17 +25,22 @@ export default function Dashboard() {
           console.error("API Error:", result.error);
           setData([]);
         } else {
-          setData(
-            result.data.map((emp: any) => ({
+          const filteredData = result.data
+            .filter((emp: any) =>
+              emp.users.some((user: any) => user.role === "PIC")
+            )
+            .map((emp: any) => ({
               employee_id: emp.employee_Id,
               name: emp.name,
               team: emp.team,
               skill: emp.skill,
               current_workload: emp.current_Workload,
-              email: emp.email,
+              email:
+                emp.users.find((user: any) => user.role === "PIC")?.email || "",
               phone: emp.phone,
-            }))
-          );
+            }));
+
+          setData(filteredData);
         }
       } catch (error) {
         console.error("Failed to fetch data:", error);
