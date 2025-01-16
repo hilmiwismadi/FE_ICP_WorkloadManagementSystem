@@ -17,6 +17,7 @@ interface FormData {
 
 interface UserData {
   user_Id: string;
+  employee_Id: string;
   name: string;
   email: string;
   role: string;
@@ -41,6 +42,17 @@ const Login = () => {
     type: "success" | "error" | "info";
   } | null>(null);
 
+  const handleRoleBasedRedirect = (userData: UserData) => {
+    const role = userData.role.toLowerCase();
+    if (role === "employee") {
+      return `/task-lists/${userData.employee_Id}`;
+    } else if (role === "manager" || role === "pic") {
+      return "/dashboard";
+    } else {
+      throw new Error("Invalid user role");
+    }
+  };
+
   useEffect(() => {
     const checkAuthAndRememberedUser = async () => {
       try {
@@ -51,8 +63,10 @@ const Login = () => {
           const currentTime = Date.now() / 1000;
           
           if (decoded.exp > currentTime) {
-            router.push("/dashboard");
-            return; // Stop here if user is already authenticated
+            // Redirect based on role
+            const redirectPath = handleRoleBasedRedirect(decoded);
+            router.push(redirectPath);
+            return;
           } else {
             // Clean up expired token
             Cookies.remove("auth_token");
@@ -173,7 +187,15 @@ const Login = () => {
               message: "Successfully signed in!",
               type: "success",
             });
-            router.push("/dashboard");
+            
+            try {
+              const redirectPath = handleRoleBasedRedirect(userData);
+              router.push(redirectPath);
+            } catch (error) {
+              setAlertMessage({ message: "Invalid user role", type: "error" });
+              setIsAuthenticating(false);
+              setIsLoading(false);
+            }
           } else {
             setAlertMessage({ message: "User role not found", type: "error" });
             setIsAuthenticating(false);
