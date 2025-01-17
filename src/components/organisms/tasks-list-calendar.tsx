@@ -4,19 +4,10 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, addMonths, startOfWeek, startOfMonth, eachDayOfInterval, subWeeks, addWeeks } from 'date-fns';
 
-interface Task {
-  id: number;
-  title: string;
-  startDate: Date;
-  endDate: Date;
-  workload: string;
-  urgency: string;
-  description: string;
-  priority: number;
-}
+// Expanded dummy data with more tasks
 
 // Expanded dummy data with more tasks
-const dummyTasks: Task[] = [
+const dummyTasks = [
   {
     id: 1,
     title: "API Integration",
@@ -25,7 +16,6 @@ const dummyTasks: Task[] = [
     workload: "high",
     urgency: "critical",
     description: "Integrate payment gateway API with error handling and security measures",
-    priority: 6.5
   },
   {
     id: 2,
@@ -35,7 +25,6 @@ const dummyTasks: Task[] = [
     workload: "medium",
     urgency: "normal",
     description: "Migrate user data to new schema with zero downtime strategy",
-    priority: 6.5
   },
   {
     id: 3,
@@ -45,7 +34,6 @@ const dummyTasks: Task[] = [
     workload: "high",
     urgency: "high",
     description: "Implement new design system across all main components",
-    priority: 6.5
   },
   {
     id: 4,
@@ -55,7 +43,6 @@ const dummyTasks: Task[] = [
     workload: "medium",
     urgency: "normal",
     description: "Optimize application performance and reduce loading times",
-    priority: 6.5
   },
   {
     id: 5,
@@ -65,7 +52,6 @@ const dummyTasks: Task[] = [
     workload: "high",
     urgency: "critical",
     description: "Conduct comprehensive security audit and implement fixes",
-    priority: 6.5
   },
   {
     id: 6,
@@ -75,7 +61,6 @@ const dummyTasks: Task[] = [
     workload: "low",
     urgency: "low",
     description: "Update technical documentation and API references",
-    priority: 6.5
   },
   {
     id: 7,
@@ -85,17 +70,16 @@ const dummyTasks: Task[] = [
     workload: "medium",
     urgency: "high",
     description: "Implement automated testing suite for core functionalities",
-    priority: 6.5
   }
 ];
 
 const TaskTimeline = () => {
   const [viewMode, setViewMode] = useState('weekly');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  
+  const [selectedTask, setSelectedTask] = useState(null);
+
   // Get color based on workload and urgency
-  const getTaskColor = (workload: string, urgency: string): string => {
+  const getTaskColor = (workload, urgency) => {
     if (urgency === 'critical') return 'bg-red-500';
     if (urgency === 'high') return 'bg-orange-500';
     if (workload === 'high') return 'bg-yellow-500';
