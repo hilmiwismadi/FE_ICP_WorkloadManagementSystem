@@ -4,8 +4,19 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addDays, addMonths, startOfWeek, startOfMonth, eachDayOfInterval, subWeeks, addWeeks } from 'date-fns';
 
+interface Task {
+  id: number;
+  title: string;
+  startDate: Date;
+  endDate: Date;
+  workload: string;
+  urgency: string;
+  description: string;
+  priority: number;
+}
+
 // Expanded dummy data with more tasks
-const dummyTasks = [
+const dummyTasks: Task[] = [
   {
     id: 1,
     title: "API Integration",
@@ -81,10 +92,10 @@ const dummyTasks = [
 const TaskTimeline = () => {
   const [viewMode, setViewMode] = useState('weekly');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedTask, setSelectedTask] = useState(null);
-
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  
   // Get color based on workload and urgency
-  const getTaskColor = (workload, urgency) => {
+  const getTaskColor = (workload: string, urgency: string): string => {
     if (urgency === 'critical') return 'bg-red-500';
     if (urgency === 'high') return 'bg-orange-500';
     if (workload === 'high') return 'bg-yellow-500';
