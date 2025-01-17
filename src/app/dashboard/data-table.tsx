@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, Check, ChevronDown, X } from "lucide-react";
+import { Search, Check, ChevronDown, X, RefreshCw  } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
@@ -64,6 +64,8 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   addEmployeeModal: React.ReactNode;
+  onRefresh: () => Promise<void>;
+  isLoading: boolean;
 }
 
 // Define the custom filter function type
@@ -201,12 +203,25 @@ const ColumnFilterDropdown = ({
 export function DataTable<TData, TValue>({
   columns,
   data,
-  addEmployeeModal
+  addEmployeeModal,
+  onRefresh,
+  isLoading
 }: DataTableProps<TData, TValue>) {
   const router = useRouter();
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [selectedFilter, setSelectedFilter] = React.useState<string>("name");
   const [popoverOpen, setPopoverOpen] = React.useState(false);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const table = useReactTable({
     data,
@@ -250,7 +265,6 @@ export function DataTable<TData, TValue>({
   return (
     <div className="flex flex-col flex-grow justify-center items-center">
       <div className="w-full space-y-[1.25vw]">
-        {/* Search and Filter Section */}
         <div className="flex items-center space-x-[0.8vw] py-[0.417vw] text-[1.25vw]">
           <div className="relative flex-1">
             <Search className="absolute left-[0.833vw] top-1/2 transform -translate-y-1/2 text-gray-500 h-[1vw] w-[1vw]" />
@@ -259,18 +273,12 @@ export function DataTable<TData, TValue>({
                 filterOptions.find((opt) => opt.value === selectedFilter)
                   ?.label || "Employee"
               }...`}
-              value={
-                (table.getColumn(selectedFilter)?.getFilterValue() as string) ??
-                ""
-              }
-              onChange={(e) =>
-                table.getColumn(selectedFilter)?.setFilterValue(e.target.value)
-              }
+              value={(table.getColumn(selectedFilter)?.getFilterValue() as string) ?? ""}
+              onChange={(e) => table.getColumn(selectedFilter)?.setFilterValue(e.target.value)}
               className="pl-[2.5vw] pr-[2vw] py-[1vw] space-x-[0.2vw] w-full bg-gray-100 rounded-[0.417vw]"
             />
           </div>
 
-          {/* Filter Dropdown */}
           <Select value={selectedFilter} onValueChange={handleFilterChange}>
             <SelectTrigger className="w-[16vw] bg-gray-100">
               <SelectValue placeholder="Filter by..." />
@@ -283,8 +291,25 @@ export function DataTable<TData, TValue>({
               ))}
             </SelectContent>
           </Select>
-          <div className="flex justify-end"> 
-            <AddEmployeeModal />
+
+          {/* Refresh Button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleRefresh}
+            disabled={isRefreshing || isLoading}
+            className="h-[2.5vw] w-[2.5vw] bg-gray-100"
+          >
+            <RefreshCw 
+              className={cn(
+                "h-[1.25vw] w-[1.25vw]",
+                (isRefreshing || isLoading) && "animate-spin"
+              )}
+            />
+          </Button>
+
+          <div className="flex justify-end">
+            {addEmployeeModal}
           </div>
         </div>
 

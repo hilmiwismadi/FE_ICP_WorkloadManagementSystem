@@ -63,7 +63,7 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  if (isLoading) {
+  if (isLoading && !data.length) {
     return <LoadingScreen />;
   }
 
@@ -76,10 +76,15 @@ export default function Dashboard() {
             <DataTable 
               columns={columns} 
               data={data} 
-              addEmployeeModal={<AddEmployeeModal onSuccess={() => {
-                setIsLoading(true);
-                fetchData(); 
-              }} />}
+              onRefresh={fetchData}
+              isLoading={isLoading}
+              addEmployeeModal={
+                <AddEmployeeModal 
+                  onSuccess={async () => {
+                    await fetchData();
+                  }} 
+                />
+              }
             />
           </div>
         </div>

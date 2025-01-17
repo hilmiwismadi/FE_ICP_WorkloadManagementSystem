@@ -94,34 +94,6 @@ export function EditEmployeeModal({
 
             <form onSubmit={handleSubmit} className="space-y-[1vw]">
               <div className="grid gap-[0.5vw]">
-                <Label htmlFor="email" className="text-[1vw]">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, email: e.target.value }))
-                  }
-                  className="text-[0.9vw] p-[1vw]"
-                />
-              </div>
-
-              <div className="grid gap-[0.5vw]">
-                <Label htmlFor="phone" className="text-[1vw]">
-                  Phone
-                </Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, phone: e.target.value }))
-                  }
-                  className="text-[0.9vw] p-[1vw]"
-                />
-              </div>
-
-              <div className="grid gap-[0.5vw]">
                 <Label htmlFor="team" className="text-[1vw]">
                   Team
                 </Label>
@@ -135,30 +107,9 @@ export function EditEmployeeModal({
                     <SelectValue placeholder="Select team" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Frontend">Frontend</SelectItem>
-                    <SelectItem value="Backend">Backend</SelectItem>
-                    <SelectItem value="Design">Design</SelectItem>
-                    <SelectItem value="DevOps">DevOps</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-[0.5vw]">
-                <Label htmlFor="role" className="text-[1vw]">
-                  Role
-                </Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, role: value }))
-                  }
-                >
-                  <SelectTrigger className="text-[0.9vw] p-[1vw]"></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Junior">Junior</SelectItem>
-                    <SelectItem value="Mid">Mid</SelectItem>
-                    <SelectItem value="Senior">Senior</SelectItem>
-                    <SelectItem value="Lead">Lead</SelectItem>
+                    <SelectItem value="Pelayanan Pelanggan">Pelayanan Pelanggan</SelectItem>
+                    <SelectItem value="Korporat 1">Korporat 1</SelectItem>
+                    <SelectItem value="Korporat 2">Korporat 2</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
