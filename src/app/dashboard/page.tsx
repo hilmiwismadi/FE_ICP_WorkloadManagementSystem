@@ -32,23 +32,27 @@ export default function Dashboard() {
       const response = await axios.get(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
       );
-
+  
       const result = response.data;
-
+  
       if (result.error) {
         console.error("API Error:", result.error);
         setData([]);
       } else {
         setData(
-          result.data.map((emp: ApiEmployeeData) => ({
-            employee_id: emp.employee_Id,
-            name: emp.name,
-            team: emp.team,
-            skill: emp.skill,
-            current_workload: emp.current_Workload,
-            email: emp.users[0]?.email || "N/A",
-            phone: emp.phone,
-          }))
+          result.data
+            .filter((emp: ApiEmployeeData) => 
+              emp.users[0]?.role === "Employee"
+            )
+            .map((emp: ApiEmployeeData) => ({
+              employee_id: emp.employee_Id,
+              name: emp.name,
+              team: emp.team,
+              skill: emp.skill,
+              current_workload: emp.current_Workload,
+              email: emp.users[0]?.email || "N/A",
+              phone: emp.phone,
+            }))
         );
       }
     } catch (error) {
