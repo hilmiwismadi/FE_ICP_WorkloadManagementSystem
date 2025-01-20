@@ -287,8 +287,8 @@ const TaskPage = () => {
                 <Searchbar />
               </div>
 
-              <div className="sticky top-[calc(3vw)] bg-stale-50 z-10 py-[0.833vw]">
-                <div className="flex justify-between items-center mb-[1.25vw]">
+              <div className="sticky top-[calc(3vw)] bg-stale-50 z-10 pt-[0.833vw]">
+                <div className="flex justify-between items-center ml-[0.833vw] mb-[0.833vw]">
                   <div>
                     <h1 className="text-[1.667vw] font-bold text-gray-900">Tasks</h1>
                     <p className="text-[1vw] text-gray-500">{filteredTasks.length} tasks total</p>
@@ -335,7 +335,7 @@ const TaskPage = () => {
                 ) : (
                   <>
                     {viewType === "board" ? (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-[1.25vw] p-[0.833vw]">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-[1.25vw] pb-[0.833vw]">
                         {Object.entries(groupedTasks).map(([status, statusTasks]) => (
                           <motion.div
                             key={status}
