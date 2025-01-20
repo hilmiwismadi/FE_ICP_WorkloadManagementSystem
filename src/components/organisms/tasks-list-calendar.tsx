@@ -36,7 +36,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) 
     return "bg-green-500";
   };
 
-  const handleStatusChange = (taskId: number, checked: boolean) => {
+  const handleStatusChange = (taskId: string, checked: boolean) => {
     // Determine new status with the correct type
     const newStatus: "ongoing" | "done" | "approved" = checked ? "done" : "ongoing";
   
@@ -208,7 +208,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) 
       </div>
 
       {/* Task Details */}
-      {selectedTask && (
+      {/* {selectedTask && (
         <div className="p-[1vw] border rounded-lg bg-white w-full">
           <h3 className="font-semibold text-lg">{selectedTask.title}</h3>
           <div className="mt-2 text-gray-600 space-y-2">
@@ -233,7 +233,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) 
             <p className="mt-2">{selectedTask.description}</p>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
