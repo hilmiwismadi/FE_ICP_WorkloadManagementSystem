@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -7,10 +7,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Task, taskData } from "./types/tasks";
+import { Task} from "./types/tasks";
 
 interface TaskListTimelineProps {
   onTaskSelect: (task: Task) => void;
+  tasks: Task[];
 }
 
 function getPriorityColor(priority: string) {
@@ -22,11 +23,11 @@ function getPriorityColor(priority: string) {
 
 export default function TaskListTimeline({
   onTaskSelect,
+  tasks,
 }: TaskListTimelineProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [tasks, setTasks] = useState<Task[]>(taskData);
 
-  const filteredTasks = taskData.filter((task) =>
+  const filteredTasks = tasks.filter((task: Task) =>
     statusFilter === "all" ? true : task.status === statusFilter
   );
 

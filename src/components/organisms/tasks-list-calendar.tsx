@@ -13,18 +13,19 @@ import {
   addWeeks,
 } from "date-fns";
 import { Switch } from "@/components/ui/switch";
-import { Task, taskData } from "./types/tasks";
+import { Task } from "./types/tasks";
 
 // Update the component props
 interface TaskTimelineProps {
   selectedTask: Task | null;
   onTaskSelect: (task: Task) => void;
+  tasks: Task[];
 }
 
-const TaskTimeline = ({ selectedTask, onTaskSelect }: TaskTimelineProps) => {
+const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) => {
   const [viewMode, setViewMode] = useState("weekly");
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [localTasks, setLocalTasks] = useState<Task[]>(taskData);
+  const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
 
   // Get color based on workload and urgency
   const getTaskColor = (workload: string, urgency: string): string => {
