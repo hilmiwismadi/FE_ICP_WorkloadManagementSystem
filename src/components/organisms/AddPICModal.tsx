@@ -34,7 +34,7 @@ import {
   AlertDialogOverlay,
 } from "@/components/ui/alert-dialog";
 
-interface NewEmployeeData {
+interface NewPICData {
   id: string;
   name: string;
   image: File | null;
@@ -46,7 +46,7 @@ interface NewEmployeeData {
   role: string;
 }
 
-interface AddEmployeeModalProps {
+interface AddPICModalProps {
   onSuccess?: () => void;
 }
 
@@ -63,7 +63,7 @@ const SKILL_OPTIONS = [
   "Data Engineer",
 ];
 
-export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
+export function AddPICModal({ onSuccess }: AddPICModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,7 +72,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
 
-  const [formData, setFormData] = useState<NewEmployeeData>({
+  const [formData, setFormData] = useState<NewPICData>({
     id: "",
     name: "",
     image: null,
@@ -81,7 +81,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
     skill: "",
     start_Date: "",
     email: "",
-    role: "Employee",
+    role: "PIC",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,14 +179,14 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to add employee");
+        throw new Error(errorData.message || "Failed to add PIC");
       }
 
       setShowConfirmation(false);
       setShowSuccess(true);
       toast({
         title: "Success!",
-        description: "Employee added successfully",
+        description: "PIC added successfully",
         duration: 3000,
       });
       if (onSuccess) {
@@ -205,16 +205,16 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
           skill: "",
           start_Date: "",
           email: "",
-          role: "Employee",
+          role: "PIC",
         });
         setSelectedFile(null);
         setImagePreview("");
       }, 1500);
     } catch (error) {
-      console.error("Error adding employee:", error);
+      console.error("Error adding PIC:", error);
       toast({
         title: "Error",
-        description: "Failed to add employee. Please try again.",
+        description: "Failed to add PIC. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -229,7 +229,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
         <DialogTrigger asChild>
           <Button className="h-[2.75vw] bg-blue-500 hover:bg-blue-600 text-white text-[0.875vw]">
             <Plus className="mr-[0.5vw]" />
-            Add Employee
+            Add PIC
           </Button>
         </DialogTrigger>
         <DialogContent className="p-[1vw] overflow-hidden rounded-[0.833vw] max-w-[50vw]">
@@ -257,7 +257,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
                       <CheckCircle2 className="w-[4vw] h-[4vw] text-green-500" />
                     </motion.div>
                     <p className="text-[1.2vw] font-semibold text-green-600">
-                      Employee added successfully!
+                      PIC added successfully!
                     </p>
                   </motion.div>
                 </motion.div>
@@ -266,7 +266,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
 
             <DialogHeader>
               <DialogTitle className="text-[1.33vw] font-bold pt-[1.25vw]">
-                Add New Employee
+                Add New PIC
               </DialogTitle>
             </DialogHeader>
 
@@ -285,7 +285,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
               </div>
               <div className="space-y-[0.25vw]">
                 <label className="text-[1vw] font-medium">
-                  Employee ID <span className="text-red-500">*</span>
+                  PIC ID <span className="text-red-500">*</span>
                 </label>
                 <Input
                   name="id"
@@ -430,7 +430,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
                 className="bg-[#38BDF8] hover:bg-[#32a8dd] text-white px-8 text-[0.8vw]"
                 disabled={isSubmitting}
               >
-                Add Employee
+                Add PIC
               </Button>
             </div>
           </form>
@@ -448,11 +448,11 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
           >
             <AlertDialogHeader>
               <AlertDialogTitle className="text-[1.5vw] font-semibold mb-[1vw]">
-                Confirm Employee Addition
+                Confirm PIC Addition
               </AlertDialogTitle>
               <div className="space-y-[1vw]">
                 <AlertDialogDescription className="text-[1vw]">
-                  Please review the employee details below:
+                  Please review the PIC details below:
                 </AlertDialogDescription>
                 <motion.div
                   className="space-y-[0.8vw] text-[0.9vw] border rounded-[0.4vw] p-[1vw] bg-gray-50"
@@ -464,7 +464,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
                     <strong>Name:</strong> {formData.name}
                   </div>
                   <div>
-                    <strong>Employee ID:</strong> {formData.id}
+                    <strong>PIC ID:</strong> {formData.id}
                   </div>
                   <div>
                     <strong>Team:</strong> {formData.team}
