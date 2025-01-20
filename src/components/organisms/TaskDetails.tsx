@@ -97,9 +97,9 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
 
   return (
     <>
-      <div className="p-[1vw] border rounded-lg bg-white w-full">
-        <h3 className="font-semibold text-lg">{selectedTask.title}</h3>
-        <div className="mt-2 text-gray-600 space-y-2">
+      <div className="p-[1vw] border rounded-lg bg-white w-full min-h-[30vh] ">
+        <h3 className="font-semibold text-[1.2vw]">{selectedTask.title}</h3>
+        <div className="mt-2 text-gray-600 space-y-[0.2vw] text-[1vw]">
           <p>
             Duration: {format(new Date(selectedTask.startDate), "MMM d")} -{" "}
             {format(new Date(selectedTask.endDate), "MMM d")}

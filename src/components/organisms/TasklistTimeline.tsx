@@ -50,14 +50,14 @@ export default function TaskListTimeline({
         </div>
       </CardHeader>
       <CardContent className="h-[80vh] mr-[0.5vw] overflow-y-scroll scrollbar-thin scrollbar-thumb-white scrollbar-track-[#0A1D56]">
-        <div className="space-y-[0.833vw] mt-[0.5vw]">
+        <div className="space-y-[0.833vw] mt-[0.5vw] ">
           {filteredTasks.map((task) => (
             <Card
               key={task.id}
-              className="bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+              className="bg-white cursor-pointer hover:bg-gray-50 transform hover:scale-105 hover:shadow-lg"
               onClick={() => onTaskSelect(task)}
             >
-              <CardContent className="p-[0.833vw]">
+              <CardContent className="p-[0.833vw] ">
                 <div className="flex justify-between items-start relative">
                   <div className="space-y-[0.217vw]">
                     <h3 className="font-medium text-[0.8vw]">{task.title}</h3>

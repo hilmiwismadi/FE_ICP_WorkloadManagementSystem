@@ -188,7 +188,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) 
               return (
                 <div
                   key={task.id}
-                  className={`absolute cursor-pointer ${getTaskColor(
+                  className={`absolute cursor-pointer transition-transform transform hover:scale-105 hover:shadow-lg ${getTaskColor(
                     task.workload,
                     task.urgency
                   )} rounded p-1 text-white text-sm truncate`}
