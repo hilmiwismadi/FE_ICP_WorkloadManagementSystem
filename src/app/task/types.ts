@@ -10,7 +10,7 @@ export interface Assign {
     title: string;
     type: string;
     description?: string;
-    status: 'Todo' | 'Ongoing' | 'Complete';
+    status: 'Ongoing' | 'Done' | 'Approved';
     priority: 'High' | 'Medium' | 'Normal';
     workload: number;
     start_Date: string;

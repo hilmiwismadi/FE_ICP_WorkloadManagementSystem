@@ -114,20 +114,23 @@ export default function ProfilePage() {
       icon: stack.image,
     })) || [];
 
-  const tasks =
-    employee?.tasks
-      .filter((task) => task.status === "Ongoing")
-      .map((task) => ({
-        id: task.task_Id,
-        type: task.type,
-        title: task.description,
-        priority: task.workload.toString(),
-        dueDate: new Date(task.end_Date).toLocaleDateString(),
-        startDate: new Date(task.start_Date).toISOString(),
-        endDate: new Date(task.end_Date).toISOString(),
-      })) || [];
-
-  console.log(tasks);
+  const tasks = Array.isArray(employee?.tasks)
+    ? employee.tasks
+        .filter((task) => task.status === "Ongoing")
+        .map((task) => ({
+          id: task.task_Id,
+          type: task.type,
+          title: task.description,
+          priority: task.workload?.toString() || "N/A",
+          dueDate: task.end_Date
+            ? new Date(task.end_Date).toLocaleDateString()
+            : "N/A",
+          startDate: task.start_Date
+            ? new Date(task.start_Date).toISOString()
+            : null,
+          endDate: task.end_Date ? new Date(task.end_Date).toISOString() : null,
+        }))
+    : [];
 
   const employeeData = employee
     ? {

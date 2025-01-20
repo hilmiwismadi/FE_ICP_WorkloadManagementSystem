@@ -69,7 +69,6 @@ export const columns: ColumnDef<EmployeeData>[] = [
   { accessorKey: "email", header: "E-mail" },
   { accessorKey: "phone", header: "Contact" },
   { accessorKey: "team", header: "Divisi" },
-  { accessorKey: "skill", header: "Skill" },
   {
     id: "actions",
     cell: ({ row }) => <ActionsCell employee={row.original} />,

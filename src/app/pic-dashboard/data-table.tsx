@@ -321,7 +321,7 @@ export function DataTable<TData>({
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="px-[2.5vw]">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -342,7 +342,7 @@ export function DataTable<TData>({
                     className="cursor-pointer hover:bg-gray-100 transition-colors"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-[0.4vw]">
+                      <TableCell key={cell.id} className="py-[0.4vw] px-[2.5vw]">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
