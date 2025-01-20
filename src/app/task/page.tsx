@@ -229,8 +229,7 @@ const TaskPage = () => {
                   const spaceBelow = window.innerHeight - rect.bottom;
                   const spaceAbove = rect.top;
 
-                  // Determine if there's enough space below or above
-                  const employeeId = emp.details.employee_Id; // Safely access employee_Id
+                  const employeeId = emp.details.employee_Id;
                   if (spaceBelow < rect.height && spaceAbove > rect.height) {
                     setHoverCardPosition(prev => ({ ...prev, [employeeId]: 'above' }));
                   } else {
