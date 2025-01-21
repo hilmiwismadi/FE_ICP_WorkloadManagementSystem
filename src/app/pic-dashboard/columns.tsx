@@ -16,6 +16,7 @@ export type EmployeeData = {
   skill: string;
   current_workload: number;
   role: string;
+  image: string;
 };
 
 // Extracted ActionsCell component to safely use hooks
