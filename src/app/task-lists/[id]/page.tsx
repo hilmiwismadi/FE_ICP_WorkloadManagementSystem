@@ -33,7 +33,7 @@ function convertApiTaskToTask(apiTask: ApiTask): Task {
         priority: (parseInt(apiTask.priority === "High" ? "8" : 
                           apiTask.priority === "Medium" ? "5" : "2") + 
                   Math.random()).toFixed(1),
-        status: apiTask.status.toLowerCase() as 'ongoing' | 'done' | 'approved'
+        status: apiTask.status as 'Ongoing' | 'Done' | 'Approved'
     };
 }
 
@@ -41,6 +41,7 @@ export default function TaskLists() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     async function fetchTasks() {
@@ -69,7 +70,7 @@ export default function TaskLists() {
     setSelectedTask(task);
   };
 
-  const handleStatusUpdate = (taskId: string, newStatus: 'ongoing' | 'done' | 'approved') => {
+  const handleStatusUpdate = (taskId: string, newStatus: 'Ongoing' | 'Done' | 'Approved') => {
     setTasks(tasks.map(task => 
       task.id === taskId 
         ? { ...task, status: newStatus }
@@ -79,6 +80,10 @@ export default function TaskLists() {
     if (selectedTask?.id === taskId) {
       setSelectedTask(prev => prev ? { ...prev, status: newStatus } : null);
     }
+  };
+
+  const handleStatusFilter = (status: string) => {
+    setStatusFilter(status);
   };
 
   if (loading) {
@@ -93,17 +98,20 @@ export default function TaskLists() {
             <TaskTimeline 
               selectedTask={selectedTask}
               onTaskSelect={handleTaskSelect}
-              tasks={tasks} // Pass the tasks data
+              tasks={tasks}
+              statusFilter={statusFilter}
             />
             <TaskDetails 
-        selectedTask={selectedTask}
-        onStatusUpdate={handleStatusUpdate}
-      />
+              selectedTask={selectedTask}
+              onStatusUpdate={handleStatusUpdate}
+            />
           </div>
           <div className="w-[15vw]  h-full ml-[0.417vw] py-[1vw] space-y-[1.25vw]">
             <TaskListTimeline 
               onTaskSelect={handleTaskSelect}
-              tasks={tasks} // Pass the tasks data
+              tasks={tasks}
+              statusFilter={statusFilter}
+              onStatusFilter={handleStatusFilter}
             />
           </div>
         </div>

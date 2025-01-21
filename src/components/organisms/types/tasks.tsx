@@ -8,5 +8,5 @@ export interface Task {
   urgency: string;
   description: string;
   priority: string;
-  status: 'ongoing' | 'done' | 'approved';
+  status: 'Ongoing' | 'Done' | 'Approved';
 }

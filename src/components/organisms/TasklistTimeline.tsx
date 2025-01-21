@@ -12,6 +12,8 @@ import { Task} from "./types/tasks";
 interface TaskListTimelineProps {
   onTaskSelect: (task: Task) => void;
   tasks: Task[];
+  statusFilter: string;
+  onStatusFilter: (status: string) => void;
 }
 
 function getPriorityColor(priority: string) {
@@ -24,9 +26,9 @@ function getPriorityColor(priority: string) {
 export default function TaskListTimeline({
   onTaskSelect,
   tasks,
+  statusFilter,
+  onStatusFilter,
 }: TaskListTimelineProps) {
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-
   const filteredTasks = tasks.filter((task: Task) =>
     statusFilter === "all" ? true : task.status === statusFilter
   );
@@ -36,15 +38,15 @@ export default function TaskListTimeline({
       <CardHeader>
         <div className="flex flex-col space-y-4">
           <CardTitle className="text-white text-[1.25vw]">Task</CardTitle>
-          <Select onValueChange={setStatusFilter} defaultValue="all">
+          <Select onValueChange={onStatusFilter} value={statusFilter}>
             <SelectTrigger className="w-full text-white border-white">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
-              <SelectItem value="ongoing">Ongoing</SelectItem>
-              <SelectItem value="done">Done</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="Ongoing">Ongoing</SelectItem>
+              <SelectItem value="Done">Done</SelectItem>
+              <SelectItem value="Approved">Approved</SelectItem>
             </SelectContent>
           </Select>
         </div>

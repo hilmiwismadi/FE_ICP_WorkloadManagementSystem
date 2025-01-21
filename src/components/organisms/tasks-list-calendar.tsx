@@ -20,9 +20,10 @@ interface TaskTimelineProps {
   selectedTask: Task | null;
   onTaskSelect: (task: Task) => void;
   tasks: Task[];
+  statusFilter: string;
 }
 
-const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) => {
+const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskTimelineProps) => {
   const [viewMode, setViewMode] = useState("weekly");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
@@ -37,8 +38,8 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) 
   };
 
   const handleStatusChange = (taskId: string, checked: boolean) => {
-    // Determine new status with the correct type
-    const newStatus: "ongoing" | "done" | "approved" = checked ? "done" : "ongoing";
+    // Use proper case directly
+    const newStatus: 'Ongoing' | 'Done' | 'Approved' = checked ? 'Done' : 'Ongoing';
   
     // Update local tasks
     const updatedTasks = localTasks.map((task) =>
@@ -85,8 +86,13 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) 
 
   const days = getDaysForView();
 
-  // Filter tasks that are visible in current view
-  const visibleTasks = localTasks.filter((task) => {
+  // Filter tasks based on status first
+  const filteredTasks = tasks.filter(task => 
+    statusFilter === "all" ? true : task.status === statusFilter
+  );
+
+  // Then filter by date range
+  const visibleTasks = filteredTasks.filter((task) => {
     const taskStart = task.startDate;
     const taskEnd = task.endDate;
     const viewStart = days[0];

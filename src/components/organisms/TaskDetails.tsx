@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogOverlay,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 interface Task {
   id: string;
@@ -29,17 +30,26 @@ interface Task {
 
 interface TaskDetailsProps {
   selectedTask: Task | null;
-  onStatusUpdate: (taskId: string, newStatus: 'ongoing' | 'done' | 'approved') => void;
+  onStatusUpdate: (taskId: string, newStatus: 'Ongoing' | 'Done' | 'Approved') => void;
 }
 
 export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState<'Done' | 'Ongoing' | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<'Ongoing' | 'Done' | null>(null);
   const { toast } = useToast();
 
-  const handleStatusChange = async (taskId: string, checked: boolean) => {
-    const newStatus = checked ? 'Done' : 'Ongoing';
+  const handleStatusChange = (newStatus: 'Ongoing' | 'Done') => {
+    // Don't allow status change if current status is 'Approved'
+    if (selectedTask?.status === 'Approved') {
+      toast({
+        title: 'Cannot modify approved tasks',
+        description: 'This task has been approved and cannot be modified.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setPendingStatus(newStatus);
     setShowConfirmation(true);
   };
@@ -74,7 +84,7 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
 
       // Notify parent component of the status update
       if (onStatusUpdate) {
-        onStatusUpdate(selectedTask.id, pendingStatus as 'ongoing' | 'done' | 'approved');
+        onStatusUpdate(selectedTask.id, pendingStatus as 'Ongoing' | 'Done' | 'Approved');
       }
       
     } catch (error) {
@@ -111,23 +121,37 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
           </p>
           <div className="flex items-center space-x-2">
             <span>Progress:</span>
-            <motion.div
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center"
-            >
-              <Switch
-                id={`task-switch-${selectedTask.id}`}
-                checked={selectedTask.status === "Done"}
-                onCheckedChange={(checked) => handleStatusChange(selectedTask.id, checked)}
-                className="data-[state=checked]:bg-green-500"
-              />
-            </motion.div>
-            <span className={cn(
-              "font-medium",
-              selectedTask.status === "Done" ? "text-green-600" : "text-yellow-600"
-            )}>
-              {selectedTask.status === "Done" ? "Done" : "Ongoing"}
-            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={selectedTask.status === 'Ongoing' ? 'default' : 'outline'}
+                onClick={() => handleStatusChange('Ongoing')}
+                disabled={selectedTask.status === 'Approved'}
+                className={`px-4 py-2 ${
+                  selectedTask.status === 'Ongoing' 
+                    ? 'bg-yellow-500 hover:bg-yellow-600' 
+                    : 'text-yellow-600 border-yellow-600 hover:bg-yellow-50'
+                }`}
+              >
+                Ongoing
+              </Button>
+              <Button
+                variant={selectedTask.status === 'Done' ? 'default' : 'outline'}
+                onClick={() => handleStatusChange('Done')}
+                disabled={selectedTask.status === 'Approved'}
+                className={`px-4 py-2 ${
+                  selectedTask.status === 'Done' 
+                    ? 'bg-green-500 hover:bg-green-600' 
+                    : 'text-green-600 border-green-600 hover:bg-green-50'
+                }`}
+              >
+                Done
+              </Button>
+              {selectedTask.status === 'Approved' && (
+                <span className="px-4 py-2 bg-blue-500 text-white rounded-md">
+                  Approved
+                </span>
+              )}
+            </div>
           </div>
           <p className="mt-2">{selectedTask.description}</p>
         </div>
