@@ -29,8 +29,10 @@ export interface TimelineActivity {
 export type Priority = 'High' | 'Medium' | 'Normal';
 export type Status = 'Ongoing' | 'Done' | 'Approved';
 
-// Initialize socket connection
+// Update socket initialization to include credentials and transports
 const socket = io('https://be-icpworkloadmanagementsystem.up.railway.app', {
+  withCredentials: true,
+  transports: ['websocket', 'polling'],
   reconnection: true,
 });
 
@@ -65,37 +67,50 @@ const TaskDetailPage = () => {
     // Socket.IO event listeners
     socket.on('connect', () => {
       console.log('Connected to Socket.IO server');
+      // Join task-specific room
+      socket.emit('join-task', taskId);
     });
 
-    socket.on('new-activity', (newActivities: TimelineActivity[]) => {
-      setRealTimeActivities(newActivities);
+    socket.on('comment', (newComment: Comment) => {
+      console.log('Received new comment:', newComment);
+      // Update both comments and activities
+      setComments(prev => [...prev, newComment]);
+      
+      const newTimelineActivity: TimelineActivity = {
+        id: newComment.comment_Id,
+        type: 'comment',
+        content: newComment.content,
+        user: newComment.user?.email || 'Unknown User',
+        timestamp: newComment.created_at,
+        userImage: getEmployeeImage(newComment.user?.email)
+      };
+      
+      setActivities(prev => [...prev, newTimelineActivity]);
     });
 
     return () => {
       socket.off('connect');
-      socket.off('new-activity');
+      socket.off('comment');
+      socket.emit('leave-task', taskId);
     };
-  }, []);
+  }, [taskId]);
 
   useEffect(() => {
     const fetchTaskAndComments = async () => {
       try {
-        const taskResponse = await fetch(`https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${taskId}`);
+        setLoading(true);
         
-        if (!taskResponse.ok) {
-          throw new Error(`Failed to fetch task: ${taskResponse.status}`);
-        }
-        
-        const taskData = await taskResponse.json();
-        setTask(taskData.data);
+        const [taskResponse, commentsResponse] = await Promise.all([
+          fetch(`https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${taskId}`),
+          fetch(`https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/read/${taskId}`)
+        ]);
 
-        const commentsResponse = await fetch(`https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/read/${taskId}`);
-        
-        if (!commentsResponse.ok) {
-          throw new Error(`Failed to fetch comments: ${commentsResponse.status}`);
-        }
-        
-        const commentsData = await commentsResponse.json();
+        const [taskData, commentsData] = await Promise.all([
+          taskResponse.json(),
+          commentsResponse.json()
+        ]);
+
+        setTask(taskData.data);
         setComments(commentsData.data || []);
 
         const timelineActivities = (commentsData.data || []).map((comment: Comment) => ({
@@ -108,6 +123,7 @@ const TaskDetailPage = () => {
         }));
 
         setActivities(timelineActivities);
+
       } catch (error) {
         console.error('Error fetching task details or comments:', error);
       } finally {
@@ -128,17 +144,11 @@ const TaskDetailPage = () => {
   const handleAddActivity = async () => {
     if (!newActivity.trim()) return;
 
-    const newTimelineActivity: TimelineActivity = {
-      id: Date.now().toString(),
-      type: activityType,
-      content: newActivity,
-      user: user?.email || 'Unknown User',
-      timestamp: new Date().toISOString(),
-      userImage: getEmployeeImage(user?.email)
-    };
+    try {
+      setLoading(true);
 
-    if (activityType === 'comment') {
-      try {
+      if (activityType === 'comment' || activityType === 'started' || activityType === 'bug' || activityType === 'completed' || activityType === 'assigned') {
+        // Send comment to API
         const response = await fetch(`https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/add/${taskId}`, {
           method: 'POST',
           headers: {
@@ -151,23 +161,48 @@ const TaskDetailPage = () => {
           }),
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          // Emit the new activity to all connected clients
-          socket.emit('activity', [...activities, newTimelineActivity]);
-          
-          // Update local state
-          setActivities(prev => [...prev, newTimelineActivity]);
-          setNewActivity('');
+        if (!response.ok) {
+          throw new Error('Failed to save comment to database');
         }
-      } catch (error) {
-        console.error('Error posting comment:', error);
+
+        const data = await response.json();
+
+        // Emit the new comment through socket
+        socket.emit('comment', {
+          ...data.data,
+          task_Id: taskId,
+          user: {
+            email: user?.email,
+            role: user?.role
+          }
+        });
+
+      } else {
+        // Handle other activity types as before
+        const newTimelineActivity: TimelineActivity = {
+          id: Date.now().toString(),
+          type: activityType,
+          content: newActivity,
+          user: user?.email || 'Unknown User',
+          timestamp: new Date().toISOString(),
+          userImage: getEmployeeImage(user?.email)
+        };
+
+        socket.emit('activity', {
+          taskId,
+          activity: newTimelineActivity
+        });
+        
+        setActivities(prev => [...prev, newTimelineActivity]);
       }
-    } else {
-      // Handle other activity types
-      socket.emit('activity', [...activities, newTimelineActivity]);
-      setActivities(prev => [...prev, newTimelineActivity]);
+
+      // Clear input
       setNewActivity('');
+
+    } catch (error) {
+      console.error('Error handling activity:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
