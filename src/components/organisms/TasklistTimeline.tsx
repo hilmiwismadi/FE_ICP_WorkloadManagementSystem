@@ -12,6 +12,8 @@ import { Task} from "./types/tasks";
 interface TaskListTimelineProps {
   onTaskSelect: (task: Task) => void;
   tasks: Task[];
+  statusFilter: string;
+  onStatusFilter: (status: string) => void;
 }
 
 function getPriorityColor(priority: string) {
@@ -24,9 +26,9 @@ function getPriorityColor(priority: string) {
 export default function TaskListTimeline({
   onTaskSelect,
   tasks,
+  statusFilter,
+  onStatusFilter,
 }: TaskListTimelineProps) {
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-
   const filteredTasks = tasks.filter((task: Task) =>
     statusFilter === "all" ? true : task.status === statusFilter
   );
@@ -36,28 +38,28 @@ export default function TaskListTimeline({
       <CardHeader>
         <div className="flex flex-col space-y-4">
           <CardTitle className="text-white text-[1.25vw]">Task</CardTitle>
-          <Select onValueChange={setStatusFilter} defaultValue="all">
+          <Select onValueChange={onStatusFilter} value={statusFilter}>
             <SelectTrigger className="w-full text-white border-white">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
-              <SelectItem value="ongoing">Ongoing</SelectItem>
-              <SelectItem value="done">Done</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="Ongoing">Ongoing</SelectItem>
+              <SelectItem value="Done">Done</SelectItem>
+              <SelectItem value="Approved">Approved</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </CardHeader>
       <CardContent className="h-[80vh] mr-[0.5vw] overflow-y-scroll scrollbar-thin scrollbar-thumb-white scrollbar-track-[#0A1D56]">
-        <div className="space-y-[0.833vw] mt-[0.5vw]">
+        <div className="space-y-[0.833vw] mt-[0.5vw] ">
           {filteredTasks.map((task) => (
             <Card
               key={task.id}
-              className="bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+              className="bg-white cursor-pointer hover:bg-gray-50 transform hover:scale-105 hover:shadow-lg"
               onClick={() => onTaskSelect(task)}
             >
-              <CardContent className="p-[0.833vw]">
+              <CardContent className="p-[0.833vw] ">
                 <div className="flex justify-between items-start relative">
                   <div className="space-y-[0.217vw]">
                     <h3 className="font-medium text-[0.8vw]">{task.title}</h3>

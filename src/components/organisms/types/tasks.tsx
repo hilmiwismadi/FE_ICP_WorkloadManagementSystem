@@ -1,6 +1,6 @@
 // types/tasks.tsx
 export interface Task {
-  id: number;
+  id: string;
   title: string;
   startDate: Date;
   endDate: Date;
@@ -8,5 +8,5 @@ export interface Task {
   urgency: string;
   description: string;
   priority: string;
-  status: 'ongoing' | 'done' | 'approved';
+  status: 'Ongoing' | 'Done' | 'Approved';
 }
