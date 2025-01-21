@@ -269,10 +269,10 @@ export default function CreateTaskModal({
             </button>
           </div>
     
-          <form onSubmit={handleSubmit} className="p-[1.25vw] space-y-[1.25vw] text-[0.933vw]"> 
+          <form onSubmit={handleSubmit} className="p-[1.25vw] space-y-[1.25vw] text-[1vw]"> 
             <div className="grid grid-cols-2 gap-[1.25vw]">
               <div className="space-y-[0.417vw]">
-                <label className="text-[0.729vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
                   <FileText className="w-[0.833vw] h-[0.833vw]" />
                   Title
                 </label>
@@ -288,7 +288,7 @@ export default function CreateTaskModal({
               </div>
     
               <div className="space-y-[0.417vw]">
-                <label className="text-[0.729vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
                   <Tag className="w-[0.833vw] h-[0.833vw]" />
                   Type
                 </label>
@@ -304,7 +304,7 @@ export default function CreateTaskModal({
               </div>
     
               <div className="col-span-2 space-y-[0.417vw]">
-                <label className="text-[0.729vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
                   <FileText className="w-[0.833vw] h-[0.833vw]" />
                   Description
                 </label>
@@ -319,7 +319,7 @@ export default function CreateTaskModal({
               </div>
     
               <div className="space-y-[0.417vw]">
-                <label className="text-[0.729vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
                   <AlertCircle className="w-[0.833vw] h-[0.833vw]" />
                   Priority
                 </label>
@@ -339,7 +339,7 @@ export default function CreateTaskModal({
               </div>
     
               <div className="space-y-[0.417vw]">
-                <label className="text-[0.729vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
                   <AlertCircle className="w-[0.833vw] h-[0.833vw]" />
                   Workload (0 - 10)
                 </label>
@@ -356,7 +356,7 @@ export default function CreateTaskModal({
               </div>
     
               <div className="space-y-[0.417vw]">
-                <label className="text-[0.729vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
                   <Calendar className="w-[0.833vw] h-[0.833vw]" />
                   Start Date
                 </label>
@@ -371,7 +371,7 @@ export default function CreateTaskModal({
               </div>
     
               <div className="space-y-[0.417vw]">
-                <label className="text-[0.729vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
                   <Calendar className="w-[0.833vw] h-[0.833vw]" />
                   End Date
                 </label>
@@ -386,7 +386,7 @@ export default function CreateTaskModal({
               </div>
     
               <div className="col-span-2 space-y-[0.417vw]">
-                <label className="text-[0.729vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
                   <Users className="w-[0.833vw] h-[0.833vw]" />
                   Assignees
                 </label>
@@ -399,7 +399,7 @@ export default function CreateTaskModal({
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   >
                     <div className="p-[0.833vw] min-h-[2.188vw] flex items-center justify-between">
-                      <span className="text-[0.729vw]">
+                      <span className="text-[1vw]">
                         {getSelectedEmployeesText()}
                       </span>
                       <ChevronDown
@@ -448,7 +448,7 @@ export default function CreateTaskModal({
                               )}
                             </div>
                             <div className="ml-[0.833vw]">
-                              <div className="text-[0.729vw] font-medium">
+                              <div className="text-[1vw] font-medium">
                                 {employee.name}
                               </div>
                               <div className="text-[0.625vw] text-gray-500">
@@ -468,7 +468,7 @@ export default function CreateTaskModal({
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-[0.729vw] text-red-600 bg-red-50 p-[0.833vw] rounded-[0.208vw] flex items-center gap-[0.417vw]"
+                className="text-[1vw] text-red-600 bg-red-50 p-[0.833vw] rounded-[0.208vw] flex items-center gap-[0.417vw]"
               >
                 <AlertCircle className="w-[0.833vw] h-[0.833vw]" />
                 {error}
@@ -479,7 +479,7 @@ export default function CreateTaskModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-[1.042vw] py-[0.521vw] text-gray-600 hover:text-gray-800 transition-colors text-[0.729vw] font-medium"
+                className="px-[1.042vw] py-[0.521vw] text-gray-600 hover:text-gray-800 transition-colors text-[1vw] font-medium"
               >
                 Cancel
               </button>
@@ -487,7 +487,7 @@ export default function CreateTaskModal({
                 type="submit"
                 disabled={loading}
                 className={cn(
-                  "px-[1.042vw] py-[0.521vw] bg-blue-600 text-white rounded-[0.208vw] hover:bg-blue-700 transition-colors text-[0.729vw] font-medium flex items-center gap-[0.417vw]",
+                  "px-[1.042vw] py-[0.521vw] bg-blue-600 text-white rounded-[0.208vw] hover:bg-blue-700 transition-colors text-[1vw] font-medium flex items-center gap-[0.417vw]",
                   loading && "opacity-50 cursor-not-allowed"
                 )}
               >
@@ -518,62 +518,62 @@ export default function CreateTaskModal({
                   <div className="space-y-[1.042vw]">
                     <div className="bg-gray-50 rounded-[0.208vw] p-[1.042vw] space-y-[0.833vw]"><div className="grid grid-cols-2 gap-[1.042vw]">
                     <div>
-                      <span className="text-[0.729vw] text-gray-500">Title</span>
-                      <p className="text-[0.729vw] font-medium">{formData.title}</p>
+                      <span className="text-[1vw] text-gray-500">Title</span>
+                      <p className="text-[1vw] font-medium">{formData.title}</p>
                     </div>
                     <div>
-                      <span className="text-[0.729vw] text-gray-500">Type</span>
-                      <p className="text-[0.729vw] font-medium">{formData.type}</p>
+                      <span className="text-[1vw] text-gray-500">Type</span>
+                      <p className="text-[1vw] font-medium">{formData.type}</p>
                     </div>
                     <div>
-                      <span className="text-[0.729vw] text-gray-500">Priority</span>
-                      <p className="text-[0.729vw] font-medium">
+                      <span className="text-[1vw] text-gray-500">Priority</span>
+                      <p className="text-[1vw] font-medium">
                         {formData.priority}
                       </p>
                     </div>
                     <div>
-                      <span className="text-[0.729vw] text-gray-500">Workload</span>
-                      <p className="text-[0.729vw] font-medium">
+                      <span className="text-[1vw] text-gray-500">Workload</span>
+                      <p className="text-[1vw] font-medium">
                         {formData.workload}
                       </p>
                     </div>
                     <div>
-                      <span className="text-[0.729vw] text-gray-500">
+                      <span className="text-[1vw] text-gray-500">
                         Start Date
                       </span>
-                      <p className="text-[0.729vw] font-medium">
+                      <p className="text-[1vw] font-medium">
                         {new Date(formData.start_Date).toLocaleDateString()}
                       </p>
                     </div>
                     <div>
-                      <span className="text-[0.729vw] text-gray-500">End Date</span>
-                      <p className="text-[0.729vw] font-medium">
+                      <span className="text-[1vw] text-gray-500">End Date</span>
+                      <p className="text-[1vw] font-medium">
                         {new Date(formData.end_Date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-[0.729vw] text-gray-500">Description</span>
-                    <p className="text-[0.729vw] font-medium">
+                    <span className="text-[1vw] text-gray-500">Description</span>
+                    <p className="text-[1vw] font-medium">
                       {formData.description}
                     </p>
                   </div>
 
                   <div>
-                    <span className="text-[0.729vw] text-gray-500">Status</span>
-                    <p className="text-[0.729vw] font-medium">{formData.status}</p>
+                    <span className="text-[1vw] text-gray-500">Status</span>
+                    <p className="text-[1vw] font-medium">{formData.status}</p>
                   </div>
 
                   <div>
-                    <span className="text-[0.729vw] text-gray-500">Assignees</span>
-                    <p className="text-[0.729vw] font-medium">
+                    <span className="text-[1vw] text-gray-500">Assignees</span>
+                    <p className="text-[1vw] font-medium">
                       {getSelectedEmployeesText()}
                     </p>
                   </div>
                 </div>
 
-                <p className="text-[0.729vw] text-gray-600">
+                <p className="text-[1vw] text-gray-600">
                   Are you sure you want to create this task?
                 </p>
               </div>
@@ -583,7 +583,7 @@ export default function CreateTaskModal({
                   type="button"
                   onClick={() => setShowConfirmation(false)}
                   disabled={loading}
-                  className="px-[1.042vw] py-[0.521vw] text-gray-600 hover:text-gray-800 transition-colors text-[0.729vw] font-medium"
+                  className="px-[1.042vw] py-[0.521vw] text-gray-600 hover:text-gray-800 transition-colors text-[1vw] font-medium"
                 >
                   Cancel
                 </button>
@@ -592,7 +592,7 @@ export default function CreateTaskModal({
                   onClick={handleConfirmedSubmit}
                   disabled={loading}
                   className={cn(
-                    "px-[1.042vw] py-[0.521vw] bg-blue-600 text-white rounded-[0.208vw] hover:bg-blue-700 transition-colors text-[0.729vw] font-medium flex items-center gap-[0.417vw]",
+                    "px-[1.042vw] py-[0.521vw] bg-blue-600 text-white rounded-[0.208vw] hover:bg-blue-700 transition-colors text-[1vw] font-medium flex items-center gap-[0.417vw]",
                     loading && "opacity-50 cursor-not-allowed"
                   )}
                 >

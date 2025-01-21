@@ -186,6 +186,21 @@ const TaskPage = () => {
   const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
   const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
 
+  const calculateWorkloadPercentage = (workload: number): number => {
+    const normalize = workload / 15;
+    return normalize * 100;
+  };
+
+  const getWorkloadColor = (percentage: number): string => {
+    if (percentage < 40) {
+      return "text-green-600"; 
+    } else if (percentage < 80) {
+      return "text-yellow-600"; 
+    } else {
+      return "text-red-600"; 
+    }
+  };
+
   const renderTaskCard = (task: Task) => {
     const employeeImages = task.assigns?.map(assign => {
       const employeeDetails = getEmployeeDetails(assign.employee_Id);
@@ -194,6 +209,10 @@ const TaskPage = () => {
         details: employeeDetails,
       };
     });
+
+    const workloadPercentage = employeeImages[0]?.details?.current_Workload 
+      ? calculateWorkloadPercentage(employeeImages[0].details.current_Workload) 
+      : 0;
 
     return (
       <motion.div
@@ -276,8 +295,8 @@ const TaskPage = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500">Workload:</span>
-                        <span className="text-gray-900">
-                          {emp.details.current_Workload}%
+                        <span className={`${getWorkloadColor(workloadPercentage)}`}>
+                          {workloadPercentage.toFixed(2)}%
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -306,6 +325,10 @@ const TaskPage = () => {
         details: employeeDetails,
       };
     });
+
+    const workloadPercentage = employeeImages[0]?.details?.current_Workload 
+      ? calculateWorkloadPercentage(employeeImages[0].details.current_Workload) 
+      : 0;
 
     return (
       <motion.tr
@@ -384,8 +407,8 @@ const TaskPage = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500">Workload:</span>
-                        <span className="text-gray-900">
-                          {emp.details.current_Workload}%
+                        <span className={`${getWorkloadColor(workloadPercentage)}`}>
+                          {workloadPercentage.toFixed(2)}%
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -473,7 +496,7 @@ const TaskPage = () => {
             className={`flex-1 h-screen py-[1vw] px-[1.667vw] ml-[0.417vw] w-[80vw] transition-all duration-300 ease-in-out`}
           >
             <div className="flex flex-col h-full">
-              <div className="sticky top-0 bg-stale-50 z-10">
+              <div className="sticky top-0 bg-stale-50 z-50">
                 <Searchbar />
               </div>
 
