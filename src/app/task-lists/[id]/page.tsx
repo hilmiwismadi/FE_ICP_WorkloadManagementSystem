@@ -5,6 +5,7 @@ import Sidebar from "@/components/sidebar";
 import TaskTimeline from "@/components/organisms/tasks-list-calendar";
 import TaskListTimeline from "@/components/organisms/TasklistTimeline";
 import { Task } from "@/components/organisms/types/tasks";
+import { TaskDetails } from "@/components/organisms/TaskDetails";
 
 interface ApiTask {
     task_Id: string;
@@ -21,7 +22,7 @@ interface ApiTask {
 
 function convertApiTaskToTask(apiTask: ApiTask): Task {
     return {
-        id: parseInt(apiTask.task_Id.slice(0, 8), 16),
+        id: apiTask.task_Id,
         title: apiTask.title,
         startDate: new Date(apiTask.start_Date),
         endDate: new Date(apiTask.end_Date),
@@ -32,7 +33,7 @@ function convertApiTaskToTask(apiTask: ApiTask): Task {
         priority: (parseInt(apiTask.priority === "High" ? "8" : 
                           apiTask.priority === "Medium" ? "5" : "2") + 
                   Math.random()).toFixed(1),
-        status: apiTask.status.toLowerCase() as 'ongoing' | 'done' | 'approved'
+        status: apiTask.status as 'Ongoing' | 'Done' | 'Approved'
     };
 }
 
@@ -40,6 +41,7 @@ export default function TaskLists() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     async function fetchTasks() {
@@ -68,6 +70,22 @@ export default function TaskLists() {
     setSelectedTask(task);
   };
 
+  const handleStatusUpdate = (taskId: string, newStatus: 'Ongoing' | 'Done' | 'Approved') => {
+    setTasks(tasks.map(task => 
+      task.id === taskId 
+        ? { ...task, status: newStatus }
+        : task
+    ));
+    
+    if (selectedTask?.id === taskId) {
+      setSelectedTask(prev => prev ? { ...prev, status: newStatus } : null);
+    }
+  };
+
+  const handleStatusFilter = (status: string) => {
+    setStatusFilter(status);
+  };
+
   if (loading) {
     return <div>Loading...</div>; // Add proper loading component
   }
@@ -80,16 +98,24 @@ export default function TaskLists() {
             <TaskTimeline 
               selectedTask={selectedTask}
               onTaskSelect={handleTaskSelect}
-              tasks={tasks} // Pass the tasks data
+              tasks={tasks}
+              statusFilter={statusFilter}
+            />
+            <TaskDetails 
+              selectedTask={selectedTask}
+              onStatusUpdate={handleStatusUpdate}
             />
           </div>
           <div className="w-[15vw]  h-full ml-[0.417vw] py-[1vw] space-y-[1.25vw]">
             <TaskListTimeline 
               onTaskSelect={handleTaskSelect}
-              tasks={tasks} // Pass the tasks data
+              tasks={tasks}
+              statusFilter={statusFilter}
+              onStatusFilter={handleStatusFilter}
             />
           </div>
         </div>
+      
     </div>
   );
 }

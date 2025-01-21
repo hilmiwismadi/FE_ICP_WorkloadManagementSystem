@@ -20,9 +20,10 @@ interface TaskTimelineProps {
   selectedTask: Task | null;
   onTaskSelect: (task: Task) => void;
   tasks: Task[];
+  statusFilter: string;
 }
 
-const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) => {
+const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskTimelineProps) => {
   const [viewMode, setViewMode] = useState("weekly");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
@@ -36,9 +37,9 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) 
     return "bg-green-500";
   };
 
-  const handleStatusChange = (taskId: number, checked: boolean) => {
-    // Determine new status with the correct type
-    const newStatus: "ongoing" | "done" | "approved" = checked ? "done" : "ongoing";
+  const handleStatusChange = (taskId: string, checked: boolean) => {
+    // Use proper case directly
+    const newStatus: 'Ongoing' | 'Done' | 'Approved' = checked ? 'Done' : 'Ongoing';
   
     // Update local tasks
     const updatedTasks = localTasks.map((task) =>
@@ -85,8 +86,13 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) 
 
   const days = getDaysForView();
 
-  // Filter tasks that are visible in current view
-  const visibleTasks = localTasks.filter((task) => {
+  // Filter tasks based on status first
+  const filteredTasks = tasks.filter(task => 
+    statusFilter === "all" ? true : task.status === statusFilter
+  );
+
+  // Then filter by date range
+  const visibleTasks = filteredTasks.filter((task) => {
     const taskStart = task.startDate;
     const taskEnd = task.endDate;
     const viewStart = days[0];
@@ -188,7 +194,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) 
               return (
                 <div
                   key={task.id}
-                  className={`absolute cursor-pointer ${getTaskColor(
+                  className={`absolute cursor-pointer transition-transform transform hover:scale-105 hover:shadow-lg ${getTaskColor(
                     task.workload,
                     task.urgency
                   )} rounded p-1 text-white text-sm truncate`}
@@ -208,7 +214,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) 
       </div>
 
       {/* Task Details */}
-      {selectedTask && (
+      {/* {selectedTask && (
         <div className="p-[1vw] border rounded-lg bg-white w-full">
           <h3 className="font-semibold text-lg">{selectedTask.title}</h3>
           <div className="mt-2 text-gray-600 space-y-2">
@@ -233,7 +239,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks }: TaskTimelineProps) 
             <p className="mt-2">{selectedTask.description}</p>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
