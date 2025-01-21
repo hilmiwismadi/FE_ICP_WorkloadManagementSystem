@@ -61,6 +61,8 @@ export default function CreateTaskModal({
   const [error, setError] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showError, setShowError] = useState(false);
 
   useEffect(() => {
     fetchEmployees();
@@ -167,6 +169,8 @@ export default function CreateTaskModal({
   const handleConfirmedSubmit = async () => {
     setLoading(true);
     setError("");
+    setErrorMessage(null);
+    setShowError(false);
 
     try {
         const formattedData = {
@@ -196,8 +200,8 @@ export default function CreateTaskModal({
         );
     
         if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          throw new Error(errorData?.message || `Failed to create task: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to create task.");
         }
     
         const responseData = await response.json();
@@ -213,7 +217,10 @@ export default function CreateTaskModal({
         }, 1500);
       } catch (error) {
         console.error("Error creating task:", error);
-        setError(error instanceof Error ? error.message : "Failed to create task. Please try again.");
+        const message = error instanceof Error ? error.message : "Failed to create task. Please try again.";
+        setErrorMessage(message);
+        setShowError(true);
+        setShowConfirmation(false);
       } finally {
         setLoading(false);
       }
@@ -254,6 +261,34 @@ export default function CreateTaskModal({
                   <p className="text-[1.042vw] font-semibold text-green-600">
                     Task created successfully!
                   </p>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+    
+          <AnimatePresence>
+            {showError && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+              >
+                <motion.div
+                  className="bg-white rounded-lg shadow-lg w-full max-w-[40vw] p-6 flex flex-col items-center"
+                >
+                  <div className="flex items-center mb-4">
+                    <AlertCircle className="w-6 h-6 text-red-500" />
+                  </div>
+                  <p className="text-md font-semibold text-red-600">
+                    {errorMessage}
+                  </p>
+                  <button
+                    onClick={() => setShowError(false)}
+                    className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    Close
+                  </button>
                 </motion.div>
               </motion.div>
             )}
@@ -349,6 +384,7 @@ export default function CreateTaskModal({
                   required
                   min="0"
                   max="10"
+                  step="0.1"
                   value={formData.workload}
                   onChange={handleInputChange}
                   className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
@@ -464,17 +500,6 @@ export default function CreateTaskModal({
               </div>
             </div>
     
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-[1vw] text-red-600 bg-red-50 p-[0.833vw] rounded-[0.208vw] flex items-center gap-[0.417vw]"
-              >
-                <AlertCircle className="w-[0.833vw] h-[0.833vw]" />
-                {error}
-              </motion.div>
-            )}
-    
             <div className="flex justify-end gap-[1.042vw] pt-[1.042vw]">
               <button
                 type="button"
@@ -509,102 +534,119 @@ export default function CreateTaskModal({
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.95, opacity: 0 }}
-                  className="bg-white rounded-[0.417vw] shadow-xl w-full max-w-[43.75vw] p-[1.563vw]"
+                  className="bg-white rounded-lg shadow-lg w-full max-w-[40vw] p-6"
                 >
-                  <h3 className="text-[1.042vw] font-semibold mb-[1.042vw]">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">
                     Confirm Task Creation
                   </h3>
     
-                  <div className="space-y-[1.042vw]">
-                    <div className="bg-gray-50 rounded-[0.208vw] p-[1.042vw] space-y-[0.833vw]"><div className="grid grid-cols-2 gap-[1.042vw]">
-                    <div>
-                      <span className="text-[1vw] text-gray-500">Title</span>
-                      <p className="text-[1vw] font-medium">{formData.title}</p>
-                    </div>
-                    <div>
-                      <span className="text-[1vw] text-gray-500">Type</span>
-                      <p className="text-[1vw] font-medium">{formData.type}</p>
-                    </div>
-                    <div>
-                      <span className="text-[1vw] text-gray-500">Priority</span>
-                      <p className="text-[1vw] font-medium">
-                        {formData.priority}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-[1vw] text-gray-500">Workload</span>
-                      <p className="text-[1vw] font-medium">
-                        {formData.workload}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-[1vw] text-gray-500">
-                        Start Date
-                      </span>
-                      <p className="text-[1vw] font-medium">
-                        {new Date(formData.start_Date).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-[1vw] text-gray-500">End Date</span>
-                      <p className="text-[1vw] font-medium">
-                        {new Date(formData.end_Date).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-gray-50 rounded-md p-4 shadow-inner">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-sm text-gray-500 flex items-center">
+                            <FileText className="mr-1 w-4 h-4" />
+                            Title
+                          </span>
+                          <p className="text-md font-medium text-gray-700">{formData.title}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-500 flex items-center">
+                            <Tag className="mr-1 w-4 h-4" />
+                            Type
+                          </span>
+                          <p className="text-md font-medium text-gray-700">{formData.type}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-500 flex items-center">
+                            <AlertCircle className="mr-1 w-4 h-4" />
+                            Priority
+                          </span>
+                          <p className="text-md font-medium text-gray-700">
+                            {formData.priority}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-500 flex items-center">
+                            <Loader2 className="mr-1 w-4 h-4" />
+                            Workload
+                          </span>
+                          <p className="text-md font-medium text-gray-700">
+                            {formData.workload}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-500 flex items-center">
+                            <Calendar className="mr-1 w-4 h-4" />
+                            Start Date
+                          </span>
+                          <p className="text-md font-medium text-gray-700">
+                            {new Date(formData.start_Date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-500 flex items-center">
+                            <Calendar className="mr-1 w-4 h-4" />
+                            End Date
+                          </span>
+                          <p className="text-md font-medium text-gray-700">
+                            {new Date(formData.end_Date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
 
-                  <div>
-                    <span className="text-[1vw] text-gray-500">Description</span>
-                    <p className="text-[1vw] font-medium">
-                      {formData.description}
+                      <div className="mt-4">
+                        <span className="text-sm text-gray-500">Description</span>
+                        <p className="text-md font-medium text-gray-700">
+                          {formData.description}
+                        </p>
+                      </div>
+
+                      <div className="mt-4">
+                        <span className="text-sm text-gray-500">Status</span>
+                        <p className="text-md font-medium text-gray-700">{formData.status}</p>
+                      </div>
+
+                      <div className="mt-4">
+                        <span className="text-sm text-gray-500">Assignees</span>
+                        <p className="text-md font-medium text-gray-700">
+                          {getSelectedEmployeesText()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-gray-600">
+                      Are you sure you want to create this task?
                     </p>
                   </div>
 
-                  <div>
-                    <span className="text-[1vw] text-gray-500">Status</span>
-                    <p className="text-[1vw] font-medium">{formData.status}</p>
+                  <div className="flex justify-end gap-4 mt-6">
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmation(false)}
+                      disabled={loading}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors text-sm font-medium border border-gray-300 rounded-md shadow-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirmedSubmit}
+                      disabled={loading}
+                      className={cn(
+                        "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2",
+                        loading && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {loading ? "Creating..." : "Confirm"}
+                    </button>
                   </div>
-
-                  <div>
-                    <span className="text-[1vw] text-gray-500">Assignees</span>
-                    <p className="text-[1vw] font-medium">
-                      {getSelectedEmployeesText()}
-                    </p>
-                  </div>
-                </div>
-
-                <p className="text-[1vw] text-gray-600">
-                  Are you sure you want to create this task?
-                </p>
-              </div>
-
-              <div className="flex justify-end gap-[1.042vw] mt-[1.563vw]">
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmation(false)}
-                  disabled={loading}
-                  className="px-[1.042vw] py-[0.521vw] text-gray-600 hover:text-gray-800 transition-colors text-[1vw] font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmedSubmit}
-                  disabled={loading}
-                  className={cn(
-                    "px-[1.042vw] py-[0.521vw] bg-blue-600 text-white rounded-[0.208vw] hover:bg-blue-700 transition-colors text-[1vw] font-medium flex items-center gap-[0.417vw]",
-                    loading && "opacity-50 cursor-not-allowed"
-                  )}
-                >
-                  {loading && <Loader2 className="w-[0.833vw] h-[0.833vw] animate-spin" />}
-                  {loading ? "Creating..." : "Confirm"}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  </motion.div>
-);
-}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
+    );
+  }
