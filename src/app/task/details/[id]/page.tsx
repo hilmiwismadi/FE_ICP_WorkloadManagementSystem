@@ -8,6 +8,7 @@ import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
 import { Activity, Calendar, Clock, CheckCircle, MessageSquare, BugIcon, UserPlus } from 'lucide-react';
 import { Task, Employee } from '@/app/task/types';
+import { io } from 'socket.io-client';
 
 export interface Comment {
   comment_Id: string;
@@ -28,6 +29,11 @@ export interface TimelineActivity {
 export type Priority = 'High' | 'Medium' | 'Normal';
 export type Status = 'Ongoing' | 'Done' | 'Approved';
 
+// Initialize socket connection
+const socket = io('https://be-icpworkloadmanagementsystem.up.railway.app', {
+  reconnection: true,
+});
+
 const TaskDetailPage = () => {
   
   const { id: taskId } = useParams();
@@ -41,6 +47,7 @@ const TaskDetailPage = () => {
   const [activities, setActivities] = useState<TimelineActivity[]>([]);
   const [newActivity, setNewActivity] = useState('');
   const [activityType, setActivityType] = useState<TimelineActivity['type']>('comment');
+  const [realTimeActivities, setRealTimeActivities] = useState<TimelineActivity[]>([]);
 
   useEffect(() => {
     const authStorage = Cookies.get("auth_token");
@@ -52,6 +59,22 @@ const TaskDetailPage = () => {
         console.error("Error decoding auth token:", error);
       }
     }
+  }, []);
+
+  useEffect(() => {
+    // Socket.IO event listeners
+    socket.on('connect', () => {
+      console.log('Connected to Socket.IO server');
+    });
+
+    socket.on('new-activity', (newActivities: TimelineActivity[]) => {
+      setRealTimeActivities(newActivities);
+    });
+
+    return () => {
+      socket.off('connect');
+      socket.off('new-activity');
+    };
   }, []);
 
   useEffect(() => {
@@ -114,12 +137,9 @@ const TaskDetailPage = () => {
       userImage: getEmployeeImage(user?.email)
     };
 
-    setActivities(prev => [...prev, newTimelineActivity]);
-    setNewActivity('');
-
     if (activityType === 'comment') {
       try {
-        await fetch(`https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/add/${taskId}`, {
+        const response = await fetch(`https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/add/${taskId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -130,9 +150,24 @@ const TaskDetailPage = () => {
             task_Id: taskId
           }),
         });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Emit the new activity to all connected clients
+          socket.emit('activity', [...activities, newTimelineActivity]);
+          
+          // Update local state
+          setActivities(prev => [...prev, newTimelineActivity]);
+          setNewActivity('');
+        }
       } catch (error) {
         console.error('Error posting comment:', error);
       }
+    } else {
+      // Handle other activity types
+      socket.emit('activity', [...activities, newTimelineActivity]);
+      setActivities(prev => [...prev, newTimelineActivity]);
+      setNewActivity('');
     }
   };
 
@@ -188,6 +223,9 @@ const TaskDetailPage = () => {
       ))}
     </div>
   );
+
+  // Use realTimeActivities if available, otherwise fall back to activities
+  const displayActivities = realTimeActivities.length > 0 ? realTimeActivities : activities;
 
   if (loading) {
     return (
@@ -308,7 +346,7 @@ const TaskDetailPage = () => {
             {/* Timeline */}
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Activity Timeline</h2>
-              <TimelineComponent activities={activities} />
+              <TimelineComponent activities={displayActivities} />
             </div>
           </div>
         </div>
