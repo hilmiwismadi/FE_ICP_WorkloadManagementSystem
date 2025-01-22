@@ -63,7 +63,7 @@ export default function TaskListTimeline({
                 <div className="flex justify-between items-start relative">
                   <div className="space-y-[0.217vw]">
                     <h3 className="font-medium text-[0.8vw]">{task.title}</h3>
-                    <p className="font-medium text-[0.7vw] text-gray-500 w-[10vw] aspect-square overflow-hidden overflow-ellipsis line-clamp-3">
+                    <p className="font-medium text-[0.7vw] text-gray-500 w-[10vw] overflow-hidden overflow-ellipsis line-clamp-3 max-h-[3em]">
                       {task.description}
                     </p>
                     <p className="text-[0.7vw] text-gray-500 capitalize">

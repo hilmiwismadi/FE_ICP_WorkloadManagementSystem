@@ -344,7 +344,7 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
                 )}
               </div>
             </div>
-            <p className="mt-2">{selectedTask.description}</p>
+            <p className="mt-2 h-[10vw] overflow-y-scroll scrollbar-thin scrollbar-thumb-[#0A1D56] scrollbar-track-white scrollbar-thumb-rounded-[5vw]">{selectedTask.description}</p>
           </div>
         </div>
       </div>
