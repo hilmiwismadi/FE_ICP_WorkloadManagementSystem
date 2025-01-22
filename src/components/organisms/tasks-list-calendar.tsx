@@ -142,11 +142,11 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
       </div>
 
       {/* Timeline Grid */}
-      <div className="overflow-x-auto w-full bg-gray-50">
+      <div className="overflow-x-auto w-full bg-gray-50 px-[0.5vw] rounded-lg ">
         <div className="w-full ">
           {/* Date Headers */}
           <div
-            className={`grid gap-px bg-gray-200 w-full border border-l`}
+            className={`grid gap-px  w-full `}
             style={{
               gridTemplateColumns: `repeat(${days.length}, minmax(30px, 1fr))`,
             }}
@@ -154,7 +154,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
             {days.map((day) => (
               <div
                 key={day.toISOString()}
-                className="p-1 text-sm text-center bg-white "
+                className="p-1 text-sm text-center bg-white border border-l rounded-lg "
               >
                 {format(day, "d")}
               </div>
@@ -162,7 +162,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
           </div>
 
           {/* Tasks Timeline */}
-          <div className="relative min-h-[20vw] bg-gray-50 w-full">
+          <div className="relative min-h-[20vw] bg-gray-50 w-full px-[1vw]">
             {visibleTasks.map((task, index) => {
               const startDate = task.startDate;
               const endDate = task.endDate;
