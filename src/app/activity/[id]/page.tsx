@@ -60,7 +60,7 @@ export default function Activity() {
     const fetchTaskData = async () => {
       try {
         const response = await axios.get(
-          `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${id}`
+          `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/emp/read/${id}`
         );
         if (response.data && response.data.data) {
           setTasks(response.data.data);
