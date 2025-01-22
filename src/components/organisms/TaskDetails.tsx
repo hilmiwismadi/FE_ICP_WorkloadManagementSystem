@@ -258,7 +258,7 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
           </Button>
         </div>
         <div className="mt-2 text-gray-600 text-[1vw] flex">
-          <div className="w-1/3 space-y-[0.2vw]">
+          <div className="w-1/3 space-y-[0.5vw]">
             <p className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-500" />
               Duration: {format(new Date(selectedTask.startDate), "MMM d")} -{" "}
@@ -272,7 +272,7 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
               <AlertTriangle className="w-4 h-4 text-gray-500" />
               Urgency:{" "}
               <span
-                className={`px-2 py-0.5 rounded-full text-sm ${
+                className={`px-2 py-0.5 rounded-full text-[0.8vw] ${
                   selectedTask.urgency === "High"
                     ? "bg-red-100 text-red-800"
                     : selectedTask.urgency === "Medium"
@@ -287,7 +287,7 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
               <Clock className="w-4 h-4 text-gray-500" />
               Status:{" "}
               <span
-                className={`px-2 py-0.5 rounded-full text-sm capitalize ${
+                className={`px-2 py-0.5 rounded-full text-[0.8vw] capitalize ${
                   selectedTask.status === "Ongoing"
                     ? "bg-yellow-100 text-yellow-800"
                     : selectedTask.status === "Done"
