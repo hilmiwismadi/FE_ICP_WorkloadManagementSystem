@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +17,21 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { Calendar, Activity, AlertTriangle, Clock } from "lucide-react";
+import { Calendar, Activity, AlertTriangle, Clock, UserPlus } from "lucide-react";
+
+interface Employee {
+  employee_Id: string;
+  name: string;
+  image?: string;
+  email?: string;
+  team?: string;
+  skill?: string;
+  phone?: string;
+  current_Workload: number;
+  users?: Array<{
+    email: string;
+  }>;
+}
 
 interface Task {
   id: string;
@@ -30,11 +44,7 @@ interface Task {
   status: string;
   assigns?: Array<{
     employee_Id: string;
-    employee: {
-      name: string;
-      image?: string;
-      skill?: string;
-    };
+    employee: Employee;
   }>;
 }
 
@@ -43,12 +53,49 @@ interface TaskDetailsProps {
   onStatusUpdate: (taskId: string, newStatus: 'Ongoing' | 'Done' | 'Approved') => void;
 }
 
+const calculateWorkloadPercentage = (workload: number): number => {
+  const normalize = workload / 15;
+  return normalize * 100;
+};
+
+const getWorkloadColor = (percentage: number): string => {
+  if (percentage < 40) {
+    return "text-green-600";
+  } else if (percentage < 80) {
+    return "text-yellow-600";
+  } else {
+    return "text-red-600";
+  }
+};
+
 export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<'Ongoing' | 'Done' | null>(null);
   const { toast } = useToast();
   const router = useRouter();
+  const [hoverCardPosition, setHoverCardPosition] = useState<Record<string, string>>({});
+  const [employees, setEmployees] = useState<Employee[]>([]);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await fetch("https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read");
+        const result = await response.json();
+        if (result.data && Array.isArray(result.data)) {
+          setEmployees(result.data);
+        }
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
+
+  const getEmployeeDetails = (employeeId: string) => {
+    return employees.find((emp) => emp.employee_Id === employeeId);
+  };
 
   const handleStatusChange = (newStatus: 'Ongoing' | 'Done') => {
     // Don't allow status change if current status is 'Approved'
@@ -112,6 +159,87 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
     }
   };
 
+  const renderAssigneeImages = (assigns: any[]) => {
+    return assigns.map((assign, index) => {
+      const employeeDetails = getEmployeeDetails(assign.employee_Id);
+      const image = employeeDetails?.image || "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ";
+
+      return (
+        <div 
+          key={assign.employee_Id} 
+          className="relative group"
+          onMouseEnter={(event) => {
+            const card = event.currentTarget.querySelector('.hover-card');
+            if (card) {
+              const rect = card.getBoundingClientRect();
+              const spaceBelow = window.innerHeight - rect.bottom;
+              const spaceAbove = rect.top;
+
+              const employeeId = employeeDetails?.employee_Id as string;
+              if (spaceBelow < rect.height && spaceAbove > rect.height) {
+                setHoverCardPosition(prev => ({ ...prev, [employeeId]: 'above' }));
+              } else {
+                setHoverCardPosition(prev => ({ ...prev, [employeeId]: 'below' }));
+              }
+            }
+          }}
+        >
+          <div className="w-[2.5vw] h-[2.5vw] rounded-full bg-gray-200 border-[0.08vw] border-white flex items-center justify-center overflow-hidden">
+            <img
+              src={image}
+              alt={employeeDetails?.name || `Employee ${index + 1}`}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          
+          {/* Hover Card */}
+          {employeeDetails && (
+            <motion.div
+              className={`absolute left-0 transform -translate-x-full 
+                ${hoverCardPosition[employeeDetails.employee_Id] === 'above' ? 'bottom-full mb-2' : 'top-full mt-2'} 
+                w-[12vw] bg-white rounded-lg shadow-lg p-[0.625vw] hidden group-hover:block z-50 border border-gray-200 hover-card`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+            >
+              <div className="flex items-start gap-[0.625vw]">
+                <img
+                  src={image}
+                  alt={employeeDetails.name}
+                  className="w-[2.5vw] h-[2.5vw] rounded-full object-cover"
+                />
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900 text-[0.9vw]">{employeeDetails.name}</h4>
+                  <p className="text-[0.6vw] text-gray-500">{employeeDetails.users?.[0]?.email}</p>
+                </div>
+              </div>
+              <div className="mt-[0.5vw] space-y-[0.25vw] text-[0.6vw]">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Team:</span>
+                  <span className="text-gray-900">{employeeDetails.team}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Role:</span>
+                  <span className="text-gray-900">{employeeDetails.skill}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Workload:</span>
+                  <span className={`${getWorkloadColor(employeeDetails.current_Workload)}`}>
+                    {calculateWorkloadPercentage(employeeDetails.current_Workload).toFixed(2)}%
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Phone:</span>
+                  <span className="text-gray-900">{employeeDetails.phone}</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      );
+    });
+  };
+
   if (!selectedTask) {
     return null;
   }
@@ -171,36 +299,13 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
               </span>
             </p>
             <div className="mt-4">
-              <p className="font-medium mb-2">Assignees:</p>
-              <div className="flex flex-wrap gap-3">
-                {selectedTask.assigns?.map((assign) => {
-                  const employee = assign.employee;
-                  return (
-                    <div
-                      key={assign.employee_Id}
-                      className="flex items-center gap-2"
-                    >
-                      <div className="w-8 h-8 rounded-full overflow-hidden">
-                        <img
-                          src={
-                            employee?.image ||
-                            "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"
-                          }
-                          alt={employee?.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {employee?.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {employee?.skill}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+              <h3 className="font-semibold text-gray-600 mb-[1vw] text-sm">Assignees</h3>
+              <div className="flex gap-[0.8vw]">
+                {selectedTask?.assigns ? (
+                  renderAssigneeImages(selectedTask.assigns)
+                ) : (
+                  <div className="text-gray-500 text-sm">No assignees found</div>
+                )}
               </div>
             </div>
           </div>
@@ -211,7 +316,7 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
                 <Button
                   variant={selectedTask.status === 'Ongoing' ? 'default' : 'outline'}
                   onClick={() => handleStatusChange('Ongoing')}
-                  disabled={selectedTask.status === 'Approved'}
+                  disabled={selectedTask.status === 'Approved' || selectedTask.status === 'Ongoing'}
                   className={`px-4 py-2 ${
                     selectedTask.status === 'Ongoing' 
                       ? 'bg-yellow-500 hover:bg-yellow-600' 
@@ -223,7 +328,7 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
                 <Button
                   variant={selectedTask.status === 'Done' ? 'default' : 'outline'}
                   onClick={() => handleStatusChange('Done')}
-                  disabled={selectedTask.status === 'Approved'}
+                  disabled={selectedTask.status === 'Approved' || selectedTask.status === 'Done'}
                   className={`px-4 py-2 ${
                     selectedTask.status === 'Done' 
                       ? 'bg-green-500 hover:bg-green-600' 

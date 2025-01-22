@@ -149,19 +149,19 @@ const TaskTimeline = ({
       </div>
 
       {/* Timeline Grid */}
-      <div className="overflow-x-auto w-full bg-gray-50 px-[0.5vw] rounded-lg ">
-        <div className="w-full ">
+      <div className="overflow-x-auto w-full bg-gray-50 px-[0.5vw] rounded-lg">
+        <div className="w-full">
           {/* Date Headers */}
           <div
-            className={`grid gap-px  w-full `}
+            className="grid gap-[0.2vw] w-full"
             style={{
-              gridTemplateColumns: `repeat(${days.length}, minmax(30px, 1fr))`,
+              gridTemplateColumns: `repeat(${days.length}, minmax(2vw, 1fr))`,
             }}
           >
             {days.map((day) => (
               <div
                 key={day.toISOString()}
-                className="p-1 text-sm text-center bg-white border border-l rounded-lg "
+                className="p-[0.5vw] text-[0.8vw] text-center bg-white border border-l rounded-lg"
               >
                 {format(day, "d")}
               </div>
@@ -201,14 +201,15 @@ const TaskTimeline = ({
               return (
                 <div
                   key={task.id}
-                  className={`absolute  cursor-pointer transition-transform transform hover:scale-[0.98] hover:shadow-lg ${getTaskColor(
+                  className={`absolute cursor-pointer transition-transform transform hover:scale-[0.98] hover:shadow-lg ${getTaskColor(
                     task.workload,
                     task.urgency
-                  )} rounded p-1 text-white text-[0.8vw] truncate`}
+                  )} rounded p-[0.5vw] text-white text-[0.8vw] truncate`}
                   style={{
                     left: `${(startPosition / days.length) * 100}%`,
                     width: `${width}%`,
-                    top: `${index * 2 + 1}vw`,
+                    top: `${index * 2.5 + 1}vw`,
+                    minHeight: '2vw'
                   }}
                   onClick={() => onTaskSelect(task)}
                 >

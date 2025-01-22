@@ -8,6 +8,17 @@ import { Task } from "@/components/organisms/types/tasks";
 import { TaskDetails } from "@/components/organisms/TaskDetails";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 
+interface Employee {
+  employee_Id: string;
+  name: string;
+  image?: string;
+  email?: string;
+  team?: string;
+  skill?: string;
+  phone?: string;
+  current_Workload: number;
+}
+
 interface ApiTask {
     task_Id: string;
     title: string;
@@ -19,6 +30,10 @@ interface ApiTask {
     start_Date: string;
     end_Date: string;
     user_Id: string;
+    assigns?: Array<{
+      employee_Id: string;
+      employee: Employee;
+    }>;
 }
 
 function convertApiTaskToTask(apiTask: ApiTask): Task {
