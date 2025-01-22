@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -64,38 +64,7 @@ export default function CreateTaskModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showError, setShowError] = useState(false);
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredEmployees(employees);
-    } else {
-      const filtered = employees.filter(
-        (employee) =>
-          employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          employee.team.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          employee.skill.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredEmployees(filtered);
-    }
-  }, [searchQuery, employees]);
-
-  const getImageUrl = (imageUrl: string | undefined): string => {
-    if (!imageUrl) {
-      return 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ'; 
-    }
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
-    }
-    if (imageUrl.startsWith('/uploads')) {
-      return `https://be-icpworkloadmanagementsystem.up.railway.app/api${imageUrl}`;
-    }
-    return imageUrl;
-  };
-
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     try {
       const response = await fetch(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
@@ -124,6 +93,37 @@ export default function CreateTaskModal({
       setEmployees([]);
       setFilteredEmployees([]);
     }
+  }, []);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
+
+  useEffect(() => {
+    if (searchQuery.trim() === "") {
+      setFilteredEmployees(employees);
+    } else {
+      const filtered = employees.filter(
+        (employee) =>
+          employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          employee.team.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          employee.skill.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredEmployees(filtered);
+    }
+  }, [searchQuery, employees]);
+
+  const getImageUrl = (imageUrl: string | undefined): string => {
+    if (!imageUrl) {
+      return 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ'; 
+    }
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
+    }
+    if (imageUrl.startsWith('/uploads')) {
+      return `https://be-icpworkloadmanagementsystem.up.railway.app/api${imageUrl}`;
+    }
+    return imageUrl;
   };
 
   const handleInputChange = (

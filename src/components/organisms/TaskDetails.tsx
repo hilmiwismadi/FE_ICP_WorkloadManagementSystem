@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Calendar, Activity, AlertTriangle, Clock, UserPlus } from "lucide-react";
+import Image from 'next/image';
 
 interface Employee {
   employee_Id: string;
@@ -185,9 +186,11 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
           }}
         >
           <div className="w-[2.5vw] h-[2.5vw] rounded-full bg-gray-200 border-[0.08vw] border-white flex items-center justify-center overflow-hidden">
-            <img
+            <Image 
               src={image}
               alt={employeeDetails?.name || `Employee ${index + 1}`}
+              width={32}
+              height={32}
               className="w-full h-full object-cover"
             />
           </div>
@@ -203,9 +206,11 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
               exit={{ opacity: 0, y: 10 }}
             >
               <div className="flex items-start gap-[0.625vw]">
-                <img
+                <Image 
                   src={image}
                   alt={employeeDetails.name}
+                  width={32}
+                  height={32}
                   className="w-[2.5vw] h-[2.5vw] rounded-full object-cover"
                 />
                 <div className="flex-1">
