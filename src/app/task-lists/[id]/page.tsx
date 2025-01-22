@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import Sidebar from "@/components/sidebar";
 import TaskTimeline from "@/components/organisms/tasks-list-calendar";
 import TaskListTimeline from "@/components/organisms/TasklistTimeline";
@@ -38,7 +38,8 @@ function convertApiTaskToTask(apiTask: ApiTask): Task {
     };
 }
 
-export default function TaskLists() {
+export default function TaskLists({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,14 +48,15 @@ export default function TaskLists() {
   useEffect(() => {
     async function fetchTasks() {
       try {
-        const response = await fetch('https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read');
+        const empId = resolvedParams.id; // Use the resolved params
+        const response = await fetch(`https://be-icpworkloadmanagementsystem.up.railway.app/api/task/emp/read/${empId}`);
         if (!response.ok) throw new Error('Failed to fetch tasks');
         
         const data = await response.json();
-        console.log('API Response:', data); // To debug the response
+        console.log('API Response:', data);
 
         // Check if data is in the expected format and handle the response structure
-        const apiTasks: ApiTask[] = Array.isArray(data) ? data : data.data || [];
+        const apiTasks: ApiTask[] = Array.isArray(data.data) ? data.data : data.data || [];
         const convertedTasks = apiTasks.map(convertApiTaskToTask);
         setTasks(convertedTasks);
       } catch (error) {
@@ -65,7 +67,7 @@ export default function TaskLists() {
     }
 
     fetchTasks();
-  }, []);
+  }, [resolvedParams.id]);
 
   const handleTaskSelect = (task: Task) => {
     setSelectedTask(task);

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { Calendar, Activity, AlertTriangle, Clock } from "lucide-react";
 
 interface Task {
   id: string;
@@ -27,6 +28,14 @@ interface Task {
   workload: string;
   urgency: string;
   status: string;
+  assigns?: Array<{
+    employee_Id: string;
+    employee: {
+      name: string;
+      image?: string;
+      skill?: string;
+    };
+  }>;
 }
 
 interface TaskDetailsProps {
@@ -109,8 +118,8 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
 
   return (
     <>
-      <div className="p-[1vw] border rounded-lg bg-white w-full min-h-[30vh] ">
-        <div className="flex justify-between items-center">
+      <div className="p-[1vw] border rounded-lg bg-white w-full min-h-[28vh] scale-[0.98] ">
+        <div className="flex justify-between items-center ">
           <h3 className="font-semibold text-[1.2vw]">{selectedTask.title}</h3>
           <Button
             variant="outline"
@@ -120,51 +129,118 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
             See Details
           </Button>
         </div>
-        <div className="mt-2 text-gray-600 space-y-[0.2vw] text-[1vw]">
-          <p>
-            Duration: {format(new Date(selectedTask.startDate), "MMM d")} -{" "}
-            {format(new Date(selectedTask.endDate), "MMM d")}
-          </p>
-          <p>Workload: {selectedTask.workload}</p>
-          <p>Urgency: {selectedTask.urgency}</p>
-          <p>
-            Status: <span className="capitalize">{selectedTask.status}</span>
-          </p>
-          <div className="flex items-center space-x-2">
-            <span>Progress:</span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={selectedTask.status === 'Ongoing' ? 'default' : 'outline'}
-                onClick={() => handleStatusChange('Ongoing')}
-                disabled={selectedTask.status === 'Approved'}
-                className={`px-4 py-2 ${
-                  selectedTask.status === 'Ongoing' 
-                    ? 'bg-yellow-500 hover:bg-yellow-600' 
-                    : 'text-yellow-600 border-yellow-600 hover:bg-yellow-50'
+        <div className="mt-2 text-gray-600 text-[1vw] flex">
+          <div className="w-1/3 space-y-[0.2vw]">
+            <p className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-gray-500" />
+              Duration: {format(new Date(selectedTask.startDate), "MMM d")} -{" "}
+              {format(new Date(selectedTask.endDate), "MMM d")}
+            </p>
+            <p className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-gray-500" />
+              Workload: <span className="font-medium">{selectedTask.workload}</span>
+            </p>
+            <p className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-gray-500" />
+              Urgency:{" "}
+              <span
+                className={`px-2 py-0.5 rounded-full text-sm ${
+                  selectedTask.urgency === "High"
+                    ? "bg-red-100 text-red-800"
+                    : selectedTask.urgency === "Medium"
+                    ? "bg-orange-100 text-orange-800"
+                    : "bg-blue-100 text-blue-800"
                 }`}
               >
-                Ongoing
-              </Button>
-              <Button
-                variant={selectedTask.status === 'Done' ? 'default' : 'outline'}
-                onClick={() => handleStatusChange('Done')}
-                disabled={selectedTask.status === 'Approved'}
-                className={`px-4 py-2 ${
-                  selectedTask.status === 'Done' 
-                    ? 'bg-green-500 hover:bg-green-600' 
-                    : 'text-green-600 border-green-600 hover:bg-green-50'
+                {selectedTask.urgency}
+              </span>
+            </p>
+            <p className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-gray-500" />
+              Status:{" "}
+              <span
+                className={`px-2 py-0.5 rounded-full text-sm capitalize ${
+                  selectedTask.status === "Ongoing"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : selectedTask.status === "Done"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-blue-100 text-blue-800"
                 }`}
               >
-                Done
-              </Button>
-              {selectedTask.status === 'Approved' && (
-                <span className="px-4 py-2 bg-blue-500 text-white rounded-md">
-                  Approved
-                </span>
-              )}
+                {selectedTask.status}
+              </span>
+            </p>
+            <div className="mt-4">
+              <p className="font-medium mb-2">Assignees:</p>
+              <div className="flex flex-wrap gap-3">
+                {selectedTask.assigns?.map((assign) => {
+                  const employee = assign.employee;
+                  return (
+                    <div
+                      key={assign.employee_Id}
+                      className="flex items-center gap-2"
+                    >
+                      <div className="w-8 h-8 rounded-full overflow-hidden">
+                        <img
+                          src={
+                            employee?.image ||
+                            "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"
+                          }
+                          alt={employee?.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {employee?.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {employee?.skill}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
-          <p className="mt-2">{selectedTask.description}</p>
+          <div className="w-2/3 space-y-[0.2vw]">
+            <div className="flex items-center space-x-2">
+              <span>Progress:</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={selectedTask.status === 'Ongoing' ? 'default' : 'outline'}
+                  onClick={() => handleStatusChange('Ongoing')}
+                  disabled={selectedTask.status === 'Approved'}
+                  className={`px-4 py-2 ${
+                    selectedTask.status === 'Ongoing' 
+                      ? 'bg-yellow-500 hover:bg-yellow-600' 
+                      : 'text-yellow-600 border-yellow-600 hover:bg-yellow-50'
+                  }`}
+                >
+                  Ongoing
+                </Button>
+                <Button
+                  variant={selectedTask.status === 'Done' ? 'default' : 'outline'}
+                  onClick={() => handleStatusChange('Done')}
+                  disabled={selectedTask.status === 'Approved'}
+                  className={`px-4 py-2 ${
+                    selectedTask.status === 'Done' 
+                      ? 'bg-green-500 hover:bg-green-600' 
+                      : 'text-green-600 border-green-600 hover:bg-green-50'
+                  }`}
+                >
+                  Done
+                </Button>
+                {selectedTask.status === 'Approved' && (
+                  <span className="px-4 py-2 bg-blue-500 text-white rounded-md">
+                    Approved
+                  </span>
+                )}
+              </div>
+            </div>
+            <p className="mt-2">{selectedTask.description}</p>
+          </div>
         </div>
       </div>
 

@@ -34,7 +34,7 @@ export default function TaskListTimeline({
   );
 
   return (
-    <Card className="bg-[#0A1D56] mr-[0.5vw]">
+    <Card className="bg-[#0A1D56]">
       <CardHeader>
         <div className="flex flex-col space-y-4">
           <CardTitle className="text-white text-[1.25vw]">Task</CardTitle>
@@ -63,7 +63,7 @@ export default function TaskListTimeline({
                 <div className="flex justify-between items-start relative">
                   <div className="space-y-[0.217vw]">
                     <h3 className="font-medium text-[0.8vw]">{task.title}</h3>
-                    <p className="font-medium text-[0.7vw] text-gray-500">
+                    <p className="font-medium text-[0.7vw] text-gray-500 w-[10vw] aspect-square overflow-hidden overflow-ellipsis line-clamp-3">
                       {task.description}
                     </p>
                     <p className="text-[0.7vw] text-gray-500 capitalize">

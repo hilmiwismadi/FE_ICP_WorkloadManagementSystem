@@ -110,7 +110,7 @@ const TaskTimeline = ({
   return (
     <div className="p-[1vw] space-y-[1vh] w-full">
       {/* Controls */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center ">
         <div className="space-x-2 ">
           <button
             className={`px-[1vw] py-[0.4vh] rounded text-[0.8vw]  transition-transform transform hover:scale-[0.98] hover:shadow-lg  ${
@@ -129,7 +129,7 @@ const TaskTimeline = ({
             Weekly
           </button>
         </div>
-        <div className="flex items-center space-x-4 scale-[0.8]">
+        <div className="flex items-center space-x-4 scale-[0.8] ">
           <button
             onClick={handlePrevious}
             className="p-2 hover:bg-gray-100 rounded"

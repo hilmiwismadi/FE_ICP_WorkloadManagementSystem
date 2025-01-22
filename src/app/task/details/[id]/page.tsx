@@ -153,6 +153,25 @@ const TaskDetailPage = () => {
     }
   }, [taskId]);
 
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await fetch(
+          'https://be-icpworkloadmanagementsystem.up.railway.app/api/employee/read'
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch employees');
+        }
+        const data = await response.json();
+        setEmployees(data.data || []);
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
+
   const getEmployeeImage = (email?: string) => {
     const employee = employees.find((emp) =>
       emp.users?.some((user) => user.email === email)
