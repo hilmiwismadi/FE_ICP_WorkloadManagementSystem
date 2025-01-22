@@ -138,6 +138,25 @@ const Sidebar = () => {
     </div>
   );
 
+  // Close the logout popup when clicking outside of it
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (isLogoutPopupOpen && !target.closest('.logout-popup')) {
+      setIsLogoutPopupOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isLogoutPopupOpen) {
+      document.addEventListener('click', handleClickOutside);
+    } else {
+      document.removeEventListener('click', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isLogoutPopupOpen]);
+
   return (
     <div
       className={`relative min-h-screen bg-navy transition-all duration-300 ease-in-out cursor-pointer ${
@@ -255,7 +274,7 @@ const Sidebar = () => {
       {/* Logout Confirmation Popup */}
       {isLogoutPopupOpen && (
         <div className="fixed inset-0 bg-black/75 flex justify-center items-center z-50 text-[1vw]">
-          <div className="bg-white p-[2.5vw] rounded-lg shadow-lg w-[90vw] sm:w-[400px] text-center">
+          <div className="bg-white p-[2.5vw] rounded-lg shadow-lg w-[90vw] sm:w-[400px] text-center logout-popup">
             <h2 className="text-[1.5vw] font-semibold mb-[0.833vw]">
               Confirm Logout
             </h2>

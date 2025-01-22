@@ -6,6 +6,7 @@ import TaskTimeline from "@/components/organisms/tasks-list-calendar";
 import TaskListTimeline from "@/components/organisms/TasklistTimeline";
 import { Task } from "@/components/organisms/types/tasks";
 import { TaskDetails } from "@/components/organisms/TaskDetails";
+import LoadingScreen from "@/components/organisms/LoadingScreen";
 
 interface ApiTask {
     task_Id: string;
@@ -87,7 +88,7 @@ export default function TaskLists() {
   };
 
   if (loading) {
-    return <div>Loading...</div>; // Add proper loading component
+    return <LoadingScreen />
   }
 
   return (
