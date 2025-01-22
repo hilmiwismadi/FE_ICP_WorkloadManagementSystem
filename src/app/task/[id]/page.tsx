@@ -12,6 +12,26 @@ import { NewTaskModal } from "@/components/organisms/NewTaskModal";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 import ProtectedRoute from "@/components/protected-route";
 
+interface TaskDetails {
+  task_Id: string;
+  title: string;
+  type: string;
+  description: string;
+  status: string;
+  priority: string;
+  workload: number;
+  start_Date: string;
+  end_Date: string;
+  user_Id: string;
+  employee_Id: string;
+}
+
+interface Assignment {
+  task_Id: string;
+  employee_Id: string;
+  task: TaskDetails;
+}
+
 interface Employee {
   id: string;
   name: string;
@@ -25,32 +45,17 @@ interface Employee {
   avatar?: string;
 }
 
-interface Task {
-  task_Id: string;
-  type: string;
-  description: string;
-  status: string;
-  workload: number;
-  start_Date: string;
-  end_Date: string;
-  employee_Id: string;
-  user_Id: string;
-}
-
 interface ApiResponse {
   data: {
     employee_Id: string;
     name: string;
-    email: string;
+    image: string;
     phone: string;
     team: string;
     skill: string;
-    role: string;
     current_Workload: number;
     start_Date: string;
-    image?: string;
-    tasks: Task[];
-    techStacks: string[];
+    assigns: Assignment[];
   };
   error: null | string;
 }
@@ -58,10 +63,8 @@ interface ApiResponse {
 export default function TaskPageId() {
   const { id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
-    null
-  );
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [tasks, setTasks] = useState<TaskDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,18 +95,19 @@ export default function TaskPageId() {
           setSelectedEmployee({
             id: user.employee_Id,
             name: user.name,
-            email: user.email,
+            email: "", // Add email handling if needed
             phone: user.phone,
             team: user.team,
             skill: user.skill,
-            role: user.role,
+            role: "", // Add role handling if needed
             currentWorkload: user.current_Workload,
             startDate: user.start_Date,
-            avatar: user.image || "/placeholder-avatar.png",
+            avatar: user.image,
           });
 
-          // Set tasks data
-          setTasks(user.tasks || []);
+          // Extract tasks from assignments
+          const tasksList = user.assigns.map(assignment => assignment.task);
+          setTasks(tasksList);
         }
       } catch (error) {
         const errorMessage =
@@ -126,8 +130,9 @@ export default function TaskPageId() {
     );
 
     const result = response.data;
-    if (result.data?.tasks) {
-      setTasks(result.data.tasks);
+    if (result.data?.assigns) {
+      const tasksList = result.data.assigns.map(assignment => assignment.task);
+      setTasks(tasksList);
     }
   };
 
@@ -137,8 +142,9 @@ export default function TaskPageId() {
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${id}`
       );
 
-      if (response.data.data?.tasks) {
-        setTasks(response.data.data.tasks);
+      if (response.data.data?.assigns) {
+        const tasksList = response.data.data.assigns.map(assignment => assignment.task);
+        setTasks(tasksList);
       }
 
       await refreshTasks();
