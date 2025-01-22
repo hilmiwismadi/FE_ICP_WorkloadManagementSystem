@@ -101,12 +101,12 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
   });
 
   return (
-    <div className="p-4 space-y-4 w-full">
+    <div className="p-[1vw] space-y-[1vh] w-full">
       {/* Controls */}
       <div className="flex justify-between items-center">
-        <div className="space-x-2">
+        <div className="space-x-2 ">
           <button
-            className={`px-4 py-2 rounded ${
+            className={`px-[1vw] py-[0.4vh] rounded text-[0.8vw]  transition-transform transform hover:scale-[0.98] hover:shadow-lg ${
               viewMode === "weekly" ? "bg-blue-600 text-white" : "bg-gray-200"
             }`}
             onClick={() => setViewMode("weekly")}
@@ -114,7 +114,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
             Weekly
           </button>
           <button
-            className={`px-4 py-2 rounded ${
+            className={`px-[1vw] py-[0.4vh] rounded text-[0.8vw]  transition-transform transform hover:scale-[0.98] hover:shadow-lg  ${
               viewMode === "monthly" ? "bg-blue-600 text-white" : "bg-gray-200"
             }`}
             onClick={() => setViewMode("monthly")}
@@ -122,7 +122,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
             Monthly
           </button>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 scale-[0.8]">
           <button
             onClick={handlePrevious}
             className="p-2 hover:bg-gray-100 rounded"
@@ -194,7 +194,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
               return (
                 <div
                   key={task.id}
-                  className={`absolute cursor-pointer transition-transform transform hover:scale-105 hover:shadow-lg ${getTaskColor(
+                  className={`absolute cursor-pointer transition-transform transform hover:scale-[0.98] hover:shadow-lg ${getTaskColor(
                     task.workload,
                     task.urgency
                   )} rounded p-1 text-white text-sm truncate`}
@@ -213,33 +213,6 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
         </div>
       </div>
 
-      {/* Task Details */}
-      {/* {selectedTask && (
-        <div className="p-[1vw] border rounded-lg bg-white w-full">
-          <h3 className="font-semibold text-lg">{selectedTask.title}</h3>
-          <div className="mt-2 text-gray-600 space-y-2">
-            <p>
-              Duration: {format(selectedTask.startDate, "MMM d")} -{" "}
-              {format(selectedTask.endDate, "MMM d")}
-            </p>
-            <p>Workload: {selectedTask.workload}</p>
-            <p>Urgency: {selectedTask.urgency}</p>
-            <p>
-              Status: <span className="capitalize">{selectedTask.status}</span>
-            </p>
-            <div className="flex items-center space-x-2">
-              <span>Progress:</span>
-              <Switch
-                id={`task-switch-${selectedTask.id}`}
-                checked={selectedTask.status === "done"}
-                onCheckedChange={(checked) => handleStatusChange(selectedTask.id, checked)}
-              />
-              <span>{selectedTask.status === "done" ? "Done" : "Ongoing"}</span>
-            </div>
-            <p className="mt-2">{selectedTask.description}</p>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };

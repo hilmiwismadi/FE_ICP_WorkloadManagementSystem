@@ -34,7 +34,7 @@ export default function TaskListTimeline({
   );
 
   return (
-    <Card className="bg-[#0A1D56]">
+    <Card className="bg-[#0A1D56] mr-[0.5vw]">
       <CardHeader>
         <div className="flex flex-col space-y-4">
           <CardTitle className="text-white text-[1.25vw]">Task</CardTitle>
