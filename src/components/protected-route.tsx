@@ -86,7 +86,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         const pathId = path.split("/").pop();
         return pathId === employee_Id;
       }
-<<<<<<< HEAD
 
       if (isTaskDetailsPath) {
         // Check if the task ID in the URL matches any of the employee's task IDs
@@ -94,15 +93,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         return taskIdFromPath !== undefined && taskIds.includes(taskIdFromPath);
       }
 
-=======
-      
-      // For task details, we'll allow access to any task details
-      // You might want to add additional checks here to ensure they can only view their own tasks
-      if (isTaskDetailsPath) {
-        return true;
-      }
-      
->>>>>>> 9dfa4201c3f7e81f1bcf7767121a32b5050c909a
       return false;
     }
 
