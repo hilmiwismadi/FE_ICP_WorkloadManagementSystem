@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import LoadingScreen from "@/components/organisms/LoadingScreen";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -97,7 +98,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }, [router, pathname]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <LoadingScreen />;
   }
 
   return <>{children}</>;
