@@ -39,8 +39,9 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     if (role === "Employee") {
       const isTaskListPath = path.startsWith("/task-lists/");
       const isEditProfilePath = path.startsWith("/edit-profile/");
+      const isTaskDetailsPath = path.startsWith("/task-details/");
 
-      if (isTaskListPath || isEditProfilePath) {
+      if (isTaskListPath || isEditProfilePath || isTaskDetailsPath) {
         // Check if the ID in the URL matches the user's ID
         const pathId = path.split("/").pop();
         return pathId === user_Id;

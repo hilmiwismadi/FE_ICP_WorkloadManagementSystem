@@ -16,6 +16,7 @@ import {
   AlertDialogOverlay,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 interface Task {
   id: string;
@@ -38,6 +39,7 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<'Ongoing' | 'Done' | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleStatusChange = (newStatus: 'Ongoing' | 'Done') => {
     // Don't allow status change if current status is 'Approved'
@@ -108,7 +110,16 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
   return (
     <>
       <div className="p-[1vw] border rounded-lg bg-white w-full min-h-[30vh] ">
-        <h3 className="font-semibold text-[1.2vw]">{selectedTask.title}</h3>
+        <div className="flex justify-between items-center">
+          <h3 className="font-semibold text-[1.2vw]">{selectedTask.title}</h3>
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/task/details/${selectedTask.id}`)}
+            className="text-blue-600 border-blue-600 hover:bg-blue-50"
+          >
+            See Details
+          </Button>
+        </div>
         <div className="mt-2 text-gray-600 space-y-[0.2vw] text-[1vw]">
           <p>
             Duration: {format(new Date(selectedTask.startDate), "MMM d")} -{" "}
