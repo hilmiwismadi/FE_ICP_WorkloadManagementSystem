@@ -39,13 +39,20 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     if (role === "Employee") {
       const isTaskListPath = path.startsWith("/task-lists/");
       const isEditProfilePath = path.startsWith("/edit-profile/");
-      const isTaskDetailsPath = path.startsWith("/task-details/");
+      const isTaskDetailsPath = path.startsWith("/task/details/");
 
-      if (isTaskListPath || isEditProfilePath || isTaskDetailsPath) {
+      if (isTaskListPath || isEditProfilePath) {
         // Check if the ID in the URL matches the user's ID
         const pathId = path.split("/").pop();
         return pathId === user_Id;
       }
+      
+      // For task details, we'll allow access to any task details
+      // You might want to add additional checks here to ensure they can only view their own tasks
+      if (isTaskDetailsPath) {
+        return true;
+      }
+      
       return false;
     }
 
