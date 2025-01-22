@@ -18,6 +18,7 @@ import BulkTaskModal from "./BulkTaskModal";
 import { jwtDecode } from "jwt-decode";
 import ProtectedRoute from "@/components/protected-route";
 import { useRouter } from 'next/navigation';
+import LoadingScreen from "@/components/organisms/LoadingScreen";
 
 interface AuthUser {
   user_Id: string;
@@ -492,6 +493,10 @@ const TaskPage = () => {
     </div>
   );
 
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <ProtectedRoute>
       <div className="flex h-screen bg-gray-100">
@@ -501,7 +506,7 @@ const TaskPage = () => {
             className={`flex-1 h-screen py-[0.8vw] px-[1.2vw] ml-[0.3vw] w-[80vw] transition-all duration-300 ease-in-out`}
           >
             <div className="flex flex-col h-full">
-              <div className="sticky top-0 bg-stale-50 z-50">
+              <div className="sticky top-0 bg-stale-50 z-20">
                 <Searchbar />
               </div>
 
