@@ -15,7 +15,10 @@ import {
   MessageSquare,
   BugIcon,
   UserPlus,
-} from "lucide-react";
+  Send,
+  CheckCheck,
+  RefreshCw,
+} from "lucide-react"; 
 import { Task, Employee } from "@/app/task/types";
 import { io } from "socket.io-client";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
@@ -24,12 +27,13 @@ export interface Comment {
   comment_Id: string;
   content: string;
   created_at: string;
+  type: "Started" | "Comment" | "Bug" | "Completed" | "Assigned";
   user?: { email: string; role: string };
 }
 
 export interface TimelineActivity {
   id: string;
-  type: "started" | "comment" | "bug" | "completed" | "assigned";
+  type: "Started" | "Comment" | "Bug" | "Completed" | "Assigned";
   content: string;
   user: string;
   timestamp: string;
@@ -58,10 +62,13 @@ const TaskDetailPage = () => {
   const [activities, setActivities] = useState<TimelineActivity[]>([]);
   const [newActivity, setNewActivity] = useState("");
   const [activityType, setActivityType] =
-    useState<TimelineActivity["type"]>("comment");
+    useState<TimelineActivity["type"]>("Comment");
   const [realTimeActivities, setRealTimeActivities] = useState<
     TimelineActivity[]
   >([]);
+  const [hoverCardPosition, setHoverCardPosition] = useState<Record<string, string>>({});
+  const [isMessageSent, setIsMessageSent] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     const authStorage = Cookies.get("auth_token");
@@ -90,7 +97,7 @@ const TaskDetailPage = () => {
 
       const newTimelineActivity: TimelineActivity = {
         id: newComment.comment_Id,
-        type: "comment",
+        type: newComment.type,
         content: newComment.content,
         user: newComment.user?.email || "Unknown User",
         timestamp: newComment.created_at,
@@ -108,10 +115,29 @@ const TaskDetailPage = () => {
   }, [taskId]);
 
   useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await fetch("https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read");
+        const result = await response.json();
+        if (result.data && Array.isArray(result.data)) {
+          setEmployees(result.data);  
+        } else {
+          setEmployees([]);
+        }
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+        setEmployees([]);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
+
+  useEffect(() => {
     const fetchTaskAndComments = async () => {
       try {
         setLoading(true);
-
+      
         const [taskResponse, commentsResponse] = await Promise.all([
           fetch(
             `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${taskId}`
@@ -132,7 +158,7 @@ const TaskDetailPage = () => {
         const timelineActivities = (commentsData.data || []).map(
           (comment: Comment) => ({
             id: comment.comment_Id,
-            type: "comment" as const,
+            type: comment.type,
             content: comment.content,
             user: comment.user?.email || "Unknown User",
             timestamp: comment.created_at,
@@ -183,137 +209,226 @@ const TaskDetailPage = () => {
   };
 
   const handleAddActivity = async () => {
-    if (!newActivity.trim()) return;
+    if (!newActivity.trim() || isSending) return;
 
     try {
-      setLoading(true);
-
-      if (
-        activityType === "comment" ||
-        activityType === "started" ||
-        activityType === "bug" ||
-        activityType === "completed" ||
-        activityType === "assigned"
-      ) {
-        // Send comment to API
-        const response = await fetch(
-          `https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/add/${taskId}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              content: newActivity,
-              user_Id: user?.user_Id,
-              task_Id: taskId,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to save comment to database");
-        }
-
-        const data = await response.json();
-
-        // Emit the new comment through socket
-        socket.emit("comment", {
-          ...data.data,
-          task_Id: taskId,
-          user: {
-            email: user?.email,
-            role: user?.role,
+      setIsSending(true);
+      
+      const normalizedType = activityType.charAt(0).toUpperCase() + activityType.slice(1).toLowerCase();
+      
+      const response = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/add/${taskId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        });
-      } else {
-        // Handle other activity types as before
-        const newTimelineActivity: TimelineActivity = {
-          id: Date.now().toString(),
-          type: activityType,
-          content: newActivity,
-          user: user?.email || "Unknown User",
-          timestamp: new Date().toISOString(),
-          userImage: getEmployeeImage(user?.email),
-        };
+          body: JSON.stringify({
+            content: newActivity,
+            user_Id: user?.user_Id,
+            task_Id: taskId,
+            type: normalizedType,
+          }),
+        }
+      );
 
-        socket.emit("activity", {
-          taskId,
-          activity: newTimelineActivity,
-        });
-
-        setActivities((prev) => [...prev, newTimelineActivity]);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to save comment to database");
       }
 
-      // Clear input
+      const data = await response.json();
+
+      socket.emit("comment", {
+        ...data.data,
+        task_Id: taskId,
+        type: normalizedType,
+        user: {
+          email: user?.email,
+          role: user?.role,
+        },
+      });
+
       setNewActivity("");
+      setIsMessageSent(true);
+      setTimeout(() => setIsMessageSent(false), 3000);
     } catch (error) {
       console.error("Error handling activity:", error);
     } finally {
-      setLoading(false);
+      setIsSending(false);
     }
   };
 
   const getActivityIcon = (type: TimelineActivity["type"]) => {
     switch (type) {
-      case "started":
+      case "Started":
         return <Activity className="w-5 h-5 text-blue-500" />;
-      case "comment":
+      case "Comment":
         return <MessageSquare className="w-5 h-5 text-gray-500" />;
-      case "bug":
+      case "Bug":
         return <BugIcon className="w-5 h-5 text-red-500" />;
-      case "completed":
+      case "Completed":
         return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case "assigned":
+      case "Assigned":
         return <UserPlus className="w-5 h-5 text-purple-500" />;
+      default:
+        return null; 
     }
   };
 
-  const TimelineComponent = ({
+  const TimelineComponent = React.memo(function TimelineComponent({
     activities,
   }: {
     activities: TimelineActivity[];
-  }) => (
-    <div className="space-y-4">
-      {activities.map((activity, index) => (
-        <motion.div
-          key={activity.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="flex gap-4"
-        >
-          <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center">
-              {getActivityIcon(activity.type)}
-            </div>
-            {index !== activities.length - 1 && (
-              <div className="absolute top-10 left-1/2 bottom-0 w-0.5 bg-gray-200 -ml-[1px]" />
-            )}
-          </div>
-          <div className="flex-1 bg-white rounded-lg shadow-sm p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <img
-                src={activity.userImage}
-                alt={activity.user}
-                className="w-6 h-6 rounded-full"
-              />
-              <span className="font-medium text-gray-900">{activity.user}</span>
-              <span className="text-sm text-gray-500">
-                <Clock className="w-4 h-4 inline mr-1" />
-                {new Date(activity.timestamp).toLocaleString()}
-              </span>
-            </div>
-            <p className="text-gray-600">{activity.content}</p>
-          </div>
-        </motion.div>
-      ))}
-    </div>
-  );
+  }) {
+    return (
+      <div className="space-y-4">
+        <AnimatePresence mode="popLayout">
+          {activities.map((activity, index) => (
+            <motion.div
+              key={activity.id}
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.3 }}
+              className="flex gap-4"
+            >
+              <div className="relative">
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  className="w-10 h-10 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center"
+                >
+                  {getActivityIcon(activity.type)}
+                </motion.div>
+                {index !== activities.length - 1 && (
+                  <div className="absolute top-10 left-1/2 bottom-0 w-0.5 bg-gray-200 -ml-[1px]" />
+                )}
+              </div>
+              <motion.div
+                initial={{ x: -20 }}
+                animate={{ x: 0 }}
+                className="flex-1 bg-white rounded-lg shadow-sm p-4"
+              >
+                <div className="flex items-center gap-[0.6vw] mb-[1vw]">
+                  <img
+                    src={activity.userImage}
+                    alt={activity.user}
+                    className="w-6 h-6 rounded-full"
+                  />
+                  <span className="font-medium text-[0.9vw] text-gray-900">{activity.user}</span>
+                  <span className="text-sm text-gray-500 text-[0.9vw]">
+                    <Clock className="w-4 h-4 inline mr-[0.4vw]" />
+                    {new Date(activity.timestamp).toLocaleString()}
+                  </span>
+                </div>
+                <p className="text-gray-600 text-[0.9vw]">{activity.content}</p>
+              </motion.div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    );
+  });
 
-  // Use realTimeActivities if available, otherwise fall back to activities
+  const calculateWorkloadPercentage = (workload: number): number => {
+    const normalize = workload / 15;
+    return normalize * 100;
+  };
+
+  const getWorkloadColor = (percentage: number): string => {
+    if (percentage < 40) {
+      return "text-green-600"; 
+    } else if (percentage < 80) {
+      return "text-yellow-600"; 
+    } else {
+      return "text-red-600"; 
+    }
+  };
+
   const displayActivities =
     realTimeActivities.length > 0 ? realTimeActivities : activities;
+
+  const getEmployeeDetails = (employeeId: string) => {
+    return employees.find((emp) => emp.employee_Id === employeeId);
+  };
+
+  const renderAssigneeImages = (assigns: any[]) => {
+    return assigns.map((assign, index) => {
+      const employeeDetails = getEmployeeDetails(assign.employee_Id);
+      const image = employeeDetails?.image || "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"; // fallback image
+
+      return (
+        <div key={index} className="relative group" onMouseEnter={(event) => {
+          const card = event.currentTarget.querySelector('.hover-card');
+          if (card) {
+            const rect = card.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+
+            const employeeId = employeeDetails?.employee_Id as string; 
+            if (spaceBelow < rect.height && spaceAbove > rect.height) {
+              setHoverCardPosition(prev => ({ ...prev, [employeeId]: 'above' } as any)); 
+            } else {
+              setHoverCardPosition(prev => ({ ...prev, [employeeId]: 'below' } as any)); 
+            }
+          }
+        }}>
+          <div className="w-[2.5vw] h-[2.5vw] rounded-full bg-gray-200 border-[0.08vw] border-white flex items-center justify-center overflow-hidden">
+            <img
+              src={image}
+              alt={`Employee ${index + 1}`}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          {/* Hover Card */}
+          {employeeDetails && (
+            <motion.div
+              className={`absolute left-0 transform -translate-x-full ${hoverCardPosition[employeeDetails.employee_Id] === 'above' ? 'bottom-full mb-2' : 'top-full mt-2'} w-[12vw] bg-white rounded-lg shadow-lg p-[0.625vw] hidden group-hover:block z-50 border border-gray-200 hover-card`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+            >
+              <div className="flex items-start gap-[0.625vw]">
+                <img
+                  src={employeeDetails.image}
+                  alt={employeeDetails.name}
+                  className="w-[2.5vw] h-[2.5vw] rounded-full object-cover"
+                />
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900 text-[0.9vw]">{employeeDetails.name}</h4>
+                  <p className="text-[0.6vw] text-gray-500">
+                    {employeeDetails.users?.[0]?.email}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-[0.5vw] space-y-[0.25vw] text-[0.6vw]">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Team:</span>
+                  <span className="text-gray-900">{employeeDetails.team}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Role:</span>
+                  <span className="text-gray-900">{employeeDetails.skill}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Workload:</span>
+                  <span className={`${getWorkloadColor(employeeDetails.current_Workload)}`}>
+                    {calculateWorkloadPercentage(employeeDetails.current_Workload).toFixed(2)}%
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Phone:</span>
+                  <span className="text-gray-900">{employeeDetails.phone}</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      );
+    });
+  };
 
   if (loading) {
     return <LoadingScreen />;
@@ -323,20 +438,20 @@ const TaskDetailPage = () => {
     <ProtectedRoute>
       <div className="flex h-screen bg-gray-50">
         <Sidebar />
-        <div className="flex-grow overflow-hidden">
-          <div className="h-screen py-4 px-8 ml-2 w-[80vw] overflow-y-auto">
-            <div className="max-w-5xl mx-auto">
+        <div className="flex-grow overflow-auto flex items-start justify-center">
+          <div className="flex-1 max-h-screen py-[1vw] px-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out">
+            <div className="mx-auto">
               {/* Task Header */}
-              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <div className="bg-white rounded-lg shadow-sm px-[2vw] py-[2vw] mb-[1vw]">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-[1.5vw] font-bold text-gray-900 mb-1">
                       {task?.title}
                     </h1>
                     <div className="flex items-center gap-4 text-gray-500">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        <span className="text-sm">
+                        <span className="text-xs">
                           {task?.start_Date && task?.end_Date
                             ? `${new Date(
                                 task.start_Date
@@ -348,7 +463,7 @@ const TaskDetailPage = () => {
                       </div>
                       <div className="flex items-center gap-1">
                         <Activity className="w-4 h-4" />
-                        <span className="text-sm">
+                        <span className="text-xs">
                           {task?.workload} workload units
                         </span>
                       </div>
@@ -385,57 +500,24 @@ const TaskDetailPage = () => {
                 </div>
 
                 {task?.description && (
-                  <p className="text-gray-600 mb-6">{task.description}</p>
+                  <p className="text-gray-600 mb-3 text-sm">{task.description}</p>
                 )}
 
                 <div className="border-t pt-4">
-                  <h3 className="font-medium text-gray-900 mb-3">Assignees</h3>
-                  <div className="flex gap-3">
-                    {task?.assigns?.map((assign) => {
-                      const employee = employees.find(
-                        (emp) => emp.employee_Id === assign.employee_Id
-                      );
-                      return (
-                        <div
-                          key={assign.employee_Id}
-                          className="flex items-center gap-2"
-                        >
-                          <div className="w-10 h-10 rounded-full overflow-hidden">
-                            <img
-                              src={
-                                employee?.image ||
-                                "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"
-                              }
-                              alt={employee?.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {employee?.name}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {employee?.skill}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <h3 className="font-semibold text-gray-600 mb-[1vw] text-sm">Assignees</h3>
+                  <div className="flex gap-[0.8vw]">
+                    {task?.assigns && renderAssigneeImages(task.assigns)}
                   </div>
                 </div>
               </div>
 
               {/* Activity Input */}
-              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <div className="flex gap-4 mb-4">
+              <div className="bg-white rounded-lg shadow-sm px-[1vw] py-[2vw] mb-[1vw]">
+                <div className="flex gap-4 relative">
                   <select
                     value={activityType}
-                    onChange={(e) =>
-                      setActivityType(
-                        e.target.value as TimelineActivity["type"]
-                      )
-                    }
-                    className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => setActivityType(e.target.value as TimelineActivity["type"])}
+                    className="px-[0.8vw] py-[0.5vw] text-[0.9vw] border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="comment">Comment</option>
                     <option value="bug">Bug</option>
@@ -448,21 +530,50 @@ const TaskDetailPage = () => {
                     value={newActivity}
                     onChange={(e) => setNewActivity(e.target.value)}
                     placeholder="Add an activity..."
-                    className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-[0.8vw] py-[0.5vw] text-[0.9vw] border rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddActivity();
+                      }
+                    }}
                   />
-                  <button
+                  <motion.button
                     onClick={handleAddActivity}
-                    disabled={!newActivity.trim()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    disabled={!newActivity.trim() || isSending}
+                    className="px-2 py-0.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
                   >
-                    Add
-                  </button>
+                    {isSending ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <RefreshCw className="w-5 h-5" />
+                      </motion.div>
+                    ) : (
+                      <Send className="w-5 h-5" />
+                    )}
+                  </motion.button>
+                  
+                  {/* Success Message */}
+                  <AnimatePresence>
+                    {isMessageSent && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute -top-8 right-0 flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full"
+                      >
+                        <CheckCheck className="w-4 h-4" />
+                        <span className="text-sm">Message sent successfully!</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 
               {/* Timeline */}
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-6">
+                <h2 className="text-md font-bold text-gray-900 mb-3">
                   Activity Timeline
                 </h2>
                 <TimelineComponent activities={displayActivities} />

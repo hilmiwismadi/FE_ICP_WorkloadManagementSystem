@@ -39,6 +39,19 @@ interface MenuItem {
   allowedRoles: string[];
 }
 
+const getImageUrl = (imageUrl: string | undefined): string => {
+  if (!imageUrl) {
+    return 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ';
+  }
+  if (imageUrl.startsWith('http')) {
+    return imageUrl;
+  }
+  if (imageUrl.startsWith('/uploads')) {
+    return `https://be-icpworkloadmanagementsystem.up.railway.app/api${imageUrl}`;
+  }
+  return imageUrl;
+};
+
 const menuItems: MenuItem[] = [
   {
     title: "Dashboard",
@@ -93,7 +106,11 @@ const Sidebar = () => {
           );
           
           if (response.data && response.data.data) {
-            setEmployeeData(response.data.data);
+            const employeeWithFormattedImage = {
+              ...response.data.data,
+              image: getImageUrl(response.data.data.image)
+            };
+            setEmployeeData(employeeWithFormattedImage);
           }
         } catch (error) {
           console.error("Error initializing sidebar:", error);
@@ -111,7 +128,6 @@ const Sidebar = () => {
     router.push("/");
   };
 
-  // Get filtered menu items based on user role
   const getFilteredMenuItems = () => {
     if (userRole === "Employee") {
       return [{
@@ -138,7 +154,6 @@ const Sidebar = () => {
     </div>
   );
 
-  // Close the logout popup when clicking outside of it
   const handleClickOutside = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     if (isLogoutPopupOpen && !target.closest('.logout-popup')) {
@@ -164,7 +179,6 @@ const Sidebar = () => {
       }`}
       onClick={() => setIsExpanded(!isExpanded)}
     >
-      {/* Back Button */}
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -175,7 +189,6 @@ const Sidebar = () => {
         <ArrowLeft className="h-[1vw] w-[1vw] text-navy font-bold" />
       </button>
 
-      {/* Logo */}
       <div className="flex justify-center py-[2.5vw]">
         <Image
           src="/img/sidebar/Logo_IconPlus.png"
@@ -189,7 +202,6 @@ const Sidebar = () => {
         />
       </div>
 
-      {/* User Profile */}
       <div
         className="mx-[1vw] mb-[1.667vw] border-2 border-[#243F80] rounded-[1vw] p-[1vw] bg-[#243F80] transition-all duration-300 hover:bg-[#1A2F60] cursor-pointer"
         onClick={(e) => {
@@ -227,7 +239,6 @@ const Sidebar = () => {
         )}
       </div>
 
-      {/* Navigation Menu */}
       <nav
         className="px-[1vw] space-y-[1vw]"
         onClick={(e) => e.stopPropagation()}
@@ -255,7 +266,6 @@ const Sidebar = () => {
         })}
       </nav>
 
-      {/* Logout Button */}
       <div
         className="absolute bottom-[1.667vw] w-full px-[0.833vw]"
         onClick={(e) => e.stopPropagation()}
@@ -271,7 +281,6 @@ const Sidebar = () => {
         </button>
       </div>
 
-      {/* Logout Confirmation Popup */}
       {isLogoutPopupOpen && (
         <div className="fixed inset-0 bg-black/75 flex justify-center items-center z-50 text-[1vw]">
           <div className="bg-white p-[2.5vw] rounded-lg shadow-lg w-[90vw] sm:w-[400px] text-center logout-popup">
