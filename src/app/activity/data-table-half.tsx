@@ -196,6 +196,7 @@ export function DataTableHalf<TData, TValue>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
+                    className="h-[50px]"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
@@ -206,7 +207,7 @@ export function DataTableHalf<TData, TValue>({
                           )
                             ? "px-[1vw] py-[0.5vw] text-center"
                             : "px-[1vw] py-[0.5vw]"
-                        }`}
+                        } overflow-hidden`}
                       >
                         <div>
                           {cell.column.id === "workload" ? (

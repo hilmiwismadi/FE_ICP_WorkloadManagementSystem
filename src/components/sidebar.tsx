@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -154,23 +154,19 @@ const Sidebar = () => {
     </div>
   );
 
-  const handleClickOutside = (event: MouseEvent) => {
+  const handleClickOutside = useCallback((event: MouseEvent) => {
     const target = event.target as HTMLElement;
     if (isLogoutPopupOpen && !target.closest('.logout-popup')) {
       setIsLogoutPopupOpen(false);
     }
-  };
+  }, [isLogoutPopupOpen]);
 
   useEffect(() => {
-    if (isLogoutPopupOpen) {
-      document.addEventListener('click', handleClickOutside);
-    } else {
-      document.removeEventListener('click', handleClickOutside);
-    }
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isLogoutPopupOpen]);
+  }, [handleClickOutside]);
 
   return (
     <div

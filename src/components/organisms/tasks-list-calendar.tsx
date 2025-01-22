@@ -23,7 +23,12 @@ interface TaskTimelineProps {
   statusFilter: string;
 }
 
-const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskTimelineProps) => {
+const TaskTimeline = ({
+  selectedTask,
+  onTaskSelect,
+  tasks,
+  statusFilter,
+}: TaskTimelineProps) => {
   const [viewMode, setViewMode] = useState("weekly");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
@@ -39,14 +44,16 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
 
   const handleStatusChange = (taskId: string, checked: boolean) => {
     // Use proper case directly
-    const newStatus: 'Ongoing' | 'Done' | 'Approved' = checked ? 'Done' : 'Ongoing';
-  
+    const newStatus: "Ongoing" | "Done" | "Approved" = checked
+      ? "Done"
+      : "Ongoing";
+
     // Update local tasks
     const updatedTasks = localTasks.map((task) =>
       task.id === taskId ? { ...task, status: newStatus } : task
     );
     setLocalTasks(updatedTasks);
-  
+
     // Update selected task
     if (selectedTask && selectedTask.id === taskId) {
       onTaskSelect({ ...selectedTask, status: newStatus });
@@ -87,7 +94,7 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
   const days = getDaysForView();
 
   // Filter tasks based on status first
-  const filteredTasks = tasks.filter(task => 
+  const filteredTasks = tasks.filter((task) =>
     statusFilter === "all" ? true : task.status === statusFilter
   );
 
@@ -101,28 +108,28 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
   });
 
   return (
-    <div className="p-4 space-y-4 w-full">
+    <div className="p-[1vw] space-y-[1vh] w-full">
       {/* Controls */}
-      <div className="flex justify-between items-center">
-        <div className="space-x-2">
+      <div className="flex justify-between items-center ">
+        <div className="space-x-2 ">
           <button
-            className={`px-4 py-2 rounded ${
-              viewMode === "weekly" ? "bg-blue-600 text-white" : "bg-gray-200"
-            }`}
-            onClick={() => setViewMode("weekly")}
-          >
-            Weekly
-          </button>
-          <button
-            className={`px-4 py-2 rounded ${
+            className={`px-[1vw] py-[0.4vh] rounded text-[0.8vw]  transition-transform transform hover:scale-[0.98] hover:shadow-lg  ${
               viewMode === "monthly" ? "bg-blue-600 text-white" : "bg-gray-200"
             }`}
             onClick={() => setViewMode("monthly")}
           >
             Monthly
           </button>
+          <button
+            className={`px-[1vw] py-[0.4vh] rounded text-[0.8vw]  transition-transform transform hover:scale-[0.98] hover:shadow-lg ${
+              viewMode === "weekly" ? "bg-blue-600 text-white" : "bg-gray-200"
+            }`}
+            onClick={() => setViewMode("weekly")}
+          >
+            Weekly
+          </button>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 scale-[0.8] ">
           <button
             onClick={handlePrevious}
             className="p-2 hover:bg-gray-100 rounded"
@@ -142,19 +149,19 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
       </div>
 
       {/* Timeline Grid */}
-      <div className="overflow-x-auto w-full bg-gray-50 px-[0.5vw] rounded-lg ">
-        <div className="w-full ">
+      <div className="overflow-x-auto w-full bg-gray-50 px-[0.5vw] rounded-lg">
+        <div className="w-full">
           {/* Date Headers */}
           <div
-            className={`grid gap-px  w-full `}
+            className="grid gap-[0.2vw] w-full"
             style={{
-              gridTemplateColumns: `repeat(${days.length}, minmax(30px, 1fr))`,
+              gridTemplateColumns: `repeat(${days.length}, minmax(2vw, 1fr))`,
             }}
           >
             {days.map((day) => (
               <div
                 key={day.toISOString()}
-                className="p-1 text-sm text-center bg-white border border-l rounded-lg "
+                className="p-[0.5vw] text-[0.8vw] text-center bg-white border border-l rounded-lg"
               >
                 {format(day, "d")}
               </div>
@@ -194,14 +201,15 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
               return (
                 <div
                   key={task.id}
-                  className={`absolute cursor-pointer transition-transform transform hover:scale-105 hover:shadow-lg ${getTaskColor(
+                  className={`absolute cursor-pointer transition-transform transform hover:scale-[0.98] hover:shadow-lg ${getTaskColor(
                     task.workload,
                     task.urgency
-                  )} rounded p-1 text-white text-sm truncate`}
+                  )} rounded p-[0.5vw] text-white text-[0.8vw] truncate`}
                   style={{
                     left: `${(startPosition / days.length) * 100}%`,
                     width: `${width}%`,
-                    top: `${index * 40 + 10}px`,
+                    top: `${index * 2.5 + 1}vw`,
+                    minHeight: '2vw'
                   }}
                   onClick={() => onTaskSelect(task)}
                 >
@@ -212,34 +220,6 @@ const TaskTimeline = ({ selectedTask, onTaskSelect, tasks, statusFilter }: TaskT
           </div>
         </div>
       </div>
-
-      {/* Task Details */}
-      {/* {selectedTask && (
-        <div className="p-[1vw] border rounded-lg bg-white w-full">
-          <h3 className="font-semibold text-lg">{selectedTask.title}</h3>
-          <div className="mt-2 text-gray-600 space-y-2">
-            <p>
-              Duration: {format(selectedTask.startDate, "MMM d")} -{" "}
-              {format(selectedTask.endDate, "MMM d")}
-            </p>
-            <p>Workload: {selectedTask.workload}</p>
-            <p>Urgency: {selectedTask.urgency}</p>
-            <p>
-              Status: <span className="capitalize">{selectedTask.status}</span>
-            </p>
-            <div className="flex items-center space-x-2">
-              <span>Progress:</span>
-              <Switch
-                id={`task-switch-${selectedTask.id}`}
-                checked={selectedTask.status === "done"}
-                onCheckedChange={(checked) => handleStatusChange(selectedTask.id, checked)}
-              />
-              <span>{selectedTask.status === "done" ? "Done" : "Ongoing"}</span>
-            </div>
-            <p className="mt-2">{selectedTask.description}</p>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };

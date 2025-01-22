@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "next/navigation";
 import Sidebar from "@/components/sidebar";
@@ -90,18 +90,18 @@ const TaskDetailPage = () => {
       socket.emit("join-task", taskId);
     });
 
-    socket.on("comment", (newComment: Comment) => {
+    socket.on("comment", async (newComment: Comment) => {
       console.log("Received new comment:", newComment);
-      // Update both comments and activities
       setComments((prev) => [...prev, newComment]);
 
+      const imageUrl = await getEmployeeImage(newComment.user?.email);
       const newTimelineActivity: TimelineActivity = {
         id: newComment.comment_Id,
         type: newComment.type,
         content: newComment.content,
         user: newComment.user?.email || "Unknown User",
         timestamp: newComment.created_at,
-        userImage: getEmployeeImage(newComment.user?.email),
+        userImage: imageUrl,
       };
 
       setActivities((prev) => [...prev, newTimelineActivity]);
@@ -179,7 +179,26 @@ const TaskDetailPage = () => {
     }
   }, [taskId]);
 
-  const getEmployeeImage = (email?: string) => {
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const response = await fetch(
+          'https://be-icpworkloadmanagementsystem.up.railway.app/api/employee/read'
+        );
+        if (!response.ok) {
+          throw new Error('Failed to fetch employees');
+        }
+        const data = await response.json();
+        setEmployees(data.data || []);
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+      }
+    };
+
+    fetchEmployees();
+  }, []);
+
+  const getEmployeeImage = useCallback(async (email?: string) => {
     const employee = employees.find((emp) =>
       emp.users?.some((user) => user.email === email)
     );
@@ -187,7 +206,11 @@ const TaskDetailPage = () => {
       employee?.image ||
       "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"
     );
-  };
+  }, [employees]);
+
+  useEffect(() => {
+    getEmployeeImage();
+  }, [getEmployeeImage]);
 
   const handleAddActivity = async () => {
     if (!newActivity.trim() || isSending) return;
