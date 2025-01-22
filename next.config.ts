@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['img.icons8.com', "utfs.io"],
+    domains: ['img.icons8.com', "utfs.io", "be-icpworkloadmanagementsystem.up.railway.app"],
   },
   // Remove experimental features that might cause issues
   poweredByHeader: false,
