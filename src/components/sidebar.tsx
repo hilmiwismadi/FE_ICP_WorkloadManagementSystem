@@ -14,6 +14,7 @@ import {
   Users,
   ClipboardList,
   LogOut,
+  RefreshCw,
 } from "lucide-react";
 
 interface Employee {
@@ -71,6 +72,7 @@ const Sidebar = () => {
   const [userRole, setUserRole] = useState<string>("");
   const [employeeId, setEmployeeId] = useState<string>("");
   const [isLogoutPopupOpen, setIsLogoutPopupOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -95,6 +97,8 @@ const Sidebar = () => {
           }
         } catch (error) {
           console.error("Error initializing sidebar:", error);
+        } finally {
+          setIsLoading(false);
         }
       }
     };
@@ -119,6 +123,39 @@ const Sidebar = () => {
     }
     return menuItems.filter(item => item.allowedRoles.includes(userRole));
   };
+
+  const LoadingProfile = () => (
+    <div className="flex items-center gap-[0.625vw]">
+      <div className={`rounded-full bg-gray-300 animate-pulse ${
+        isExpanded ? "w-[3vw] h-[3vw]" : "w-[1vw] h-[1vw]"
+      }`} />
+      {isExpanded && (
+        <div className="flex items-center gap-[0.625vw] text-white">
+          <RefreshCw className="w-[1.25vw] h-[1.25vw] animate-spin" />
+          <span className="text-[0.9vw]">Loading . . .</span>
+        </div>
+      )}
+    </div>
+  );
+
+  // Close the logout popup when clicking outside of it
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (isLogoutPopupOpen && !target.closest('.logout-popup')) {
+      setIsLogoutPopupOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isLogoutPopupOpen) {
+      document.addEventListener('click', handleClickOutside);
+    } else {
+      document.removeEventListener('click', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isLogoutPopupOpen]);
 
   return (
     <div
@@ -162,28 +199,32 @@ const Sidebar = () => {
           }
         }}
       >
-        <div className="flex items-center gap-[0.625vw]">
-          <Image
-            src={employeeData?.image || "/img/sidebar/UserProfile.png"}
-            alt="profile"
-            width={40}
-            height={40}
-            className={`rounded-full transition-all duration-300 ${
-              isExpanded ? "w-[3vw] h-[3vw]" : "w-[1vw] h-[1vw]"
-            }`}
-          />
-          {isExpanded && employeeData && (
-            <div className="flex flex-col text-white">
-              <span className="font-semibold text-[1.25vw]">
-                {employeeData.name}
-              </span>
-              <span className="text-[1vw]">ID-{employeeData.employee_Id}</span>
-              <span className="text-[0.8vw] text-gray-300">
-                {userRole}
-              </span>
-            </div>
-          )}
-        </div>
+        {isLoading ? (
+          <LoadingProfile />
+        ) : (
+          <div className="flex items-center gap-[0.625vw]">
+            <Image
+              src={employeeData?.image || "/img/sidebar/UserProfile.png"}
+              alt="profile"
+              width={40}
+              height={40}
+              className={`rounded-full transition-all duration-300 ${
+                isExpanded ? "w-[3vw] h-[3vw]" : "w-[1vw] h-[1vw]"
+              }`}
+            />
+            {isExpanded && employeeData && (
+              <div className="flex flex-col text-white">
+                <span className="font-semibold text-[1.25vw]">
+                  {employeeData.name}
+                </span>
+                <span className="text-[1vw]">ID-{employeeData.employee_Id}</span>
+                <span className="text-[0.8vw] text-gray-300">
+                  {userRole}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Navigation Menu */}
@@ -233,7 +274,7 @@ const Sidebar = () => {
       {/* Logout Confirmation Popup */}
       {isLogoutPopupOpen && (
         <div className="fixed inset-0 bg-black/75 flex justify-center items-center z-50 text-[1vw]">
-          <div className="bg-white p-[2.5vw] rounded-lg shadow-lg w-[90vw] sm:w-[400px] text-center">
+          <div className="bg-white p-[2.5vw] rounded-lg shadow-lg w-[90vw] sm:w-[400px] text-center logout-popup">
             <h2 className="text-[1.5vw] font-semibold mb-[0.833vw]">
               Confirm Logout
             </h2>

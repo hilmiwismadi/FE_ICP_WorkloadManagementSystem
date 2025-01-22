@@ -16,6 +16,7 @@ export type EmployeeData = {
   skill: string;
   current_workload: number;
   role: string;
+  image: string;
 };
 
 // Extracted ActionsCell component to safely use hooks
@@ -69,7 +70,6 @@ export const columns: ColumnDef<EmployeeData>[] = [
   { accessorKey: "email", header: "E-mail" },
   { accessorKey: "phone", header: "Contact" },
   { accessorKey: "team", header: "Divisi" },
-  { accessorKey: "skill", header: "Skill" },
   {
     id: "actions",
     cell: ({ row }) => <ActionsCell employee={row.original} />,
