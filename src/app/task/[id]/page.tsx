@@ -181,7 +181,7 @@ export default function TaskPageId() {
 
             {selectedEmployee && (
               <ProfileHeader
-                employee={selectedEmployee}
+                id={selectedEmployee.id}
                 showEditButton={false}
               />
             )}

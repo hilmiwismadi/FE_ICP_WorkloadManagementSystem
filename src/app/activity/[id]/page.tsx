@@ -10,6 +10,7 @@ import UserProfile from "../user-profile";
 import SearchBar from "@/components/organisms/SearchBarActivity";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 import ProtectedRoute from "@/components/protected-route";
+import ProfileHeader from "@/components/organisms/ProfileHeader";
 
 interface Task {
   task_Id: string;
@@ -95,7 +96,7 @@ export default function Activity() {
           <div className="flex-1 max-h-screen w-[80vw] ml-[0.417vw] py-[1vw] px-[1.667vw] space-y-[1.25vw]">
             <SearchBar />
 
-            {employee && <UserProfile employee={employee} />}
+            {employee && <ProfileHeader id={employee.employee_Id} />}
 
             {/* Tabs */}
             <div className="flex border-b mb-[1vw] w-full mx-auto">

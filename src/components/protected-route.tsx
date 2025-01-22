@@ -9,6 +9,7 @@ interface ProtectedRouteProps {
 }
 
 interface UserData {
+  employee_Id: string;
   user_Id: string;
   name: string;
   email: string;
@@ -18,13 +19,51 @@ interface UserData {
   exp: number;
 }
 
+interface Task {
+  taskId: string; 
+  description: string;
+  endDate: string;
+  priority: string;
+  startDate: string;
+  status: string;
+  title: string;
+  type: string;
+  userId: string;
+  workload: number;
+}
+
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(true);
+  const [taskIds, setTaskIds] = useState<string[]>([]);
+
+  const fetchTaskIds = async (employeeId: string) => {
+    try {
+      const response = await fetch(`https://be-icpworkloadmanagementsystem.up.railway.app/api/task/emp/read/${employeeId}`);
+      const responseData = await response.json();
+      
+      if (responseData.data && Array.isArray(responseData.data)) {
+        const extractedTaskIds = responseData.data.map((task: any) => task.task_Id);
+        console.log('Extracted Task IDs:', extractedTaskIds); // Debug log
+        setTaskIds(extractedTaskIds);
+      } else {
+        console.error('Unexpected data structure:', responseData);
+        setTaskIds([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch task IDs:", error);
+      setTaskIds([]);
+    }
+  };
+  
+  // Add a useEffect to monitor taskIds changes
+  useEffect(() => {
+    console.log('Updated taskIds:', taskIds);
+  }, [taskIds]);
 
   const checkRoleAccess = (userData: UserData, path: string): boolean => {
-    const { role, user_Id } = userData;
+    const { role, user_Id, employee_Id } = userData;
 
     // Manager has access to all routes
     if (role === "Manager") {
@@ -43,17 +82,17 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       const isTaskDetailsPath = path.startsWith("/task/details/");
 
       if (isTaskListPath || isEditProfilePath) {
-        // Check if the ID in the URL matches the user's ID
+        // Check if the ID in the URL matches the employee's ID
         const pathId = path.split("/").pop();
-        return pathId === user_Id;
+        return pathId === employee_Id;
       }
-      
-      // For task details, we'll allow access to any task details
-      // You might want to add additional checks here to ensure they can only view their own tasks
+
       if (isTaskDetailsPath) {
-        return true;
+        // Check if the task ID in the URL matches any of the employee's task IDs
+        const taskIdFromPath = path.split("/").pop();
+        return taskIdFromPath !== undefined && taskIds.includes(taskIdFromPath);
       }
-      
+
       return false;
     }
 
@@ -61,7 +100,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   };
 
   useEffect(() => {
-    const checkAuthentication = () => {
+    const checkAuthentication = async () => {
       const token = Cookies.get("auth_token");
 
       if (!token) {
@@ -79,15 +118,17 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           return;
         }
 
+        // Fetch task IDs before checking access
+        await fetchTaskIds(decoded.employee_Id);
+
         // Check role-based access
         if (!checkRoleAccess(decoded, pathname)) {
-          // If access is denied, redirect to a suitable page based on role
           switch (decoded.role) {
             case "Employee":
-              router.push(`/task-lists/${decoded.user_Id}`);
+              router.push(`/task-lists/${decoded.employee_Id}`);
               break;
             case "PIC":
-              router.push("/dashboard"); // Or any default PIC page
+              router.push("/dashboard");
               break;
             default:
               router.push("/");
@@ -97,6 +138,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
         setIsLoading(false);
       } catch (error) {
+        console.error("Authentication error:", error);
         Cookies.remove("auth_token");
         router.push("/");
       }

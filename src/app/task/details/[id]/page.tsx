@@ -183,7 +183,7 @@ const TaskDetailPage = () => {
     const fetchEmployees = async () => {
       try {
         const response = await fetch(
-          'https://be-icpworkloadmanagementsystem.up.railway.app/api/employee/read'
+          'https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read'
         );
         if (!response.ok) {
           throw new Error('Failed to fetch employees');
