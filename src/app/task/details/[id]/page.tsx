@@ -257,59 +257,61 @@ const TaskDetailPage = () => {
     }
   };
 
-  const TimelineComponent = React.memo(({
+  const TimelineComponent = React.memo(function TimelineComponent({
     activities,
   }: {
     activities: TimelineActivity[];
-  }) => (
-    <div className="space-y-4">
-      <AnimatePresence mode="popLayout">
-        {activities.map((activity, index) => (
-          <motion.div
-            key={activity.id}
-            layout
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.3 }}
-            className="flex gap-4"
-          >
-            <div className="relative">
-              <motion.div
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                className="w-10 h-10 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center"
-              >
-                {getActivityIcon(activity.type)}
-              </motion.div>
-              {index !== activities.length - 1 && (
-                <div className="absolute top-10 left-1/2 bottom-0 w-0.5 bg-gray-200 -ml-[1px]" />
-              )}
-            </div>
+  }) {
+    return (
+      <div className="space-y-4">
+        <AnimatePresence mode="popLayout">
+          {activities.map((activity, index) => (
             <motion.div
-              initial={{ x: -20 }}
-              animate={{ x: 0 }}
-              className="flex-1 bg-white rounded-lg shadow-sm p-4"
+              key={activity.id}
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.3 }}
+              className="flex gap-4"
             >
-              <div className="flex items-center gap-[0.6vw] mb-[1vw]">
-                <img
-                  src={activity.userImage}
-                  alt={activity.user}
-                  className="w-6 h-6 rounded-full"
-                />
-                <span className="font-medium text-[0.9vw] text-gray-900">{activity.user}</span>
-                <span className="text-sm text-gray-500 text-[0.9vw]">
-                  <Clock className="w-4 h-4 inline mr-[0.4vw]" />
-                  {new Date(activity.timestamp).toLocaleString()}
-                </span>
+              <div className="relative">
+                <motion.div
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  className="w-10 h-10 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center"
+                >
+                  {getActivityIcon(activity.type)}
+                </motion.div>
+                {index !== activities.length - 1 && (
+                  <div className="absolute top-10 left-1/2 bottom-0 w-0.5 bg-gray-200 -ml-[1px]" />
+                )}
               </div>
-              <p className="text-gray-600 text-[0.9vw]">{activity.content}</p>
+              <motion.div
+                initial={{ x: -20 }}
+                animate={{ x: 0 }}
+                className="flex-1 bg-white rounded-lg shadow-sm p-4"
+              >
+                <div className="flex items-center gap-[0.6vw] mb-[1vw]">
+                  <img
+                    src={activity.userImage}
+                    alt={activity.user}
+                    className="w-6 h-6 rounded-full"
+                  />
+                  <span className="font-medium text-[0.9vw] text-gray-900">{activity.user}</span>
+                  <span className="text-sm text-gray-500 text-[0.9vw]">
+                    <Clock className="w-4 h-4 inline mr-[0.4vw]" />
+                    {new Date(activity.timestamp).toLocaleString()}
+                  </span>
+                </div>
+                <p className="text-gray-600 text-[0.9vw]">{activity.content}</p>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </div>
-  ));
+          ))}
+        </AnimatePresence>
+      </div>
+    );
+  });
 
   const calculateWorkloadPercentage = (workload: number): number => {
     const normalize = workload / 15;
