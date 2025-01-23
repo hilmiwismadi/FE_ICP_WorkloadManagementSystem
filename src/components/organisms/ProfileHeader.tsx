@@ -1,61 +1,152 @@
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
-// import EditEmployeeModal from "./EditEmployeeModal";
+import { useEffect, useState } from 'react';
 
-interface ProfileHeaderProps {
-  employee: any;
-  showEditButton?: boolean; 
+interface User {
+  email: string;
+  role: string;
 }
 
-export default function ProfileHeader({ employee, showEditButton = true }: ProfileHeaderProps) {
-  const handleUpdateEmployee = (updatedData: any) => {
-    console.log("Updated employee data:", updatedData);
+interface Employee {
+  employee_Id: string;
+  name: string;
+  image?: string;
+  phone: string;
+  team: string;
+  skill: string;
+  current_Workload: number;
+  start_Date: string;
+  users: User[];
+}
+
+interface ProfileHeaderProps {
+  id: string;
+  showEditButton?: boolean;
+}
+
+const getImageUrl = (imageUrl: string | undefined): string => {
+  if (!imageUrl) {
+    return 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ';
+  }
+  if (imageUrl.startsWith('http')) {
+    return imageUrl;
+  }
+  if (imageUrl.startsWith('/uploads')) {
+    return `https://be-icpworkloadmanagementsystem.up.railway.app/api${imageUrl}`;
+  }
+  return imageUrl;
+};
+
+export default function ProfileHeader({ id, showEditButton = true }: ProfileHeaderProps) {
+  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchEmployee = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${id}`
+      );
+      const result = await response.json();
+
+      if (result.data) {
+        setEmployee({
+          ...result.data,
+          image: getImageUrl(result.data.image)
+        });
+      } else {
+        setError("Employee data not found");
+      }
+    } catch (error) {
+      console.error("Error fetching employee:", error);
+      setError("Failed to fetch employee data");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (!employee) {
+  useEffect(() => {
+    if (id) {
+      fetchEmployee();
+    }
+  }, [id]);
+
+  if (loading) {
     return (
       <Card className="bg-[#0A1D56]">
-        <CardContent className="p-[1.25vw]">
-          <div className="text-white">Select an employee to view details.</div>
+        <CardContent className="p-4">
+          <div className="text-white text-sm">Loading employee details...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !employee) {
+    return (
+      <Card className="bg-[#0A1D56]">
+        <CardContent className="p-4">
+          <div className="text-white text-sm">{error || "Select an employee to view details."}</div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="bg-[#0A1D56] w-full h-[21vh]">
-      <CardContent className="p-[1.25vw]">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start pl-[1vw] gap-[2vw]">
-            <div className="h-[7vw] w-[7vw] rounded-full bg-slate-100 overflow-hidden border-[0.5vw] border-[#29A6DE]">
-              {/* Add avatar image here */}
+    <Card className="bg-[#0A1D56] w-full h-[25vh] rounded-lg shadow-lg overflow-hidden">
+      <CardContent className="p-6 h-full">
+        <div className="flex items-center h-full gap-8">
+          {/* Left side - Image */}
+          <div className="flex-shrink-0">
+            <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-[#29A6DE] bg-slate-100 shadow-lg">
               <Image
-                src={employee.avatar || "/img/sidebar/UserProfile.png"}
+                src={employee.image || "/img/sidebar/UserProfile.png"}
                 alt="Avatar"
-                width={50}
-                height={50}
+                width={96}
+                height={96}
                 className="h-full w-full object-cover"
                 priority
               />
             </div>
-            <div className="space-y-[0.208vw]">
-              <h2 className="text-[1.5vw] font-bold text-white">{employee.name}</h2>
-              <p className="text-slate-300 text-[1vw]">ID-{employee.id}</p>
-              <div className="text-slate-300 mt-[0.833vw] text-[1vw]">
-                <div className="grid grid-cols-[4vw_1fr]">
-                  <span>Team</span>
-                  <span>: {employee.team}</span>
-                </div>
-                <div className="grid grid-cols-[4vw_1fr]">
-                  <span>Role</span>
-                  <span>: {employee.role}</span>
-                </div>
+          </div>
+
+          {/* Right side - Content */}
+          <div className="flex-grow grid grid-cols-2 gap-x-8">
+            {/* Left column */}
+            <div className="space-y-2">
+              <h2 className="text-2xl font-semibold text-white tracking-tight mb-1">{employee.name}</h2>
+              <div className="space-y-1">
+                <p className="text-slate-300 text-sm flex items-center">
+                  <span className="w-16 text-slate-400">ID</span>
+                  <span className="text-white">{employee.employee_Id}</span>
+                </p>
+                <p className="text-slate-300 text-sm flex items-center">
+                  <span className="w-16 text-slate-400">Email</span>
+                  <span className="text-white">{employee.users[0]?.email || 'N/A'}</span>
+                </p>
+                <p className="text-slate-300 text-sm flex items-center">
+                  <span className="w-16 text-slate-400">Phone</span>
+                  <span className="text-white">{employee.phone}</span>
+                </p>
               </div>
             </div>
+
+            {/* Right column */}
+            <div className="space-y-2 pt-9">
+              <p className="text-slate-300 text-sm flex items-center">
+                <span className="w-16 text-slate-400">Team</span>
+                <span className="text-white">{employee.team}</span>
+              </p>
+              <p className="text-slate-300 text-sm flex items-center">
+                <span className="w-16 text-slate-400">Role</span>
+                <span className="text-white">{employee.users[0]?.role || 'N/A'}</span>
+              </p>
+              <p className="text-slate-300 text-sm flex items-center">
+                <span className="w-16 text-slate-400">Skill</span>
+                <span className="text-white">{employee.skill}</span>
+              </p>
+            </div>
           </div>
-          {/* {showEditButton && (
-            <EditEmployeeModal employee={employee} onUpdate={handleUpdateEmployee} />
-          )} */}
         </div>
       </CardContent>
     </Card>

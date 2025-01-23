@@ -6,7 +6,8 @@ import { parse } from "cookie";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PencilIcon, Lock, CheckCircle2 } from "lucide-react";
+import { PencilIcon, Lock, CheckCircle2, Camera } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,15 +25,7 @@ interface Employee {
   name: string;
   image?: string;
   phone: string;
-  team: string;
   skill: string;
-  current_Workload: number;
-  start_Date: string;
-  users: Array<{
-    user_Id: string;
-    email: string;
-    role: string;
-  }>;
 }
 
 interface PasswordChangeForm {
@@ -42,10 +35,13 @@ interface PasswordChangeForm {
 }
 
 interface UserProfileProps {
-  employee: Employee;
+  employee: Employee | null;
+  onSave: (formData: FormData) => Promise<boolean>;
+  onImageChange: (file: File | null) => void;
+  selectedImage: File | null;
 }
 
-export default function EditUserProfile({ employee }: UserProfileProps) {
+export default function EditUserProfile({ employee, onSave, onImageChange, selectedImage }: UserProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -55,10 +51,9 @@ export default function EditUserProfile({ employee }: UserProfileProps) {
     "profile" | "password"
   >("profile");
   const [formData, setFormData] = useState({
-    name: employee.name,
-    email: employee.users[0]?.email || "",
-    phone: employee.phone,
-    skill: employee.skill,
+    name: employee?.name || "",
+    phone: employee?.phone || "",
+    skill: employee?.skill || "",
   });
   const [passwordForm, setPasswordForm] = useState<PasswordChangeForm>({
     previousPassword: "",
@@ -67,10 +62,11 @@ export default function EditUserProfile({ employee }: UserProfileProps) {
   });
   const [passwordError, setPasswordError] = useState("");
   const { id } = useParams();
+  const [showImageUploadHelper, setShowImageUploadHelper] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handlePasswordInputChange = (
@@ -102,37 +98,30 @@ export default function EditUserProfile({ employee }: UserProfileProps) {
   };
 
   const handleSave = async () => {
-    setIsSubmitting(true);
-    try {
-      const response = await fetch(
-        `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/update/${id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...employee,
-            name: formData.name,
-            phone: formData.phone,
-            skill: formData.skill,
-            users: [{ ...employee.users[0], email: formData.email }],
-          }),
-        }
-      );
-      if (response.ok) {
+    console.log("Saving form data:", formData);
+    const editedData = new FormData();
+
+    // Append all fields regardless of whether they have changed
+    editedData.append("name", formData.name);
+    editedData.append("phone", formData.phone);
+    editedData.append("skill", formData.skill);
+    if (selectedImage) {
+        editedData.append("image", selectedImage);
+    }
+
+    // Call the onSave function with the edited data
+    const success = await onSave(editedData);
+    if (success) {
         setShowConfirmation(false);
         setShowSuccess(true);
         setTimeout(() => {
-          setShowSuccess(false);
-          setIsEditing(false);
+            setShowSuccess(false);
+            setIsEditing(false);
+            window.location.reload(); 
         }, 1500);
-      } else {
-        throw new Error("Failed to update profile");
-      }
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      alert("An error occurred while updating the profile.");
-    } finally {
-      setIsSubmitting(false);
+    } else {
+        console.error("Failed to update profile");
+        alert("An error occurred while updating the profile.");
     }
   };
 
@@ -196,28 +185,67 @@ export default function EditUserProfile({ employee }: UserProfileProps) {
     }
   };
 
+  // Image upload UI component
+  const ImageUploadOverlay = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="absolute inset-0 bg-black/50 rounded-full flex flex-col items-center justify-center 
+                cursor-pointer group-hover:opacity-100 transition-opacity"
+    >
+      <Camera className="w-[1.5vw] h-[1.5vw] text-white mb-2" />
+      <span className="text-white text-[0.8vw] text-center px-2">
+        Click to change photo
+      </span>
+    </motion.div>
+  );
+
+  if (!employee) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="w-full">
       {/* Profile Header */}
       <div className="bg-[#15234A] rounded-t-[0.833vw] p-[1.5vw] text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-[1vw]">
-            <div className="relative w-[3vw] h-[3vw]">
+            <div 
+              className="relative w-[6vw] h-[6vw] group"
+              onMouseEnter={() => isEditing && setShowImageUploadHelper(true)}
+              onMouseLeave={() => setShowImageUploadHelper(false)}
+            >
               <Image
-                src={employee.image || "/img/sidebar/UserProfile.png"}
+                src={
+                  selectedImage
+                    ? URL.createObjectURL(selectedImage)
+                    : employee?.image || "/img/sidebar/UserProfile.png"
+                }
                 alt="Profile"
                 fill
                 className="rounded-full object-cover"
                 priority
               />
+              {isEditing && showImageUploadHelper && (
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      onImageChange(file || null);
+                    }}
+                  />
+                  <ImageUploadOverlay />
+                </label>
+              )}
             </div>
             <div>
               <h2 className="text-[1.25vw] font-medium">{employee.name}</h2>
               <p className="text-[0.875vw] text-gray-300">
                 ID-{employee.employee_Id}
-              </p>
-              <p className="text-[0.875vw] text-gray-300">
-                {employee.users[0]?.role}
               </p>
             </div>
           </div>
@@ -311,7 +339,6 @@ export default function EditUserProfile({ employee }: UserProfileProps) {
               setIsEditing(false);
               setFormData({
                 name: employee.name,
-                email: employee.users[0]?.email || "",
                 phone: employee.phone,
                 skill: employee.skill,
               });
@@ -466,9 +493,6 @@ export default function EditUserProfile({ employee }: UserProfileProps) {
                   >
                     <div>
                       <strong>Name:</strong> {formData.name}
-                    </div>
-                    <div>
-                      <strong>Email:</strong> {formData.email}
                     </div>
                     <div>
                       <strong>Phone:</strong> {formData.phone}

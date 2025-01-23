@@ -162,7 +162,7 @@ export default function ProfilePage() {
               <div className="grid grid-cols-12 gap-[1.25vw]">
                 <div className="col-span-12 xl:col-span-9 space-y-[1.25vw]">
                   <ProfileHeader
-                    employee={employeeData}
+                    id={employee.employee_Id}
                     showEditButton={true}
                   />
                   <div className="grid grid-cols-12 gap-[1.25vw]">
