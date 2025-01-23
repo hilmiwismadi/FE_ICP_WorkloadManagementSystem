@@ -249,7 +249,7 @@ export const TaskDetails = ({ selectedTask: initialTask, onStatusUpdate }: TaskD
         >
           <div className="w-[2.5vw] h-[2.5vw] rounded-full bg-gray-200 border-[0.08vw] border-white flex items-center justify-center overflow-hidden">
             <Image 
-              src={image}
+              src={image || 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ'}
               alt={employeeDetails?.name || `Employee ${index + 1}`}
               width={32}
               height={32}
@@ -269,7 +269,7 @@ export const TaskDetails = ({ selectedTask: initialTask, onStatusUpdate }: TaskD
             >
               <div className="flex items-start gap-[0.625vw]">
                 <Image 
-                  src={image}
+                  src={image || 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ'}
                   alt={employeeDetails.name}
                   width={32}
                   height={32}
