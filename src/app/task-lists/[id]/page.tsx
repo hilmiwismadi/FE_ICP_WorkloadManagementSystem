@@ -42,7 +42,7 @@ function convertApiTaskToTask(apiTask: ApiTask): Task {
         title: apiTask.title,
         startDate: new Date(apiTask.start_Date),
         endDate: new Date(apiTask.end_Date),
-        workload: apiTask.workload >= 4 ? "high" : apiTask.workload >= 2 ? "medium" : "low",
+        workload: apiTask.workload.toString(),
         urgency: apiTask.priority.toLowerCase() === "high" ? "critical" : 
                 apiTask.priority.toLowerCase() === "medium" ? "high" : "normal",
         description: apiTask.description,

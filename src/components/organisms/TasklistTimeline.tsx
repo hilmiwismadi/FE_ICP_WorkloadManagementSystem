@@ -75,7 +75,7 @@ export default function TaskListTimeline({
                       className={`${getPriorityColor(
                         task.priority
                       )} text-white text-[0.9vw] px-[0.417vw] py-[0.208vw] rounded-full bottom-0`}
-                    > {task.priority} </span>
+                    > {task.workload} </span>
                   </div>
                 </div>
               </CardContent>
