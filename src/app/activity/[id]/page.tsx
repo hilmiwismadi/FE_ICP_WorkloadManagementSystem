@@ -80,8 +80,10 @@ export default function Activity() {
   }, [id]);
 
   // Filter tasks based on active tab
-  const filteredTasks = tasks.filter(
-    (task) => (activeTab === "ongoing" ? task.status === "Ongoing" : true) // Show all tasks in history tab
+  const filteredTasks = tasks.filter((task) => 
+    activeTab === "ongoing" 
+      ? task.status === "Ongoing"
+      : task.status === "Approved" || task.status === "Done"
   );
 
   if (loading) {
