@@ -86,6 +86,36 @@ interface DataTableProps {
   onTaskUpdate?: () => void
 }
 
+// Add this component near the top of the file
+const TruncatedText = ({ text }: { text: string }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  return (
+    <>
+      <div
+        className="cursor-pointer truncate max-w-[20vw]"
+        onClick={() => setIsOpen(true)}
+        title="Click to view full description"
+      >
+        {text}
+      </div>
+      <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Full Description</AlertDialogTitle>
+            <AlertDialogDescription className="whitespace-pre-wrap">
+              {text}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>Close</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
+
 export function DataTable({ tasks = [], isLoading = false, onTaskUpdate }: DataTableProps) {
   const [updating, setUpdating] = React.useState<string | null>(null)
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null)
@@ -132,6 +162,10 @@ export function DataTable({ tasks = [], isLoading = false, onTaskUpdate }: DataT
     {
       accessorKey: "description",
       header: "Description",
+      cell: ({ row }) => {
+        const description = row.getValue("description") as string;
+        return <TruncatedText text={description} />;
+      },
     },
     {
       accessorKey: "type",
@@ -326,7 +360,7 @@ export function DataTable({ tasks = [], isLoading = false, onTaskUpdate }: DataT
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={`text-[0.9vw] h-[0.8vw] ${
+                      className={`text-[0.9vw] h-[3vw] ${
                         ["status", "workload", "start_Date", "end_Date"].includes(cell.column.id)
                           ? "px-[1vw] py-[0.5vw] text-center"
                           : "px-[1vw] py-[0.5vw]" 
