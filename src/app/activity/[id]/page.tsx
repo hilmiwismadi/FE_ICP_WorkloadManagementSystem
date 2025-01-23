@@ -125,18 +125,19 @@ export default function Activity() {
             </div>
 
             <div className="flex-grow">
-              <DataTableHalf
-                columns={columns}
-                data={filteredTasks.map((task) => ({
-                  task_id: task.task_Id,
-                  description: task.description,
-                  workload: task.workload,
-                  start_date: task.start_Date,
-                  end_date: task.end_Date,
-                  status: task.status,
-                  type: task.type,
-                }))}
-              />
+            <DataTableHalf
+              columns={columns}
+              data={filteredTasks.map((task) => ({
+                task_id: task.task_Id,
+                description: task.description,
+                workload: task.workload,
+                start_date: task.start_Date,
+                end_date: task.end_Date,
+                status: task.status,
+                type: task.type,
+              }))}
+              isHistory={activeTab === "history"}
+            />
             </div>
           </div>
         </div>
