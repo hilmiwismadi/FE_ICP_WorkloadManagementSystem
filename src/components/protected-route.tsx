@@ -38,57 +38,43 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [taskIds, setTaskIds] = useState<string[]>([]);
 
-  const fetchTaskIds = async (employeeId: string) => {
+  const fetchTaskIds = async (employeeId: string): Promise<string[]> => {
     try {
       const response = await fetch(`https://be-icpworkloadmanagementsystem.up.railway.app/api/task/emp/read/${employeeId}`);
       const responseData = await response.json();
-      
+
       if (responseData.data && Array.isArray(responseData.data)) {
-        const extractedTaskIds = responseData.data.map((task: any) => task.task_Id);
-        console.log('Extracted Task IDs:', extractedTaskIds); // Debug log
-        setTaskIds(extractedTaskIds);
+        return responseData.data.map((task: any) => task.task_Id);
       } else {
-        console.error('Unexpected data structure:', responseData);
-        setTaskIds([]);
+        return [];
       }
     } catch (error) {
-      console.error("Failed to fetch task IDs:", error);
-      setTaskIds([]);
+      return [];
     }
   };
-  
-  // Add a useEffect to monitor taskIds changes
-  useEffect(() => {
-    console.log('Updated taskIds:', taskIds);
-  }, [taskIds]);
 
-  const checkRoleAccess = (userData: UserData, path: string): boolean => {
-    const { role, user_Id, employee_Id } = userData;
+  const checkRoleAccess = (userData: UserData, path: string, taskIds: string[]): boolean => {
+    const { role, employee_Id } = userData;
 
-    // Manager has access to all routes
     if (role === "Manager") {
       return true;
     }
 
-    // PIC has access to all routes except /pic-dashboard
     if (role === "PIC") {
       return !path.startsWith("/pic-dashboard");
     }
 
-    // Employee can only access their own task list and profile
     if (role === "Employee") {
       const isTaskListPath = path.startsWith("/task-lists/");
       const isEditProfilePath = path.startsWith("/edit-profile/");
       const isTaskDetailsPath = path.startsWith("/task/details/");
 
       if (isTaskListPath || isEditProfilePath) {
-        // Check if the ID in the URL matches the employee's ID
         const pathId = path.split("/").pop();
         return pathId === employee_Id;
       }
 
       if (isTaskDetailsPath) {
-        // Check if the task ID in the URL matches any of the employee's task IDs
         const taskIdFromPath = path.split("/").pop();
         return taskIdFromPath !== undefined && taskIds.includes(taskIdFromPath);
       }
@@ -118,11 +104,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           return;
         }
 
-        // Fetch task IDs before checking access
-        await fetchTaskIds(decoded.employee_Id);
+        const fetchedTaskIds = await fetchTaskIds(decoded.employee_Id);
+        setTaskIds(fetchedTaskIds);
 
-        // Check role-based access
-        if (!checkRoleAccess(decoded, pathname)) {
+        const hasAccess = checkRoleAccess(decoded, pathname, fetchedTaskIds);
+        if (!hasAccess) {
           switch (decoded.role) {
             case "Employee":
               router.push(`/task-lists/${decoded.employee_Id}`);
@@ -138,7 +124,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
         setIsLoading(false);
       } catch (error) {
-        console.error("Authentication error:", error);
         Cookies.remove("auth_token");
         router.push("/");
       }
