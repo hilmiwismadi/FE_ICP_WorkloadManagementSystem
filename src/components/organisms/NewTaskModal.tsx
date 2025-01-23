@@ -37,6 +37,12 @@ const taskTypes = [
   "Other task...",
 ];
 
+const taskPriorities = [
+  "Normal",
+  "Medium",
+  "High"
+];
+
 interface NewTaskModalProps {
   open: boolean;
   onClose: () => void;
@@ -57,6 +63,7 @@ export const NewTaskModal = ({
     description: "",
     startDate: "",
     endDate: "",
+    priority: "",
   });
   const [isCustomType, setIsCustomType] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -98,14 +105,15 @@ export const NewTaskModal = ({
   
       const generateTaskData = (formData: any, params: any, userId: string) => {
         return {
-          task_Id: undefined,
+          employee_Ids: [params.id],
+          title: formData.type,
           type: isCustomType ? formData.customType : formData.type,
           description: formData.description,
           status: "Ongoing",
+          priority: formData.priority,
           workload: formData.workload,
           start_Date: formData.startDate,
-          end_Date: formData.endDate,
-          employee_Id: params.id,
+          end_Date: formData.endDate
         };
       };
   
@@ -120,6 +128,8 @@ export const NewTaskModal = ({
           body: JSON.stringify(generateTaskData(formData, params, userId)),
         }
       );
+
+      console.log(generateTaskData(formData, params, userId));
   
       if (!response.ok) {
         const errorData = await response.json();
@@ -251,6 +261,28 @@ export const NewTaskModal = ({
                       />
                     </motion.div>
                   )}
+                </div>
+                
+                <div className="space-y-[0.833vw]">
+                  <label className="block text-[1vw]">
+                    Task Priority <span className="text-red-500">*</span>
+                  </label>
+                  <Select 
+                    value={formData.priority}
+                    onValueChange={(value) => setFormData({ ...formData, priority: value })} 
+                    required
+                  >
+                    <SelectTrigger className="h-[2.5vw]">
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {taskPriorities.map((priority) => (
+                        <SelectItem key={priority} value={priority}>
+                          {priority}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-[0.417vw]">

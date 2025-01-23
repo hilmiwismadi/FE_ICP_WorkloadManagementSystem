@@ -596,8 +596,8 @@ export default function CreateTaskModal({
                       </div>
 
                       <div className="mt-4">
-                        <span className="text-sm text-gray-500">Description</span>
-                        <p className="text-md font-medium text-gray-700">
+                        <span className="text-sm text-gray-500 ">Description</span>
+                        <p className="text-md font-medium text-gray-700 max-h-[8vw] overflow-y-auto">
                           {formData.description}
                         </p>
                       </div>
