@@ -499,7 +499,7 @@ const TaskPage = () => {
 
   return (
     <ProtectedRoute>
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen bg-gray-200">
         <Sidebar />
         <div className="flex-grow overflow-hidden flex items-start justify-center">
           <div

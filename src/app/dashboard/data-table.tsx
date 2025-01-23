@@ -275,12 +275,12 @@ export function DataTable<TData, TValue>({
               }...`}
               value={(table.getColumn(selectedFilter)?.getFilterValue() as string) ?? ""}
               onChange={(e) => table.getColumn(selectedFilter)?.setFilterValue(e.target.value)}
-              className="pl-[2.5vw] pr-[2vw] py-[1vw] space-x-[0.2vw] w-full bg-gray-100 rounded-[0.417vw]"
+              className="pl-[2.5vw] pr-[2vw] py-[1vw] space-x-[0.2vw] w-full bg-white rounded-[0.417vw]"
             />
           </div>
 
           <Select value={selectedFilter} onValueChange={handleFilterChange}>
-            <SelectTrigger className="w-[16vw] bg-gray-100">
+            <SelectTrigger className="w-[16vw] bg-white">
               <SelectValue placeholder="Filter by..." />
             </SelectTrigger>
             <SelectContent>
@@ -298,7 +298,7 @@ export function DataTable<TData, TValue>({
             size="icon"
             onClick={handleRefresh}
             disabled={isRefreshing || isLoading}
-            className="h-[2.5vw] w-[2.5vw] bg-gray-100"
+            className="h-[2.5vw] w-[2.5vw] bg-white"
           >
             <RefreshCw 
               className={cn(
@@ -314,7 +314,7 @@ export function DataTable<TData, TValue>({
         </div>
 
         {/* Table */}
-        <div className="rounded-[0.417vw] border">
+        <div className="rounded-[0.417vw] border bg-white p-[1.25vw]">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

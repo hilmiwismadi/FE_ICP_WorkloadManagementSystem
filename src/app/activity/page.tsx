@@ -204,7 +204,7 @@ export default function ActivityPage() {
 
   if (error) {
     return (
-      <div className="flex h-screen bg-stale-50">
+      <div className="flex h-screen bg-gray-200">
         <Sidebar />
         <div className="flex-grow p-4">
           <Card className="w-full">
@@ -219,7 +219,7 @@ export default function ActivityPage() {
 
   return (
     <ProtectedRoute>
-      <div className="flex h-screen bg-stale-50">
+      <div className="flex h-screen bg-gray-200">
         <Sidebar />
         <div className="flex-grow overflow-auto flex items-start justify-center">
           <div className="flex-1 max-h-screen py-[1vw] px-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[0.5vw] transition-all duration-300 ease-in-out">

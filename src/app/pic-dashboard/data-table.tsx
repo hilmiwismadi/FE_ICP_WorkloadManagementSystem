@@ -274,13 +274,13 @@ export function DataTable<TData>({
               onChange={(e) =>
                 table.getColumn(selectedFilter)?.setFilterValue(e.target.value)
               }
-              className="pl-[2.5vw] pr-[2vw] py-[1vw] space-x-[0.2vw] w-full bg-gray-100 rounded-[0.417vw]"
+              className="pl-[2.5vw] pr-[2vw] py-[1vw] space-x-[0.2vw] w-full bg-white rounded-[0.417vw]"
             />
           </div>
 
           {/* Filter Dropdown */}
           <Select value={selectedFilter} onValueChange={handleFilterChange}>
-            <SelectTrigger className="w-[16vw] bg-gray-100">
+            <SelectTrigger className="w-[16vw] bg-white">
               <SelectValue placeholder="Filter by..." />
             </SelectTrigger>
             <SelectContent>
@@ -314,7 +314,7 @@ export function DataTable<TData>({
         </div>
 
         {/* Table */}
-        <div className="rounded-[0.417vw] border">
+        <div className="rounded-[0.417vw] border bg-white p-[1.25vw]">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

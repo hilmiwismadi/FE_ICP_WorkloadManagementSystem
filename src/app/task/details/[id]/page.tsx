@@ -28,6 +28,7 @@ export interface Comment {
   content: string;
   created_at: string;
   type: "Started" | "Comment" | "Bug" | "Completed" | "Assigned";
+  user_Id: string;
   user?: { email: string; role: string };
 }
 
@@ -94,7 +95,7 @@ const TaskDetailPage = () => {
       console.log("Received new comment:", newComment);
       setComments((prev) => [...prev, newComment]);
 
-      const imageUrl = await getEmployeeImage(newComment.user?.email);
+      const imageUrl = await getEmployeeImage(newComment.user_Id);
       const newTimelineActivity: TimelineActivity = {
         id: newComment.comment_Id,
         type: newComment.type,
@@ -176,19 +177,32 @@ const TaskDetailPage = () => {
           commentsResponse.json(),
         ]);
 
-        setTask(taskData.data);
-        setComments(commentsData.data || []);
+        console.log("Task Data:", taskData);
+        console.log("Comments Data:", commentsData);
 
-        const timelineActivities = (commentsData.data || []).map(
-          (comment: Comment) => ({
-            id: comment.comment_Id,
-            type: comment.type,
-            content: comment.content,
-            user: comment.user?.email || "Unknown User",
-            timestamp: comment.created_at,
-            userImage: getEmployeeImage(comment.user?.email),
-          })
-        );
+        setTask(taskData.data);
+        
+        const updatedComments = (commentsData.data || []).map((comment: any) => ({
+          comment_Id: comment.comment_Id,
+          content: comment.content,
+          created_at: comment.created_at,
+          type: comment.type,
+          user_Id: comment.user_Id,
+          user: {
+            email: comment.user?.email || "Unknown User",
+          },
+        }));
+
+        setComments(updatedComments);
+
+        const timelineActivities = await Promise.all(updatedComments.map(async (comment: any) => ({
+          id: comment.comment_Id,
+          type: comment.type,
+          content: comment.content,
+          user: comment.user?.email || "Unknown User",
+          timestamp: comment.created_at,
+          userImage: await getEmployeeImage(comment.user_Id),
+        })));
 
         setActivities(timelineActivities);
       } catch (error) {
@@ -207,10 +221,7 @@ const TaskDetailPage = () => {
     const employee = employees.find((emp) =>
       emp.users?.some((user) => user.email === email)
     );
-    return (
-      employee?.image ||
-      "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"
-    );
+    return getImageUrl(employee?.image);
   }, [employees]);
 
   useEffect(() => {
@@ -445,43 +456,39 @@ const TaskDetailPage = () => {
 
   return (
     <ProtectedRoute>
-      <div className="flex h-screen bg-gray-50">
+      <div className="flex h-screen bg-gray-200">
         <Sidebar />
         <div className="flex-grow overflow-auto flex items-start justify-center">
-          <div className="flex-1 max-h-screen py-[1vw] px-[1.667vw] ml-[0.417vw] w-[80vw] space-y-[1.25vw] transition-all duration-300 ease-in-out">
+          <div className="flex-1 max-h-screen py-[0.5vw] px-[1vw] ml-[0.2vw] w-[70vw] space-y-[0.8vw] transition-all duration-300 ease-in-out">
             <div className="mx-auto">
               {/* Task Header */}
-              <div className="bg-white rounded-lg shadow-sm px-[2vw] py-[2vw] mb-[1vw]">
-                <div className="flex justify-between items-start mb-4">
+              <div className="bg-white rounded-lg shadow-sm px-[1.5vw] py-[1.5vw] mb-[0.5vw]">
+                <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h1 className="text-[1.5vw] font-bold text-gray-900 mb-1">
+                    <h1 className="text-[1.2vw] font-bold text-gray-900 mb-1">
                       {task?.title}
                     </h1>
-                    <div className="flex items-center gap-4 text-gray-500">
+                    <div className="flex items-center gap-3 text-gray-500">
                       <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
+                        <Calendar className="w-3 h-3" />
                         <span className="text-xs">
                           {task?.start_Date && task?.end_Date
-                            ? `${new Date(
-                                task.start_Date
-                              ).toLocaleDateString()} - ${new Date(
-                                task.end_Date
-                              ).toLocaleDateString()}`
+                            ? `${new Date(task.start_Date).toLocaleDateString()} - ${new Date(task.end_Date).toLocaleDateString()}`
                             : "N/A"}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Activity className="w-4 h-4" />
+                        <Activity className="w-3 h-3" />
                         <span className="text-xs">
                           {task?.workload} workload units
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     {task?.priority && (
                       <span
-                        className={`px-3 py-1 rounded-full text-sm ${
+                        className={`px-2 py-0.5 rounded-full text-xs ${
                           task.priority === "High"
                             ? "bg-red-100 text-red-800"
                             : task.priority === "Medium"
@@ -494,7 +501,7 @@ const TaskDetailPage = () => {
                     )}
                     {task?.status && (
                       <span
-                        className={`px-3 py-1 rounded-full text-sm ${
+                        className={`px-2 py-0.5 rounded-full text-xs ${
                           task.status === "Ongoing"
                             ? "bg-blue-100 text-blue-800"
                             : task.status === "Done"
@@ -509,24 +516,24 @@ const TaskDetailPage = () => {
                 </div>
 
                 {task?.description && (
-                  <p className="text-gray-600 mb-3 text-sm">{task.description}</p>
+                  <p className="text-gray-600 mb-2 text-xs">{task.description}</p>
                 )}
 
-                <div className="border-t pt-4">
-                  <h3 className="font-semibold text-gray-600 mb-[1vw] text-sm">Assignees</h3>
-                  <div className="flex gap-[0.8vw]">
+                <div className="border-t pt-2">
+                  <h3 className="font-semibold text-gray-600 mb-[0.5vw] text-xs">Assignees</h3>
+                  <div className="flex gap-[0.5vw]">
                     {task?.assigns && renderAssigneeImages(task.assigns)}
                   </div>
                 </div>
               </div>
 
               {/* Activity Input */}
-              <div className="bg-white rounded-lg shadow-sm px-[1vw] py-[2vw] mb-[1vw]">
-                <div className="flex gap-4 relative">
+              <div className="bg-white rounded-lg shadow-sm px-[1vw] py-[1.5vw] mb-[0.5vw]">
+                <div className="flex gap-2 relative">
                   <select
                     value={activityType}
                     onChange={(e) => setActivityType(e.target.value as TimelineActivity["type"])}
-                    className="px-[0.8vw] py-[0.5vw] text-[0.9vw] border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-[0.5vw] py-[0.3vw] text-[0.8vw] border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="comment">Comment</option>
                     <option value="bug">Bug</option>
@@ -539,7 +546,7 @@ const TaskDetailPage = () => {
                     value={newActivity}
                     onChange={(e) => setNewActivity(e.target.value)}
                     placeholder="Add an activity..."
-                    className="flex-1 px-[0.8vw] py-[0.5vw] text-[0.9vw] border rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-300"
+                    className="flex-1 px-[0.5vw] py-[0.3vw] text-[0.8vw] border rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-300"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         handleAddActivity();
@@ -549,17 +556,17 @@ const TaskDetailPage = () => {
                   <motion.button
                     onClick={handleAddActivity}
                     disabled={!newActivity.trim() || isSending}
-                    className="px-2 py-0.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
+                    className="px-1 py-0.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
                   >
                     {isSending ? (
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                       >
-                        <RefreshCw className="w-5 h-5" />
+                        <RefreshCw className="w-4 h-4" />
                       </motion.div>
                     ) : (
-                      <Send className="w-5 h-5" />
+                      <Send className="w-4 h-4" />
                     )}
                   </motion.button>
                   
@@ -570,10 +577,10 @@ const TaskDetailPage = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute -top-8 right-0 flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full"
+                        className="absolute -top-6 right-0 flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-full"
                       >
                         <CheckCheck className="w-4 h-4" />
-                        <span className="text-sm">Message sent successfully!</span>
+                        <span className="text-xs">Message sent successfully!</span>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -581,8 +588,8 @@ const TaskDetailPage = () => {
               </div>
 
               {/* Timeline */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-md font-bold text-gray-900 mb-3">
+              <div className="bg-white rounded-lg shadow-sm p-4">
+                <h2 className="text-md font-bold text-gray-900 mb-2">
                   Activity Timeline
                 </h2>
                 <TimelineComponent activities={displayActivities} />
