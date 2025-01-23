@@ -114,16 +114,40 @@ const TaskDetailPage = () => {
     };
   }, [taskId]);
 
+  const getImageUrl = (imageUrl: string | undefined): string => {
+    if (!imageUrl) {
+      return "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ";
+    }
+    if (imageUrl.startsWith("http")) {
+      return imageUrl;
+    }
+    if (imageUrl.startsWith("/uploads")) {
+      return `https://be-icpworkloadmanagementsystem.up.railway.app/api${imageUrl}`;
+    }
+    return imageUrl;
+  };
+
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         const response = await fetch("https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read");
         const result = await response.json();
-        if (result.data && Array.isArray(result.data)) {
-          setEmployees(result.data);  
+
+        let formattedEmployees;
+        if (Array.isArray(result)) {
+          formattedEmployees = result.map((emp: any) => ({
+            ...emp,
+            image: getImageUrl(emp.image),
+          }));
+        } else if (result.data && Array.isArray(result.data)) {
+          formattedEmployees = result.data.map((emp: any) => ({
+            ...emp,
+            image: getImageUrl(emp.image),
+          }));
         } else {
-          setEmployees([]);
+          formattedEmployees = [];
         }
+        setEmployees(formattedEmployees);
       } catch (error) {
         console.error("Error fetching employees:", error);
         setEmployees([]);
@@ -178,25 +202,6 @@ const TaskDetailPage = () => {
       fetchTaskAndComments();
     }
   }, [taskId]);
-
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const response = await fetch(
-          'https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read'
-        );
-        if (!response.ok) {
-          throw new Error('Failed to fetch employees');
-        }
-        const data = await response.json();
-        setEmployees(data.data || []);
-      } catch (error) {
-        console.error('Error fetching employees:', error);
-      }
-    };
-
-    fetchEmployees();
-  }, []);
 
   const getEmployeeImage = useCallback(async (email?: string) => {
     const employee = employees.find((emp) =>
