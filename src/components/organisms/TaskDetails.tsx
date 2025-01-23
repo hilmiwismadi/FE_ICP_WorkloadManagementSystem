@@ -69,7 +69,20 @@ const getWorkloadColor = (percentage: number): string => {
   }
 };
 
-export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) => {
+const getImageUrl = (imageUrl: string | undefined): string => {
+  if (!imageUrl) {
+    return 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ';
+  }
+  if (imageUrl.startsWith('http')) {
+    return imageUrl;
+  }
+  if (imageUrl.startsWith('/uploads')) {
+    return `https://be-icpworkloadmanagementsystem.up.railway.app/api${imageUrl}`;
+  }
+  return imageUrl;
+};
+
+export const TaskDetails = ({ selectedTask: initialTask, onStatusUpdate }: TaskDetailsProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<'Ongoing' | 'Done' | null>(null);
@@ -77,30 +90,70 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
   const router = useRouter();
   const [hoverCardPosition, setHoverCardPosition] = useState<Record<string, string>>({});
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [taskData, setTaskData] = useState<Task | null>(initialTask);
 
   useEffect(() => {
+    const fetchTaskDetails = async () => {
+      if (!initialTask?.id) return;
+      
+      try {
+        const response = await fetch(
+          `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${initialTask.id}`
+        );
+        const result = await response.json();
+        console.log('Task API Response:', result); // Debug log
+
+        if (result.data) {
+          // Transform the data to match our Task interface
+          const transformedTask = {
+            ...result.data,
+            id: result.data.task_Id,
+            startDate: new Date(result.data.start_Date),
+            endDate: new Date(result.data.end_Date),
+            urgency: result.data.priority,
+            workload: result.data.workload.toString(),
+            assigns: result.data.assigns || []
+          };
+          setTaskData(transformedTask);
+          console.log('Transformed task data:', transformedTask); // Debug log
+        }
+      } catch (error) {
+        console.error('Error fetching task details:', error);
+      }
+    };
+
     const fetchEmployees = async () => {
       try {
         const response = await fetch("https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read");
         const result = await response.json();
+        
         if (result.data && Array.isArray(result.data)) {
-          setEmployees(result.data);
+          // Format the image URLs for each employee
+          const formattedEmployees = result.data.map((employee: any) => ({
+            ...employee,
+            image: getImageUrl(employee.image)
+          }));
+          setEmployees(formattedEmployees);
+          console.log('Stored employees:', formattedEmployees);
         }
       } catch (error) {
         console.error("Error fetching employees:", error);
       }
     };
 
+    fetchTaskDetails();
     fetchEmployees();
-  }, []);
+  }, [initialTask?.id]);
 
   const getEmployeeDetails = (employeeId: string) => {
-    return employees.find((emp) => emp.employee_Id === employeeId);
+    const employee = employees.find((emp) => emp.employee_Id === employeeId);
+    console.log(`Looking for employee ${employeeId}:`, employee); // Debug log
+    return employee;
   };
 
   const handleStatusChange = (newStatus: 'Ongoing' | 'Done') => {
     // Don't allow status change if current status is 'Approved'
-    if (selectedTask?.status === 'Approved') {
+    if (taskData?.status === 'Approved') {
       toast({
         title: 'Cannot modify approved tasks',
         description: 'This task has been approved and cannot be modified.',
@@ -114,12 +167,12 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
   };
 
   const handleConfirmedStatusChange = async () => {
-    if (!selectedTask || !pendingStatus) return;
+    if (!taskData || !pendingStatus) return;
     
     setIsSubmitting(true);
     try {
       const response = await fetch(
-        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/edit/${selectedTask.id}`,
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/edit/${taskData.id}`,
         {
           method: 'PUT',
           headers: {
@@ -143,7 +196,7 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
 
       // Notify parent component of the status update
       if (onStatusUpdate) {
-        onStatusUpdate(selectedTask.id, pendingStatus as 'Ongoing' | 'Done' | 'Approved');
+        onStatusUpdate(taskData.id, pendingStatus as 'Ongoing' | 'Done' | 'Approved');
       }
       
     } catch (error) {
@@ -161,9 +214,18 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
   };
 
   const renderAssigneeImages = (assigns: any[]) => {
+    console.log('Rendering assigns:', assigns);
+    
+    if (!assigns || assigns.length === 0) {
+      console.log('No assigns found');
+      return null;
+    }
+
     return assigns.map((assign, index) => {
       const employeeDetails = getEmployeeDetails(assign.employee_Id);
-      const image = employeeDetails?.image || "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ";
+      console.log('Found employee details:', employeeDetails);
+
+      const image = employeeDetails?.image;
 
       return (
         <div 
@@ -187,7 +249,7 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
         >
           <div className="w-[2.5vw] h-[2.5vw] rounded-full bg-gray-200 border-[0.08vw] border-white flex items-center justify-center overflow-hidden">
             <Image 
-              src={image}
+              src={image || 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ'}
               alt={employeeDetails?.name || `Employee ${index + 1}`}
               width={32}
               height={32}
@@ -207,7 +269,7 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
             >
               <div className="flex items-start gap-[0.625vw]">
                 <Image 
-                  src={image}
+                  src={image || 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ'}
                   alt={employeeDetails.name}
                   width={32}
                   height={32}
@@ -245,7 +307,7 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
     });
   };
 
-  if (!selectedTask) {
+  if (!taskData) {
     return null;
   }
 
@@ -253,10 +315,10 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
     <>
       <div className="p-[1vw] border rounded-lg bg-white w-full min-h-[28vh] scale-[0.98] ">
         <div className="flex justify-between items-center ">
-          <h3 className="font-semibold text-[1.2vw]">{selectedTask.title}</h3>
+          <h3 className="font-semibold text-[1.2vw]">{taskData.title}</h3>
           <Button
             variant="outline"
-            onClick={() => router.push(`/task/details/${selectedTask.id}`)}
+            onClick={() => router.push(`/task/details/${taskData.id}`)}
             className="text-blue-600 border-blue-600 hover:bg-blue-50"
           >
             See Details
@@ -266,26 +328,26 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
           <div className="w-1/3 space-y-[0.5vw]">
             <p className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-gray-500" />
-              Duration: {format(new Date(selectedTask.startDate), "MMM d")} -{" "}
-              {format(new Date(selectedTask.endDate), "MMM d")}
+              Duration: {format(new Date(taskData.startDate), "MMM d")} -{" "}
+              {format(new Date(taskData.endDate), "MMM d")}
             </p>
             <p className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-gray-500" />
-              Workload: <span className="font-medium">{selectedTask.workload}</span>
+              Workload: <span className="font-medium">{taskData.workload}</span>
             </p>
             <p className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-gray-500" />
               Urgency:{" "}
               <span
                 className={`px-2 py-0.5 rounded-full text-[0.8vw] ${
-                  selectedTask.urgency === "High"
+                  taskData.urgency === "High"
                     ? "bg-red-100 text-red-800"
-                    : selectedTask.urgency === "Medium"
+                    : taskData.urgency === "Medium"
                     ? "bg-orange-100 text-orange-800"
                     : "bg-blue-100 text-blue-800"
                 }`}
               >
-                {selectedTask.urgency}
+                {taskData.urgency}
               </span>
             </p>
             <p className="flex items-center gap-2">
@@ -293,21 +355,21 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
               Status:{" "}
               <span
                 className={`px-2 py-0.5 rounded-full text-[0.8vw] capitalize ${
-                  selectedTask.status === "Ongoing"
+                  taskData.status === "Ongoing"
                     ? "bg-yellow-100 text-yellow-800"
-                    : selectedTask.status === "Done"
+                    : taskData.status === "Done"
                     ? "bg-green-100 text-green-800"
                     : "bg-blue-100 text-blue-800"
                 }`}
               >
-                {selectedTask.status}
+                {taskData.status}
               </span>
             </p>
             <div className="mt-4">
               <h3 className="font-semibold text-gray-600 mb-[1vw] text-sm">Assignees</h3>
               <div className="flex gap-[0.8vw]">
-                {selectedTask?.assigns ? (
-                  renderAssigneeImages(selectedTask.assigns)
+                {taskData?.assigns ? (
+                  renderAssigneeImages(taskData.assigns)
                 ) : (
                   <div className="text-gray-500 text-sm">No assignees found</div>
                 )}
@@ -319,11 +381,11 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
               <span>Progress:</span>
               <div className="flex items-center gap-2">
                 <Button
-                  variant={selectedTask.status === 'Ongoing' ? 'default' : 'outline'}
+                  variant={taskData.status === 'Ongoing' ? 'default' : 'outline'}
                   onClick={() => handleStatusChange('Ongoing')}
-                  disabled={selectedTask.status === 'Approved' || selectedTask.status === 'Ongoing'}
+                  disabled={taskData.status === 'Approved' || taskData.status === 'Ongoing'}
                   className={`px-4 py-2 ${
-                    selectedTask.status === 'Ongoing' 
+                    taskData.status === 'Ongoing' 
                       ? 'bg-yellow-500 hover:bg-yellow-600' 
                       : 'text-yellow-600 border-yellow-600 hover:bg-yellow-50'
                   }`}
@@ -331,25 +393,25 @@ export const TaskDetails = ({ selectedTask, onStatusUpdate }: TaskDetailsProps) 
                   Ongoing
                 </Button>
                 <Button
-                  variant={selectedTask.status === 'Done' ? 'default' : 'outline'}
+                  variant={taskData.status === 'Done' ? 'default' : 'outline'}
                   onClick={() => handleStatusChange('Done')}
-                  disabled={selectedTask.status === 'Approved' || selectedTask.status === 'Done'}
+                  disabled={taskData.status === 'Approved' || taskData.status === 'Done'}
                   className={`px-4 py-2 ${
-                    selectedTask.status === 'Done' 
+                    taskData.status === 'Done' 
                       ? 'bg-green-500 hover:bg-green-600' 
                       : 'text-green-600 border-green-600 hover:bg-green-50'
                   }`}
                 >
                   Done
                 </Button>
-                {selectedTask.status === 'Approved' && (
+                {taskData.status === 'Approved' && (
                   <span className="px-4 py-2 bg-blue-500 text-white rounded-md">
                     Approved
                   </span>
                 )}
               </div>
             </div>
-            <p className="mt-2 h-[10vw] overflow-y-scroll scrollbar-thin scrollbar-thumb-[#0A1D56] scrollbar-track-white scrollbar-thumb-rounded-[5vw]">{selectedTask.description}</p>
+            <p className="mt-2 h-[10vw] overflow-y-scroll scrollbar-thin scrollbar-thumb-[#0A1D56] scrollbar-track-white scrollbar-thumb-rounded-[5vw]">{taskData.description}</p>
           </div>
         </div>
       </div>
