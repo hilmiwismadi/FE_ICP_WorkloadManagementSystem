@@ -20,7 +20,7 @@ interface UserData {
 }
 
 interface Task {
-  taskId: string; 
+  taskId: string;
   description: string;
   endDate: string;
   priority: string;
@@ -40,7 +40,9 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   const fetchTaskIds = async (employeeId: string): Promise<string[]> => {
     try {
-      const response = await fetch(`https://be-icpworkloadmanagementsystem.up.railway.app/api/task/emp/read/${employeeId}`);
+      const response = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/emp/read/${employeeId}`
+      );
       const responseData = await response.json();
 
       if (responseData.data && Array.isArray(responseData.data)) {
@@ -53,14 +55,30 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     }
   };
 
-  const checkRoleAccess = (userData: UserData, path: string, taskIds: string[]): boolean => {
+  const checkRoleAccess = (
+    userData: UserData,
+    path: string,
+    taskIds: string[]
+  ): boolean => {
     const { role, employee_Id } = userData;
 
     if (role === "Manager") {
+      const isTaskListPath = path.startsWith("/task-lists/");
+      const isEditProfilePath = path.startsWith("/edit-profile/");
+      if (isTaskListPath || isEditProfilePath) {
+        const pathId = path.split("/").pop();
+        return pathId === employee_Id;
+      }
       return true;
     }
 
     if (role === "PIC") {
+      const isTaskListPath = path.startsWith("/task-lists/");
+      const isEditProfilePath = path.startsWith("/edit-profile/");
+      if (isTaskListPath || isEditProfilePath) {
+        const pathId = path.split("/").pop();
+        return pathId === employee_Id;
+      }
       return !path.startsWith("/pic-dashboard");
     }
 
@@ -114,6 +132,9 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
               router.push(`/task-lists/${decoded.employee_Id}`);
               break;
             case "PIC":
+              router.push("/dashboard");
+              break;
+            case "Manager":
               router.push("/dashboard");
               break;
             default:
