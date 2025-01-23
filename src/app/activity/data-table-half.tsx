@@ -69,11 +69,13 @@ const WorkloadStatusBar = ({ value }: { value: number }) => {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  isHistory?: boolean; // Add this new prop
 }
 
 export function DataTableHalf<TData, TValue>({
   columns,
   data,
+  isHistory = false, // Add default value
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [selectedFilter, setSelectedFilter] = React.useState<string>("type");
@@ -146,7 +148,7 @@ export function DataTableHalf<TData, TValue>({
             <SelectContent>
               <SelectItem value="type">Type</SelectItem>
               <SelectItem value="description">Description</SelectItem>
-              <SelectItem value="status">Status</SelectItem>
+              {isHistory && <SelectItem value="status">Status</SelectItem>}
             </SelectContent>
           </Select>
         </div>
