@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
@@ -17,8 +17,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { Calendar, Activity, AlertTriangle, Clock, UserPlus } from "lucide-react";
-import Image from 'next/image';
+import {
+  Calendar,
+  Activity,
+  AlertTriangle,
+  Clock,
+  UserPlus,
+  X,
+  Check,
+  AlertCircle,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
+import Image from "next/image";
 
 interface Employee {
   employee_Id: string;
@@ -51,7 +62,10 @@ interface Task {
 
 interface TaskDetailsProps {
   selectedTask: Task | null;
-  onStatusUpdate: (taskId: string, newStatus: 'Ongoing' | 'Done' | 'Approved') => void;
+  onStatusUpdate: (
+    taskId: string,
+    newStatus: "Ongoing" | "Done" | "Approved"
+  ) => void;
 }
 
 const calculateWorkloadPercentage = (workload: number): number => {
@@ -71,37 +85,49 @@ const getWorkloadColor = (percentage: number): string => {
 
 const getImageUrl = (imageUrl: string | undefined): string => {
   if (!imageUrl) {
-    return 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ';
+    return "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ";
   }
-  if (imageUrl.startsWith('http')) {
+  if (imageUrl.startsWith("http")) {
     return imageUrl;
   }
-  if (imageUrl.startsWith('/uploads')) {
+  if (imageUrl.startsWith("/uploads")) {
     return `https://be-icpworkloadmanagementsystem.up.railway.app/api${imageUrl}`;
   }
   return imageUrl;
 };
 
-export const TaskDetails = ({ selectedTask: initialTask, onStatusUpdate }: TaskDetailsProps) => {
+export const TaskDetails = ({
+  selectedTask: initialTask,
+  onStatusUpdate,
+}: TaskDetailsProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState<'Ongoing' | 'Done' | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<"Ongoing" | "Done" | null>(
+    null
+  );
   const { toast } = useToast();
   const router = useRouter();
-  const [hoverCardPosition, setHoverCardPosition] = useState<Record<string, string>>({});
+  const [hoverCardPosition, setHoverCardPosition] = useState<
+    Record<string, string>
+  >({});
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [taskData, setTaskData] = useState<Task | null>(initialTask);
+  const [showFeedback, setShowFeedback] = useState<string | null>(null);
+  const [statusUpdateResult, setStatusUpdateResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     const fetchTaskDetails = async () => {
       if (!initialTask?.id) return;
-      
+
       try {
         const response = await fetch(
           `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${initialTask.id}`
         );
         const result = await response.json();
-        console.log('Task API Response:', result); // Debug log
+        console.log("Task API Response:", result); // Debug log
 
         if (result.data) {
           // Transform the data to match our Task interface
@@ -112,29 +138,31 @@ export const TaskDetails = ({ selectedTask: initialTask, onStatusUpdate }: TaskD
             endDate: new Date(result.data.end_Date),
             urgency: result.data.priority,
             workload: result.data.workload.toString(),
-            assigns: result.data.assigns || []
+            assigns: result.data.assigns || [],
           };
           setTaskData(transformedTask);
-          console.log('Transformed task data:', transformedTask); // Debug log
+          console.log("Transformed task data:", transformedTask); // Debug log
         }
       } catch (error) {
-        console.error('Error fetching task details:', error);
+        console.error("Error fetching task details:", error);
       }
     };
 
     const fetchEmployees = async () => {
       try {
-        const response = await fetch("https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read");
+        const response = await fetch(
+          "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
+        );
         const result = await response.json();
-        
+
         if (result.data && Array.isArray(result.data)) {
           // Format the image URLs for each employee
           const formattedEmployees = result.data.map((employee: any) => ({
             ...employee,
-            image: getImageUrl(employee.image)
+            image: getImageUrl(employee.image),
           }));
           setEmployees(formattedEmployees);
-          console.log('Stored employees:', formattedEmployees);
+          console.log("Stored employees:", formattedEmployees);
         }
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -151,13 +179,13 @@ export const TaskDetails = ({ selectedTask: initialTask, onStatusUpdate }: TaskD
     return employee;
   };
 
-  const handleStatusChange = (newStatus: 'Ongoing' | 'Done') => {
+  const handleStatusChange = (newStatus: "Ongoing" | "Done") => {
     // Don't allow status change if current status is 'Approved'
-    if (taskData?.status === 'Approved') {
+    if (taskData?.status === "Approved") {
       toast({
-        title: 'Cannot modify approved tasks',
-        description: 'This task has been approved and cannot be modified.',
-        variant: 'destructive',
+        title: "Cannot modify approved tasks",
+        description: "This task has been approved and cannot be modified.",
+        variant: "destructive",
       });
       return;
     }
@@ -168,15 +196,17 @@ export const TaskDetails = ({ selectedTask: initialTask, onStatusUpdate }: TaskD
 
   const handleConfirmedStatusChange = async () => {
     if (!taskData || !pendingStatus) return;
-    
+
     setIsSubmitting(true);
+    setStatusUpdateResult(null);
+
     try {
       const response = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/edit/${taskData.id}`,
         {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             status: pendingStatus,
@@ -185,54 +215,62 @@ export const TaskDetails = ({ selectedTask: initialTask, onStatusUpdate }: TaskD
       );
 
       if (!response.ok) {
-        throw new Error('Failed to update task status');
+        throw new Error("Failed to update task status");
       }
 
       toast({
-        title: 'Success!',
+        title: "Success!",
         description: `Task status updated to ${pendingStatus}`,
         duration: 3000,
       });
 
       // Notify parent component of the status update
       if (onStatusUpdate) {
-        onStatusUpdate(taskData.id, pendingStatus as 'Ongoing' | 'Done' | 'Approved');
+        onStatusUpdate(
+          taskData.id,
+          pendingStatus as "Ongoing" | "Done" | "Approved"
+        );
       }
-      
+      setStatusUpdateResult({
+        success: true,
+        message: `Task status updated to ${pendingStatus}`,
+      });
     } catch (error) {
-      console.error('Error updating task status:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update task status. Please try again.',
-        variant: 'destructive',
+      console.error("Error updating task status:", error);
+      setStatusUpdateResult({
+        success: false,
+        message: "Failed to update task status. Please try again.",
       });
     } finally {
       setIsSubmitting(false);
-      setShowConfirmation(false);
-      setPendingStatus(null);
+      setTimeout(() => {
+        setShowConfirmation(false);
+        setStatusUpdateResult(null);
+        setTaskData(null);
+      }, 500);
     }
   };
 
   const renderAssigneeImages = (assigns: any[]) => {
-    console.log('Rendering assigns:', assigns);
-    
+    console.log("Rendering assigns:", assigns);
+
     if (!assigns || assigns.length === 0) {
-      console.log('No assigns found');
+      console.log("No assigns found");
       return null;
     }
 
     return assigns.map((assign, index) => {
       const employeeDetails = getEmployeeDetails(assign.employee_Id);
-      console.log('Found employee details:', employeeDetails);
+      console.log("Found employee details:", employeeDetails);
 
       const image = employeeDetails?.image;
 
       return (
-        <div 
-          key={assign.employee_Id} 
+        <div
+          key={assign.employee_Id}
           className="relative group"
           onMouseEnter={(event) => {
-            const card = event.currentTarget.querySelector('.hover-card');
+            const card = event.currentTarget.querySelector(".hover-card");
             if (card) {
               const rect = card.getBoundingClientRect();
               const spaceBelow = window.innerHeight - rect.bottom;
@@ -240,44 +278,64 @@ export const TaskDetails = ({ selectedTask: initialTask, onStatusUpdate }: TaskD
 
               const employeeId = employeeDetails?.employee_Id as string;
               if (spaceBelow < rect.height && spaceAbove > rect.height) {
-                setHoverCardPosition(prev => ({ ...prev, [employeeId]: 'above' }));
+                setHoverCardPosition((prev) => ({
+                  ...prev,
+                  [employeeId]: "above",
+                }));
               } else {
-                setHoverCardPosition(prev => ({ ...prev, [employeeId]: 'below' }));
+                setHoverCardPosition((prev) => ({
+                  ...prev,
+                  [employeeId]: "below",
+                }));
               }
             }
           }}
         >
           <div className="w-[2.5vw] h-[2.5vw] rounded-full bg-gray-200 border-[0.08vw] border-white flex items-center justify-center overflow-hidden">
-            <Image 
-              src={image || 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ'}
+            <Image
+              src={
+                image ||
+                "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"
+              }
               alt={employeeDetails?.name || `Employee ${index + 1}`}
               width={32}
               height={32}
               className="w-full h-full object-cover"
             />
           </div>
-          
+
           {/* Hover Card */}
           {employeeDetails && (
             <motion.div
               className={`absolute left-0 transform -translate-x-full 
-                ${hoverCardPosition[employeeDetails.employee_Id] === 'above' ? 'bottom-full mb-2' : 'top-full mt-2'} 
+                ${
+                  hoverCardPosition[employeeDetails.employee_Id] === "above"
+                    ? "bottom-full mb-2"
+                    : "top-full mt-2"
+                } 
                 w-[12vw] bg-white rounded-lg shadow-lg p-[0.625vw] hidden group-hover:block z-50 border border-gray-200 hover-card`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
             >
               <div className="flex items-start gap-[0.625vw]">
-                <Image 
-                  src={image || 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ'}
+                <Image
+                  src={
+                    image ||
+                    "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"
+                  }
                   alt={employeeDetails.name}
                   width={32}
                   height={32}
                   className="w-[2.5vw] h-[2.5vw] rounded-full object-cover"
                 />
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 text-[0.9vw]">{employeeDetails.name}</h4>
-                  <p className="text-[0.6vw] text-gray-500">{employeeDetails.users?.[0]?.email}</p>
+                  <h4 className="font-medium text-gray-900 text-[0.9vw]">
+                    {employeeDetails.name}
+                  </h4>
+                  <p className="text-[0.6vw] text-gray-500">
+                    {employeeDetails.users?.[0]?.email}
+                  </p>
                 </div>
               </div>
               <div className="mt-[0.5vw] space-y-[0.25vw] text-[0.6vw]">
@@ -291,8 +349,15 @@ export const TaskDetails = ({ selectedTask: initialTask, onStatusUpdate }: TaskD
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Workload:</span>
-                  <span className={`${getWorkloadColor(employeeDetails.current_Workload)}`}>
-                    {calculateWorkloadPercentage(employeeDetails.current_Workload).toFixed(2)}%
+                  <span
+                    className={`${getWorkloadColor(
+                      employeeDetails.current_Workload
+                    )}`}
+                  >
+                    {calculateWorkloadPercentage(
+                      employeeDetails.current_Workload
+                    ).toFixed(2)}
+                    %
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -313,159 +378,213 @@ export const TaskDetails = ({ selectedTask: initialTask, onStatusUpdate }: TaskD
 
   return (
     <>
-      <div className="p-[1vw] border rounded-lg bg-white w-full min-h-[28vh] scale-[0.98] ">
-        <div className="flex justify-between items-center ">
-          <h3 className="font-semibold text-[1.2vw]">{taskData.title}</h3>
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/task/details/${taskData.id}`)}
-            className="text-blue-600 border-blue-600 hover:bg-blue-50"
-          >
-            See Details
-          </Button>
-        </div>
-        <div className="mt-2 text-gray-600 text-[1vw] flex">
-          <div className="w-1/3 space-y-[0.5vw]">
-            <p className="flex items-center gap-2">
+      <div className="p-6 border rounded-lg bg-white w-full min-h-[38vh] relative">
+        <h3 className="font-semibold text-lg mb-4">{taskData.title}</h3>
+
+        <div className="grid grid-cols-4 gap-6">
+          <div className="col-span-2">
+            <p className="text-sm text-gray-600 h-[10.5vw] w-full overflow-y-auto">
+              {taskData.description}
+            </p>
+          </div>
+
+          <div className="col-span-1 space-y-auto flex flex-col justify-between">
+            <div className="flex items-center gap-2 text-sm">
               <Calendar className="w-4 h-4 text-gray-500" />
-              Duration: {format(new Date(taskData.startDate), "MMM d")} -{" "}
-              {format(new Date(taskData.endDate), "MMM d")}
-            </p>
-            <p className="flex items-center gap-2">
+              <span>
+                Duration: {format(new Date(taskData.startDate), "MMM d")} -{" "}
+                {format(new Date(taskData.endDate), "MMM d")}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
               <Activity className="w-4 h-4 text-gray-500" />
-              Workload: <span className="font-medium">{taskData.workload}</span>
-            </p>
-            <p className="flex items-center gap-2">
+              <span>
+                Workload:{" "}
+                <span className="font-medium">{taskData.workload}</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
               <AlertTriangle className="w-4 h-4 text-gray-500" />
-              Urgency:{" "}
-              <span
-                className={`px-2 py-0.5 rounded-full text-[0.8vw] ${
-                  taskData.urgency === "High"
-                    ? "bg-red-100 text-red-800"
-                    : taskData.urgency === "Medium"
-                    ? "bg-orange-100 text-orange-800"
-                    : "bg-blue-100 text-blue-800"
-                }`}
-              >
-                {taskData.urgency}
+              <span>
+                Urgency:{" "}
+                <span
+                  className={`px-2 py-1 rounded-full text-xs ${
+                    taskData.urgency === "High"
+                      ? "bg-red-100 text-red-800"
+                      : taskData.urgency === "Medium"
+                      ? "bg-orange-100 text-orange-800"
+                      : "bg-blue-100 text-blue-800"
+                  }`}
+                >
+                  {taskData.urgency}
+                </span>
               </span>
-            </p>
-            <p className="flex items-center gap-2">
+            </div>
+            <div className="flex items-center gap-2 text-sm">
               <Clock className="w-4 h-4 text-gray-500" />
-              Status:{" "}
-              <span
-                className={`px-2 py-0.5 rounded-full text-[0.8vw] capitalize ${
-                  taskData.status === "Ongoing"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : taskData.status === "Done"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-blue-100 text-blue-800"
-                }`}
-              >
-                {taskData.status}
+              <span>
+                Status:{" "}
+                <span
+                  className={`px-2 py-1 rounded-full text-xs ${
+                    taskData.status === "Ongoing"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : taskData.status === "Done"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-blue-100 text-blue-800"
+                  }`}
+                >
+                  {taskData.status}
+                </span>
               </span>
-            </p>
-            <div className="mt-4">
-              <h3 className="font-semibold text-gray-600 mb-[1vw] text-sm">Assignees</h3>
-              <div className="flex gap-[0.8vw]">
-                {taskData?.assigns ? (
-                  renderAssigneeImages(taskData.assigns)
-                ) : (
-                  <div className="text-gray-500 text-sm">No assignees found</div>
-                )}
-              </div>
             </div>
           </div>
-          <div className="w-2/3 space-y-[0.2vw]">
-            <div className="flex items-center space-x-2">
-              <span>Progress:</span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={taskData.status === 'Ongoing' ? 'default' : 'outline'}
-                  onClick={() => handleStatusChange('Ongoing')}
-                  disabled={taskData.status === 'Approved' || taskData.status === 'Ongoing'}
-                  className={`px-4 py-2 ${
-                    taskData.status === 'Ongoing' 
-                      ? 'bg-yellow-500 hover:bg-yellow-600' 
-                      : 'text-yellow-600 border-yellow-600 hover:bg-yellow-50'
-                  }`}
-                >
-                  Ongoing
-                </Button>
-                <Button
-                  variant={taskData.status === 'Done' ? 'default' : 'outline'}
-                  onClick={() => handleStatusChange('Done')}
-                  disabled={taskData.status === 'Approved' || taskData.status === 'Done'}
-                  className={`px-4 py-2 ${
-                    taskData.status === 'Done' 
-                      ? 'bg-green-500 hover:bg-green-600' 
-                      : 'text-green-600 border-green-600 hover:bg-green-50'
-                  }`}
-                >
-                  Done
-                </Button>
-                {taskData.status === 'Approved' && (
-                  <span className="px-4 py-2 bg-blue-500 text-white rounded-md">
-                    Approved
-                  </span>
-                )}
-              </div>
+
+          <div className="col-span-1 flex flex-col justify-between">
+            <h3 className="font-semibold text-gray-600 mb-2 text-sm">
+              Assignees
+            </h3>
+            <div className="flex flex-wrap gap-2 mb-auto">
+              {taskData?.assigns ? (
+                renderAssigneeImages(taskData.assigns)
+              ) : (
+                <div className="text-gray-500 text-sm">No assignees found</div>
+              )}
             </div>
-            <p className="mt-2 h-[10vw] overflow-y-scroll scrollbar-thin scrollbar-thumb-[#0A1D56] scrollbar-track-white scrollbar-thumb-rounded-[5vw]">{taskData.description}</p>
+            <div className="flex items-center space-x-4 justify-end">
+              <Button
+                variant={taskData.status === "Ongoing" ? "default" : "outline"}
+                onClick={() => handleStatusChange("Ongoing")}
+                disabled={
+                  taskData.status === "Approved" ||
+                  taskData.status === "Ongoing"
+                }
+                className={`px-4 py-2 ${
+                  taskData.status === "Ongoing"
+                    ? "bg-yellow-500 hover:bg-yellow-600"
+                    : "text-yellow-600 border-yellow-600 hover:bg-yellow-50"
+                }`}
+              >
+                Ongoing
+              </Button>
+              <Button
+                variant={taskData.status === "Done" ? "default" : "outline"}
+                onClick={() => handleStatusChange("Done")}
+                disabled={
+                  taskData.status === "Approved" || taskData.status === "Done"
+                }
+                className={`px-4 py-2 ${
+                  taskData.status === "Done"
+                    ? "bg-green-500 hover:bg-green-600"
+                    : "text-green-600 border-green-600 hover:bg-green-50"
+                }`}
+              >
+                Done
+              </Button>
+              {taskData.status === "Approved" && (
+                <span className="px-4 py-2 bg-blue-500 text-white rounded-md">
+                  Approved
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <AlertDialogOverlay className="bg-black/50 fixed inset-0" />
-        <AlertDialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[30vw] max-w-none z-50 bg-white rounded-[0.8vw] p-[1.5vw] shadow-lg">
+      {showFeedback && (
+        <div className="mt-4 text-center text-sm text-green-600">
+          {showFeedback}
+        </div>
+      )}
+
+      <AnimatePresence>
+        {showConfirmation && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: "1vw" }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: "1vw" }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-[1.042vw] z-[60]"
           >
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-[1.5vw] font-semibold mb-[1vw]">
-                Confirm Status Change
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-[1vw]">
-                Are you sure you want to change the task status to {pendingStatus}?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="mt-[1vw]">
-              <AlertDialogCancel
-                disabled={isSubmitting}
-                className="text-[0.8vw]"
-              >
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleConfirmedStatusChange}
-                disabled={isSubmitting}
-                className="bg-[#38BDF8] hover:bg-[#32a8dd] text-[0.8vw]"
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-[0.417vw]">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-lg shadow-lg w-full max-w-[40vw] p-6 relative"
+            >
+              {statusUpdateResult ? (
+                <div className="flex flex-col items-center justify-center h-full">
+                  {statusUpdateResult.success ? (
                     <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                      className="w-[0.833vw] h-[0.833vw] border-[0.417vw] border-white border-t-transparent rounded-full"
-                    />
-                    Updating...
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="text-center"
+                    >
+                      <CheckCircle2 className="mx-auto mb-4 w-16 h-16 text-green-500" />
+                      <p className="text-green-600 font-semibold">
+                        {statusUpdateResult.message}
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="text-center"
+                    >
+                      <AlertCircle className="mx-auto mb-4 w-16 h-16 text-red-500" />
+                      <p className="text-red-600 font-semibold">
+                        {statusUpdateResult.message}
+                      </p>
+                    </motion.div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setShowConfirmation(false)}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                    Confirm Status Change
+                  </h3>
+                  <p className="mb-6 text-gray-600">
+                    Are you sure you want to change the task status to{" "}
+                    <span className="font-bold">{pendingStatus}</span>?
+                  </p>
+                  <div className="flex justify-end space-x-4">
+                    <button
+                      onClick={() => setShowConfirmation(false)}
+                      disabled={isSubmitting}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirmedStatusChange}
+                      disabled={isSubmitting}
+                      className={cn(
+                        "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2",
+                        isSubmitting && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Updating...
+                        </>
+                      ) : (
+                        "Confirm"
+                      )}
+                    </button>
                   </div>
-                ) : (
-                  "Confirm Change"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
+                </>
+              )}
+            </motion.div>
           </motion.div>
-        </AlertDialogContent>
-      </AlertDialog>
+        )}
+      </AnimatePresence>
     </>
   );
 };

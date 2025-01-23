@@ -11,11 +11,10 @@ import {
   eachDayOfInterval,
   subWeeks,
   addWeeks,
+  isToday,
 } from "date-fns";
-import { Switch } from "@/components/ui/switch";
 import { Task } from "./types/tasks";
 
-// Update the component props
 interface TaskTimelineProps {
   selectedTask: Task | null;
   onTaskSelect: (task: Task) => void;
@@ -33,34 +32,14 @@ const TaskTimeline = ({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
 
-  // Get color based on workload and urgency
   const getTaskColor = (workload: string, urgency: string): string => {
-    if (urgency === "critical") return "bg-red-500";
-    if (urgency === "high") return "bg-orange-500";
-    if (workload === "high") return "bg-yellow-500";
-    if (workload === "medium") return "bg-blue-500";
-    return "bg-green-500";
+    if (urgency === "critical") return "bg-red-600";
+    if (urgency === "high") return "bg-orange-600";
+    if (workload === "high") return "bg-yellow-600";
+    if (workload === "medium") return "bg-blue-600";
+    return "bg-green-600";
   };
 
-  const handleStatusChange = (taskId: string, checked: boolean) => {
-    // Use proper case directly
-    const newStatus: "Ongoing" | "Done" | "Approved" = checked
-      ? "Done"
-      : "Ongoing";
-
-    // Update local tasks
-    const updatedTasks = localTasks.map((task) =>
-      task.id === taskId ? { ...task, status: newStatus } : task
-    );
-    setLocalTasks(updatedTasks);
-
-    // Update selected task
-    if (selectedTask && selectedTask.id === taskId) {
-      onTaskSelect({ ...selectedTask, status: newStatus });
-    }
-  };
-
-  // Calculate dates for view
   const getDaysForView = () => {
     const start =
       viewMode === "weekly"
@@ -74,7 +53,6 @@ const TaskTimeline = ({
     return eachDayOfInterval({ start, end });
   };
 
-  // Navigation handlers
   const handlePrevious = () => {
     if (viewMode === "weekly") {
       setCurrentDate((prev) => subWeeks(prev, 1));
@@ -93,12 +71,10 @@ const TaskTimeline = ({
 
   const days = getDaysForView();
 
-  // Filter tasks based on status first
   const filteredTasks = tasks.filter((task) =>
     statusFilter === "all" ? true : task.status === statusFilter
   );
 
-  // Then filter by date range
   const visibleTasks = filteredTasks.filter((task) => {
     const taskStart = task.startDate;
     const taskEnd = task.endDate;
@@ -107,78 +83,124 @@ const TaskTimeline = ({
     return taskStart <= viewEnd && taskEnd >= viewStart;
   });
 
+  const todayIndex = days.findIndex(day => isToday(day));
+
   return (
-    <div className="p-[1vw] space-y-[1vh] w-full">
+    <div className="p-[1.25vw] space-y-2 w-full bg-white shadow-sm rounded-lg border">
       {/* Controls */}
-      <div className="flex justify-between items-center ">
-        <div className="space-x-2 ">
+      <div className="flex justify-between items-center border-b pb-2">
+        <div className="space-x-1 text-xs">
           <button
-            className={`px-[1vw] py-[0.4vh] rounded text-[0.8vw]  transition-transform transform hover:scale-[0.98] hover:shadow-lg  ${
-              viewMode === "monthly" ? "bg-blue-600 text-white" : "bg-gray-200"
+            className={`px-2 py-1 rounded transition-all ${
+              viewMode === "monthly" 
+                ? "bg-blue-700 text-white" 
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
             onClick={() => setViewMode("monthly")}
           >
             Monthly
           </button>
           <button
-            className={`px-[1vw] py-[0.4vh] rounded text-[0.8vw]  transition-transform transform hover:scale-[0.98] hover:shadow-lg ${
-              viewMode === "weekly" ? "bg-blue-600 text-white" : "bg-gray-200"
+            className={`px-2 py-1 rounded transition-all ${
+              viewMode === "weekly" 
+                ? "bg-blue-700 text-white" 
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
             onClick={() => setViewMode("weekly")}
           >
             Weekly
           </button>
         </div>
-        <div className="flex items-center space-x-4 scale-[0.8] ">
+        <div className="flex items-center space-x-2 text-xs">
           <button
             onClick={handlePrevious}
-            className="p-2 hover:bg-gray-100 rounded"
+            className="p-1 hover:bg-gray-100 rounded"
           >
-            <ChevronLeft size={20} />
+            <ChevronLeft size={16} className="text-gray-600" />
           </button>
-          <span className="font-semibold">
+          <span className="font-medium text-gray-800">
             {format(currentDate, "MMMM yyyy")}
           </span>
           <button
             onClick={handleNext}
-            className="p-2 hover:bg-gray-100 rounded"
+            className="p-1 hover:bg-gray-100 rounded"
           >
-            <ChevronRight size={20} />
+            <ChevronRight size={16} className="text-gray-600" />
           </button>
         </div>
       </div>
 
       {/* Timeline Grid */}
-      <div className="overflow-x-auto w-full bg-gray-50 px-[0.5vw] rounded-lg">
-        <div className="w-full">
+      <div className="overflow-x-auto w-full relative">
+        {/* Vertical Grid Swimlanes with Today Highlight */}
+        <div 
+          className="absolute inset-0 pointer-events-none flex"
+          style={{
+            backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px)',
+            backgroundSize: '2rem 100%',
+          }}
+        >
+          {/* Today Highlight */}
+          {todayIndex !== -1 && (
+            <div 
+              className="absolute top-0 bottom-0 bg-blue-50/50 border-x border-blue-200"
+              style={{
+                left: `${(todayIndex / days.length) * 100}%`,
+                width: `${(1 / days.length) * 100}%`
+              }}
+            />
+          )}
+        </div>
+
+        <div className="w-full relative z-20">
           {/* Date Headers */}
           <div
-            className="grid gap-[0.2vw] w-full"
+            className="grid gap-0 w-full border-b"
             style={{
               gridTemplateColumns: `repeat(${days.length}, minmax(2vw, 1fr))`,
             }}
           >
-            {days.map((day) => (
+            {days.map((day, index) => (
               <div
                 key={day.toISOString()}
-                className="p-[0.5vw] text-[0.8vw] text-center bg-white border border-l rounded-lg"
+                className={`p-[0.3vw] text-[0.6rem] text-center 
+                  ${isToday(day) ? 'bg-blue-100 font-bold' : 'bg-gray-50'}
+                  ${index === 0 ? 'rounded-bl' : ''}
+                  ${index === days.length - 1 ? 'rounded-br' : ''}`}
               >
-                {format(day, "d")}
+                <div className={`${isToday(day) ? 'text-blue-700' : 'text-gray-800'}`}>
+                  {format(day, "d")}
+                </div>
+                <div className={`text-[0.5rem] text-gray-500 ${isToday(day) ? 'text-blue-700' : 'text-gray-800'}`}>
+                  {format(day, "EEE")}
+                </div>
               </div>
             ))}
           </div>
 
-          {/* Tasks Timeline */}
-          <div className="relative min-h-[20vw] bg-gray-50 w-full px-[1vw]">
+          {/* Tasks Timeline with Horizontal Swimlanes */}
+          <div 
+            className="relative bg-white w-full"
+            style={{ 
+              minHeight: `${Math.max(visibleTasks.length * 3, 17)}vw`
+            }}
+          >
+            {/* Horizontal Swimlanes */}
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: 'linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px)',
+                backgroundSize: '100% 2rem',
+              }}
+            />
+
             {visibleTasks.map((task, index) => {
               const startDate = task.startDate;
               const endDate = task.endDate;
 
-              // Calculate position and width
               let startPosition = 0;
               let endPosition = days.length;
 
-              // Adjust start position if task starts before view
               if (startDate >= days[0]) {
                 startPosition = days.findIndex(
                   (day) =>
@@ -187,7 +209,6 @@ const TaskTimeline = ({
                 );
               }
 
-              // Adjust end position if task ends after view
               const endIdx = days.findIndex(
                 (day) =>
                   format(day, "yyyy-MM-dd") === format(endDate, "yyyy-MM-dd")
@@ -201,15 +222,15 @@ const TaskTimeline = ({
               return (
                 <div
                   key={task.id}
-                  className={`absolute cursor-pointer transition-transform transform hover:scale-[0.98] hover:shadow-lg ${getTaskColor(
+                  className={`absolute cursor-pointer transition-all ${getTaskColor(
                     task.workload,
                     task.urgency
-                  )} rounded p-[0.5vw] text-white text-[0.8vw] truncate`}
+                  )} rounded p-1 text-white text-[0.6rem] truncate`}
                   style={{
                     left: `${(startPosition / days.length) * 100}%`,
                     width: `${width}%`,
-                    top: `${index * 2.5 + 1}vw`,
-                    minHeight: '2vw'
+                    top: `${index * 2 + 0.5}vw`,
+                    minHeight: '1.5vw'
                   }}
                   onClick={() => onTaskSelect(task)}
                 >
