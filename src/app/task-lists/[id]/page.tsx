@@ -73,7 +73,7 @@ export default function TaskLists({
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("Ongoing");
 
   useEffect(() => {
     async function fetchTasks() {
@@ -132,22 +132,24 @@ export default function TaskLists({
 
   return (
     <ProtectedRoute>
-      <div className="flex h-screen bg-stale-50">
+      <div className="flex h-screen bg-gray-200">
         <Sidebar />
-        <div className="flex-grow overflow-auto flex items-start justify-center">
-          <div className="w-[65vw] flex-1  h-screen ml-[0.417vw] py-[1vw]  space-y-[1.25vw]">
-            <TaskTimeline
-              selectedTask={selectedTask}
-              onTaskSelect={handleTaskSelect}
-              tasks={tasks}
-              statusFilter={statusFilter}
-            />
-            <TaskDetails
-              selectedTask={selectedTask}
-              onStatusUpdate={handleStatusUpdate}
-            />
+        <div className="grid grid-cols-4 flex-grow overflow-auto h-screen ml-[0.417vw] py-[1.25vw] px-[1.25vw] space-x-[1.25vw]">
+          <div className="col-span-3 flex items-start justify-center space-y-[1.25vw]">
+            <div className="w-full space-y-[1.25vw]">
+              <TaskTimeline
+                selectedTask={selectedTask}
+                onTaskSelect={handleTaskSelect}
+                tasks={tasks}
+                statusFilter={statusFilter}
+              />
+              <TaskDetails
+                selectedTask={selectedTask}
+                onStatusUpdate={handleStatusUpdate}
+              />
+            </div>
           </div>
-          <div className="w-[15vw]  h-full ml-[0.417vw] py-[1vw] space-y-[1.25vw]">
+          <div className="col-span-1 h-full">
             <TaskListTimeline
               onTaskSelect={handleTaskSelect}
               tasks={tasks}
