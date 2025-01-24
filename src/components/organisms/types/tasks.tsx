@@ -9,4 +9,5 @@ export interface Task {
   description: string;
   priority: string;
   status: 'Ongoing' | 'Done' | 'Approved';
+  team: string;
 }

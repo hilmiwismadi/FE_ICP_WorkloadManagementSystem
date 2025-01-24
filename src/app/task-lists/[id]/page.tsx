@@ -35,6 +35,7 @@ interface ApiTask {
     employee_Id: string;
     employee: Employee;
   }>;
+  team: string;
 }
 
 function convertApiTaskToTask(apiTask: ApiTask): Task {
@@ -61,6 +62,7 @@ function convertApiTaskToTask(apiTask: ApiTask): Task {
       ) + Math.random()
     ).toFixed(1),
     status: apiTask.status as "Ongoing" | "Done" | "Approved",
+    team: apiTask.team,
   };
 }
 
@@ -74,6 +76,7 @@ export default function TaskLists({
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("Ongoing");
+  const [teamFilter, setTeamFilter] = useState<string>("all");
 
   useEffect(() => {
     async function fetchTasks() {
@@ -157,6 +160,9 @@ export default function TaskLists({
               tasks={tasks}
               statusFilter={statusFilter}
               onStatusFilter={handleStatusFilter}
+              teamFilter="all"
+              onTeamFilter={() => {}}
+              isVisible={false}
             />
           </div>
         </div>

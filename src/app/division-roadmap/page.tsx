@@ -35,6 +35,7 @@ interface ApiTask {
     employee_Id: string;
     employee: Employee;
   }>;
+  team: string;
 }
 
 function convertApiTaskToTask(apiTask: ApiTask): Task {
@@ -61,6 +62,7 @@ function convertApiTaskToTask(apiTask: ApiTask): Task {
       ) + Math.random()
     ).toFixed(1),
     status: apiTask.status as "Ongoing" | "Done" | "Approved",
+    team: apiTask.team,
   };
 }
 
@@ -74,6 +76,7 @@ export default function DivisionRoadmap({
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("Ongoing");
+  const [teamFilter, setTeamFilter] = useState<string>("all");
 
   useEffect(() => {
     async function fetchTasks() {
@@ -126,6 +129,10 @@ export default function DivisionRoadmap({
     setStatusFilter(status);
   };
 
+  const handleTeamFilter = (team: string) => {
+    setTeamFilter(team);
+  };
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -141,12 +148,15 @@ export default function DivisionRoadmap({
                 <TaskTimeline
                   selectedTask={selectedTask}
                   onTaskSelect={handleTaskSelect}
-                  tasks={tasks}
+                  tasks={tasks.filter(task => 
+                    teamFilter === "all" || task.team === teamFilter // Filter tasks by team
+                  )}
                   statusFilter={statusFilter}
                 />
                 <TaskDetails
                   selectedTask={selectedTask}
                   onStatusUpdate={handleStatusUpdate}
+                  onClose={() => {}}
                 />
               </div>
             </div>
@@ -157,6 +167,9 @@ export default function DivisionRoadmap({
               tasks={tasks}
               statusFilter={statusFilter}
               onStatusFilter={handleStatusFilter}
+              teamFilter={teamFilter}
+              onTeamFilter={handleTeamFilter}
+              isVisible={true}
             />
           </div>
         </div>
