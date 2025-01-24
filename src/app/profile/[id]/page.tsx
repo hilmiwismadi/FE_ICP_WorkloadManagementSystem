@@ -30,16 +30,21 @@ interface Employee {
     image: string;
     employee_Id: string;
   }>;
-  tasks: Array<{
+  assigns?: Array<{
     task_Id: string;
-    type: string;
-    description: string;
-    status: string;
-    workload: number;
-    start_Date: string;
-    end_Date: string;
     employee_Id: string;
-    user_Id: string;
+    task: {
+      task_Id: string;
+      type: string;
+      description: string;
+      status: string;
+      workload: number;
+      start_Date: string;
+      end_Date: string;
+      user_Id: string;
+      priority: string;
+      title: string;
+    };
   }>;
 }
 
@@ -67,10 +72,11 @@ export default function ProfilePage() {
             },
             0
           );
-
+          console.log(totalWorkload);
           const calculatedAverage = totalWorkload / employees.length;
           setAverageWorkload(Math.round(calculatedAverage));
         }
+ 
       } catch (error) {
         console.error("Failed to fetch employees data:", error);
       }
@@ -78,6 +84,8 @@ export default function ProfilePage() {
 
     fetchAllEmployees();
   }, []);
+
+  console.log(averageWorkload);
 
   // Fetch individual employee data
   useEffect(() => {
@@ -114,21 +122,25 @@ export default function ProfilePage() {
       icon: stack.image,
     })) || [];
 
-  const tasks = Array.isArray(employee?.tasks)
-    ? employee.tasks
-        .filter((task) => task.status === "Ongoing")
-        .map((task) => ({
-          id: task.task_Id,
-          type: task.type,
-          title: task.description,
-          priority: task.workload?.toString() || "N/A",
-          dueDate: task.end_Date
-            ? new Date(task.end_Date).toLocaleDateString()
+  const tasks = employee?.assigns
+    ? employee.assigns
+        .filter((assign) => assign && assign.task && assign.task.status === "Ongoing")
+        .map((assign) => ({
+          id: assign.task.task_Id || '',
+          type: assign.task.type || '',
+          title: assign.task.title || '',
+          description: assign.task.description || '',
+          status: assign.task.status || '',
+          priority: assign.task.workload || '',
+          dueDate: assign.task.end_Date
+            ? new Date(assign.task.end_Date).toLocaleDateString()
             : "N/A",
-          startDate: task.start_Date
-            ? new Date(task.start_Date).toISOString()
+          startDate: assign.task.start_Date
+            ? new Date(assign.task.start_Date).toISOString()
             : null,
-          endDate: task.end_Date ? new Date(task.end_Date).toISOString() : null,
+          endDate: assign.task.end_Date 
+            ? new Date(assign.task.end_Date).toISOString() 
+            : null,
         }))
     : [];
 
@@ -175,7 +187,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="col-span-12 md:col-span-7">
                       <WorkloadOverview
-                        tasks={employee.tasks}
+                        tasks={employee.assigns}
                         currentWorkload={Math.round(
                           (employee.current_Workload / 15) * 100
                         )}
