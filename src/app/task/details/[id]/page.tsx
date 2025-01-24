@@ -462,7 +462,7 @@ const TaskDetailPage = () => {
           <div className="flex-1 max-h-screen py-[0.5vw] px-[1vw] ml-[0.2vw] w-[70vw] space-y-[0.8vw] transition-all duration-300 ease-in-out">
             <div className="mx-auto">
               {/* Task Header */}
-              <div className="bg-white rounded-lg shadow-sm px-[1.5vw] py-[1.5vw] mb-[0.5vw]">
+              <div className="bg-white rounded-lg shadow-sm px-[1.5vw] py-[1.5vw] mb-[1vw]">
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h1 className="text-[1.2vw] font-bold text-gray-900 mb-1">
@@ -528,7 +528,7 @@ const TaskDetailPage = () => {
               </div>
 
               {/* Activity Input */}
-              <div className="bg-white rounded-lg shadow-sm px-[1vw] py-[1.5vw] mb-[0.5vw]">
+              <div className="bg-white rounded-lg shadow-sm px-[1vw] py-[1.5vw] mb-[1vw]">
                 <div className="flex gap-2 relative">
                   <select
                     value={activityType}
@@ -556,7 +556,7 @@ const TaskDetailPage = () => {
                   <motion.button
                     onClick={handleAddActivity}
                     disabled={!newActivity.trim() || isSending}
-                    className="px-1 py-0.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
+                    className="px-[0.5vw] py-[0.3vw] bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
                   >
                     {isSending ? (
                       <motion.div

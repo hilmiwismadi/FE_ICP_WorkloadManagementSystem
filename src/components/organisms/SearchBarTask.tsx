@@ -158,7 +158,7 @@ export default function CustomSearchBar() {
       <div className="relative" ref={teamDropdownRef}>
         <button
           onClick={() => setIsTeamDropdownOpen(!isTeamDropdownOpen)}
-          className="flex items-center gap-[0.417vw] px-[0.833vw] py-[0.625vw] rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-[0.417vw] px-[0.833vw] py-[0.625vw] rounded-lg border bg-white border-gray-300 hover:bg-gray-50 transition-colors"
           disabled={isLoading}
         >
           <span className="text-[1vw] font-medium">
