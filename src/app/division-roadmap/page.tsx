@@ -156,7 +156,6 @@ export default function DivisionRoadmap({
                 <TaskDetails
                   selectedTask={selectedTask}
                   onStatusUpdate={handleStatusUpdate}
-                  onClose={() => {}}
                 />
               </div>
             </div>
