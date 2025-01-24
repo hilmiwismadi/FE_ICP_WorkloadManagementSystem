@@ -149,7 +149,7 @@ export default function TaskLists({
               />
             </div>
           </div>
-          <div className="col-span-1 h-full">
+          <div className="col-span-1 h-full max-w-[21.5vw]">
             <TaskListTimeline
               onTaskSelect={handleTaskSelect}
               tasks={tasks}
