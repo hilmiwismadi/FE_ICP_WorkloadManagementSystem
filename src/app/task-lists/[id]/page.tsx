@@ -136,7 +136,7 @@ export default function TaskLists({
         <Sidebar />
         <div className="grid grid-cols-4 flex-grow overflow-auto h-screen ml-[0.417vw] py-[1.25vw] px-[1.25vw] space-x-[1.25vw]">
           <div className="col-span-3 flex items-start justify-center space-y-[1.25vw]">
-            <div className="w-full space-y-[1.25vw]">
+            <div className="w-full space-y-[1.25vw] max-w-[71.5vw]">
               <TaskTimeline
                 selectedTask={selectedTask}
                 onTaskSelect={handleTaskSelect}
