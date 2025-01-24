@@ -379,6 +379,12 @@ export const TaskDetails = ({
   return (
     <>
       <div className="p-6 border rounded-lg bg-white w-full min-h-[38vh] relative">
+        <button
+          onClick={() => setTaskData(null)}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+        >
+          <X className="w-5 h-5" />
+        </button>
         <h3 className="font-semibold text-lg mb-4">{taskData.title}</h3>
 
         <div className="grid grid-cols-4 gap-6">
