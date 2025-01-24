@@ -223,7 +223,7 @@ const Sidebar = () => {
             {isExpanded && employeeData && (
               <div className="flex flex-col text-white">
                 <span className="font-semibold text-[1.25vw]">
-                  {employeeData.name}
+                  {employeeData.name.split(' ')[0]}
                 </span>
                 <span className="text-[1vw]">ID-{employeeData.employee_Id}</span>
                 <span className="text-[0.8vw] text-gray-300">

@@ -64,7 +64,7 @@ function convertApiTaskToTask(apiTask: ApiTask): Task {
   };
 }
 
-export default function TaskLists({
+export default function DivisionRoadmap({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -80,7 +80,7 @@ export default function TaskLists({
       try {
         const empId = resolvedParams.id; // Use the resolved params
         const response = await fetch(
-          `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/emp/read/${empId}`
+          `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read`
         );
         if (!response.ok) throw new Error("Failed to fetch tasks");
 
