@@ -8,9 +8,11 @@ import SearchBar from "@/components/organisms/SearchBarTask";
 import ProfileHeader from "@/components/organisms/ProfileHeader";
 import Sidebar from "@/components/sidebar";
 import { DataTable } from "../data-table";
-import { NewTaskModal } from "@/components/organisms/NewTaskModal";
+import BulkTaskModal from "../BulkTaskModal";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 import ProtectedRoute from "@/components/protected-route";
+import { jwtDecode } from "jwt-decode";
+import { AnimatePresence } from "framer-motion";
 
 interface TaskDetails {
   task_Id: string;
@@ -67,6 +69,7 @@ export default function TaskPageId() {
   const [tasks, setTasks] = useState<TaskDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEmployeeData = async () => {
@@ -108,6 +111,7 @@ export default function TaskPageId() {
           // Extract tasks from assignments
           const tasksList = user.assigns.map(assignment => assignment.task);
           setTasks(tasksList);
+          setUserId(user.employee_Id);
         }
       } catch (error) {
         const errorMessage =
@@ -138,15 +142,6 @@ export default function TaskPageId() {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.get<ApiResponse>(
-        `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${id}`
-      );
-
-      if (response.data.data?.assigns) {
-        const tasksList = response.data.data.assigns.map(assignment => assignment.task);
-        setTasks(tasksList);
-      }
-
       await refreshTasks();
       setIsLoading(false);
       setIsModalOpen(false);
@@ -211,11 +206,16 @@ export default function TaskPageId() {
             </div>
           </div>
         </div>
-        <NewTaskModal
-          open={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onTaskSubmit={handleSubmit}
-        />
+
+        <AnimatePresence>
+          {isModalOpen && (
+            <BulkTaskModal
+              userId={userId || ""}
+              onClose={() => setIsModalOpen(false)}
+              onSuccess={handleSubmit}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </ProtectedRoute>
   );

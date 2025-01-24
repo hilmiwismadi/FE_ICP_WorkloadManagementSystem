@@ -37,11 +37,7 @@ const taskTypes = [
   "Other task...",
 ];
 
-const taskPriorities = [
-  "Normal",
-  "Medium",
-  "High"
-];
+const taskPriorities = ["Normal", "Medium", "High"];
 
 interface NewTaskModalProps {
   open: boolean;
@@ -64,6 +60,7 @@ export const NewTaskModal = ({
     startDate: "",
     endDate: "",
     priority: "",
+    team: "",
   });
   const [isCustomType, setIsCustomType] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -86,23 +83,23 @@ export const NewTaskModal = ({
   const handleConfirmedSubmit = async () => {
     try {
       setIsSubmitting(true);
-  
+
       const token = document.cookie
         .split("; ")
-        .find(row => row.startsWith("auth_token="))
+        .find((row) => row.startsWith("auth_token="))
         ?.split("=")[1];
-  
+
       if (!token) {
         throw new Error("No authentication token found");
       }
-  
+
       const decodedToken: { user_Id: string } = jwtDecode(token);
       const userId = decodedToken.user_Id;
-  
+
       if (!userId) {
         throw new Error("User ID not found in token");
       }
-  
+
       const generateTaskData = (formData: any, params: any, userId: string) => {
         return {
           employee_Ids: [params.id],
@@ -113,10 +110,11 @@ export const NewTaskModal = ({
           priority: formData.priority,
           workload: formData.workload,
           start_Date: formData.startDate,
-          end_Date: formData.endDate
+          end_Date: formData.endDate,
+          team: formData.team,
         };
       };
-  
+
       const response = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/add/${userId}`,
         {
@@ -130,19 +128,19 @@ export const NewTaskModal = ({
       );
 
       console.log(generateTaskData(formData, params, userId));
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to create task");
       }
-  
+
       setShowSuccess(true);
       toast({
         title: "Success!",
         description: "Task assigned successfully",
         duration: 3000,
       });
-  
+
       setTimeout(() => {
         setShowSuccess(false);
         onTaskSubmit();
@@ -174,10 +172,12 @@ export const NewTaskModal = ({
     setFormData({ ...formData, workload: value[0] });
   };
 
-  const handleWorkloadInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleWorkloadInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const value = e.target.value;
     const parsedValue = parseFloat(value.replace(",", "."));
-    
+
     if (!isNaN(parsedValue) && parsedValue >= 0 && parsedValue <= 10) {
       setFormData({ ...formData, workload: parsedValue });
     }
@@ -262,14 +262,16 @@ export const NewTaskModal = ({
                     </motion.div>
                   )}
                 </div>
-                
+
                 <div className="space-y-[0.833vw]">
                   <label className="block text-[1vw]">
                     Task Priority <span className="text-red-500">*</span>
                   </label>
-                  <Select 
+                  <Select
                     value={formData.priority}
-                    onValueChange={(value) => setFormData({ ...formData, priority: value })} 
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, priority: value })
+                    }
                     required
                   >
                     <SelectTrigger className="h-[2.5vw]">
@@ -343,6 +345,31 @@ export const NewTaskModal = ({
                     required
                   />
                 </div>
+                <div className="space-y-[0.833vw]">
+                  <label className="block text-[1vw]">
+                    Team <span className="text-red-500">*</span>
+                  </label>
+                  <Select
+                    value={formData.team}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, team: value })
+                    }
+                    required
+                  >
+                    <SelectTrigger className="h-[2.5vw]">
+                      <SelectValue placeholder="Select team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["Korporat 1", "Korporat 2", "Pelayanan Pelanggan"].map(
+                        (team) => (
+                          <SelectItem key={team} value={team}>
+                            {team}
+                          </SelectItem>
+                        )
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -391,9 +418,9 @@ export const NewTaskModal = ({
         <AlertDialogOverlay className="bg-black/50 fixed inset-0" />
         <AlertDialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[30vw] max-w-none z-50 bg-white rounded-[0.8vw] p-[1.5vw] shadow-lg">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: '1vw' }}
+            initial={{ opacity: 0, scale: 0.95, y: "1vw" }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: '1vw' }}
+            exit={{ opacity: 0, scale: 0.95, y: "1vw" }}
             transition={{ duration: 0.2 }}
           >
             <AlertDialogHeader>
@@ -404,9 +431,9 @@ export const NewTaskModal = ({
                 <AlertDialogDescription className="text-[1vw]">
                   Please review the task details below:
                 </AlertDialogDescription>
-                <motion.div 
+                <motion.div
                   className="space-y-[0.8vw] text-[0.9vw] border rounded-[0.4vw] p-[1vw] bg-gray-50"
-                  initial={{ y: '1vw', opacity: 0 }}
+                  initial={{ y: "1vw", opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.1 }}
                 >
@@ -421,16 +448,20 @@ export const NewTaskModal = ({
                     <strong>Workload:</strong> {formData.workload}
                   </div>
                   <div>
-                    <strong>Start Date:</strong> {formatDate(formData.startDate)}
+                    <strong>Start Date:</strong>{" "}
+                    {formatDate(formData.startDate)}
                   </div>
                   <div>
                     <strong>End Date:</strong> {formatDate(formData.endDate)}
+                  </div>
+                  <div>
+                    <strong>Team:</strong> {formData.team}
                   </div>
                 </motion.div>
               </div>
             </AlertDialogHeader>
             <AlertDialogFooter className="mt-[1vw]">
-              <AlertDialogCancel 
+              <AlertDialogCancel
                 disabled={isSubmitting}
                 className="text-[0.8vw]"
               >
@@ -445,7 +476,11 @@ export const NewTaskModal = ({
                   <div className="flex items-center gap-[0.417vw]">
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                       className="w-[0.833vw] h-[0.833vw] border-[0.417vw] border-white border-t-transparent rounded-full"
                     />
                     Assigning...

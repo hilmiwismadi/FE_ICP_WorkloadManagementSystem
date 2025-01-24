@@ -34,6 +34,7 @@ interface FormData {
   workload: number;
   start_Date: string;
   end_Date: string;
+  team: string;
 }
 
 export default function CreateTaskModal({
@@ -51,6 +52,7 @@ export default function CreateTaskModal({
     workload: 0,
     start_Date: "",
     end_Date: "",
+    team: "",
   });
 
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -419,6 +421,27 @@ export default function CreateTaskModal({
                   onChange={handleInputChange}
                   className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
                 />
+              </div>
+    
+              <div className="col-span-2 space-y-[0.417vw]">
+                <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                  <Tag className="w-[0.833vw] h-[0.833vw]" />
+                  Team to be assigned
+                </label>
+                <div className="relative">
+                  <select
+                    name="team"
+                    value={formData.team}
+                    onChange={handleInputChange}
+                    className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] appearance-none focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  >
+                    <option value="">Select team...</option>
+                    <option value="Korporat 1">Korporat 1</option>
+                    <option value="Korporat 2">Korporat 2</option>
+                    <option value="Pelayanan Pelanggan">Pelayanan Pelanggan</option>
+                  </select>
+                  <ChevronDown className="absolute right-[0.833vw] top-[50%] transform -translate-y-1/2 w-[0.833vw] h-[0.833vw] pointer-events-none" />
+                </div>
               </div>
     
               <div className="col-span-2 space-y-[0.417vw]">
