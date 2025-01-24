@@ -31,50 +31,103 @@ const CustomProgressBar = ({ value }: { value: number }) => (
 );
 
 const getWeekNumber = (date: Date): number => {
-  const startDate = new Date(date.getFullYear(), 0, 1);
-  const days = Math.floor((date.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
-  return Math.ceil((days + 1) / 7);
+  const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+  const daysSinceFirstDay = Math.floor((date.getTime() - firstDayOfMonth.getTime()) / (1000 * 3600 * 24));
+  
+  // Adjust so Monday is treated as the start of the week
+  const firstDayOffset = (firstDayOfMonth.getDay() + 6) % 7; // 0 = Monday, ..., 6 = Sunday
+  return Math.ceil((daysSinceFirstDay + firstDayOffset + 1) / 7); // No Week 5 merging
 };
 
 const getMonthName = (month: number): string => {
   return new Date(2024, month).toLocaleString('default', { month: 'long' });
 };
 
+const monthOrder = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
 export default function WorkloadOverview({ tasks, currentWorkload, averageWorkload }: any) {
   const monthlyWorkloadData = React.useMemo(() => {
-    const workloadByMonth = new Map<string, Map<number, number>>();
+    const workloadByMonth = new Map<string, Map<number, { 
+      total: number,
+      ongoing: number,
+      completed: number 
+    }>>();
 
-    tasks?.forEach((task: any) => {
+    tasks?.forEach((assign: any) => {
+      const task = assign.task;
+      if (!task) return;
+      
       const startDate = new Date(task.start_Date);
       const endDate = new Date(task.end_Date);
-      const weeks = getWeekNumber(endDate) - getWeekNumber(startDate) + 1;
-      const weeklyWorkload = task.workload / weeks;
       
-      for (let i = 0; i < weeks; i++) {
-        const currentDate = new Date(startDate);
-        currentDate.setDate(startDate.getDate() + i * 7);
-        const weekNumber = getWeekNumber(currentDate);
+      // Iterate through each day between start and end date
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
         const monthYear = `${getMonthName(currentDate.getMonth())} ${currentDate.getFullYear()}`;
-
+        const weekNumber = getWeekNumber(currentDate);
+        
         if (!workloadByMonth.has(monthYear)) {
           workloadByMonth.set(monthYear, new Map());
         }
 
         const workloadMap = workloadByMonth.get(monthYear);
-        workloadMap?.set(weekNumber, (workloadMap.get(weekNumber) || 0) + weeklyWorkload);
+        if (!workloadMap?.has(weekNumber)) {
+          workloadMap?.set(weekNumber, { total: 0, ongoing: 0, completed: 0 });
+        }
+
+        // Calculate daily workload (total workload divided by total days)
+        const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
+        const dailyWorkload = task.workload / totalDays;
+
+        const currentStats = workloadMap?.get(weekNumber);
+        if (currentStats) {
+          currentStats.total += dailyWorkload;
+          if (task.status === 'Done' || task.status === 'Approved') {
+            currentStats.completed += dailyWorkload;
+          } else {
+            currentStats.ongoing += dailyWorkload;
+          }
+        }
+
+        // Move to next day
+        currentDate.setDate(currentDate.getDate() + 1);
       }
     });
 
-    return Array.from(workloadByMonth.entries()).map(([monthYear, weeklyData]) => ({
-      monthYear,
-      weeklyData: Array.from(weeklyData.entries()).map(([_, workload], index) => ({
-        week: index + 1,
-        workload: Number(workload.toFixed(2)),
-      })),
-    }));
+    // Sort months chronologically and process the data
+    return Array.from(workloadByMonth.entries())
+      .sort(([monthYearA], [monthYearB]) => {
+        const [monthA, yearA] = monthYearA.split(' ');
+        const [monthB, yearB] = monthYearB.split(' ');
+        
+        if (yearA !== yearB) {
+          return parseInt(yearA) - parseInt(yearB);
+        }
+        return monthOrder.indexOf(monthA) - monthOrder.indexOf(monthB);
+      })
+      .map(([monthYear, weeklyData]) => ({
+        monthYear,
+        weeklyData: Array.from(weeklyData.entries())
+          .sort(([weekA], [weekB]) => weekA - weekB) // Sort weeks numerically
+          .map(([week, stats]) => ({
+            week,
+            total: Number(stats.total.toFixed(2)),
+            ongoing: Number(stats.ongoing.toFixed(2)),
+            completed: Number(stats.completed.toFixed(2)),
+          })),
+      }));
   }, [tasks]);
 
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
+  // Set default month to current month
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(() => {
+    const currentDate = new Date();
+    const currentMonthYear = `${getMonthName(currentDate.getMonth())} ${currentDate.getFullYear()}`;
+    return Math.max(0, monthlyWorkloadData.findIndex(data => data.monthYear === currentMonthYear));
+  });
+
   const currentMonthData = monthlyWorkloadData[currentMonthIndex];
 
   return (
@@ -117,17 +170,39 @@ export default function WorkloadOverview({ tasks, currentWorkload, averageWorklo
               />
               <Tooltip 
                 labelFormatter={(week) => `Week ${week}`}
-                formatter={(value: number) => [`${value} hours`, "Workload"]}
+                formatter={(value: number, name: string) => [
+                  `${value} Workload Units`, 
+                  name.charAt(0).toUpperCase() + name.slice(1)
+                ]}
                 contentStyle={{ backgroundColor: '#1a1a1a', border: 'none' }}
                 labelStyle={{ color: '#fff' }}
               />
               <Line 
                 type="monotone" 
-                dataKey="workload" 
+                dataKey="total" 
+                name="Total"
                 stroke="#2563eb" 
                 strokeWidth={2}
                 dot={{ fill: '#2563eb', strokeWidth: 2 }}
                 activeDot={{ r: 6, fill: '#fff', stroke: '#2563eb' }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="ongoing" 
+                name="Ongoing"
+                stroke="#ef4444" 
+                strokeWidth={2}
+                dot={{ fill: '#ef4444', strokeWidth: 2 }}
+                activeDot={{ r: 6, fill: '#fff', stroke: '#ef4444' }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="completed" 
+                name="Completed"
+                stroke="#22c55e" 
+                strokeWidth={2}
+                dot={{ fill: '#22c55e', strokeWidth: 2 }}
+                activeDot={{ r: 6, fill: '#fff', stroke: '#22c55e' }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -165,6 +240,6 @@ export default function WorkloadOverview({ tasks, currentWorkload, averageWorklo
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>
+  );
 }

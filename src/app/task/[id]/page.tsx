@@ -190,7 +190,7 @@ export default function TaskPageId() {
               <div className="px-[1.25vw] py-[0.625vw]">
                 <div className="flex justify-between items-center mb-[0.833vw]">
                   <h3 className="text-[1.25vw] ml-[0.833vw] mt-[1.25vw] font-medium">
-                    On Going Task
+                    Task Have Been Done
                   </h3>
                   <Button
                     onClick={() => setIsModalOpen(true)}
