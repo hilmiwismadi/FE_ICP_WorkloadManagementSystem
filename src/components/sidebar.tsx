@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Users,
   ClipboardList,
+  FlagTriangleRight,
   LogOut,
   RefreshCw,
 } from "lucide-react";
@@ -76,6 +77,12 @@ const menuItems: MenuItem[] = [
     link: "/task",
     icon: ClipboardList,
     allowedRoles: ["Manager", "PIC"],
+  },
+  {
+    title: "Roadmap",
+    link: "/division-roadmap",
+    icon: FlagTriangleRight,
+    allowedRoles: ["Manager"],
   },
 ];
 
