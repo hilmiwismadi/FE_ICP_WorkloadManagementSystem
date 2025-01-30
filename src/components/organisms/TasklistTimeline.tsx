@@ -134,7 +134,7 @@ export default function CompactTaskList({
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-3 h-[85vh] overflow-y-auto rounded-b-md scrollbar-hide scrollbar-thumb-transparent">
+      <CardContent className="p-3 h-[85vh] overflow-y-auto rounded-[0.3vw] scrollbar-hide scrollbar-thumb-transparent">
         <div className="space-y-3">
           {filteredTasks.map((task) => (
             <div

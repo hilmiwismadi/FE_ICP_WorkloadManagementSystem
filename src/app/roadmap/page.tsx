@@ -149,7 +149,7 @@ export default function DivisionRoadmap({
                   selectedTask={selectedTask}
                   onTaskSelect={handleTaskSelect}
                   tasks={tasks.filter(task => 
-                    teamFilter === "all" || task.team === teamFilter // Filter tasks by team
+                    teamFilter === "all" || task.team === teamFilter
                   )}
                   statusFilter={statusFilter}
                 />

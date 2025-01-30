@@ -575,7 +575,7 @@ const TaskPage = () => {
                         className="flex items-center gap-[0.25vw] px-[0.6vw] py-[0.4vw] bg-blue-600 text-white rounded-[0.3vw] hover:bg-blue-700 transition-colors text-[0.7vw]"
                       >
                         <Plus size={16} />
-                        Create Task
+                        Assign Task
                       </button>
                     )}
                   </div>

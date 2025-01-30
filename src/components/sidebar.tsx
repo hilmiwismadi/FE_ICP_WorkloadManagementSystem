@@ -1,4 +1,3 @@
-"use client";
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,6 +12,7 @@ import {
   LayoutDashboard,
   Users,
   ClipboardList,
+  FlagTriangleRight,
   LogOut,
   RefreshCw,
 } from "lucide-react";
@@ -30,6 +30,7 @@ interface Employee {
 interface DecodedToken {
   employee_Id: string;
   role: string;
+  user_Id?: string;
 }
 
 interface MenuItem {
@@ -77,6 +78,12 @@ const menuItems: MenuItem[] = [
     icon: ClipboardList,
     allowedRoles: ["Manager", "PIC"],
   },
+  {
+    title: "Roadmap",
+    link: "/roadmap",
+    icon: FlagTriangleRight,
+    allowedRoles: ["Manager"],
+  },
 ];
 
 const Sidebar = () => {
@@ -88,6 +95,7 @@ const Sidebar = () => {
   const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const initializeSidebar = async () => {
@@ -100,6 +108,7 @@ const Sidebar = () => {
           const decodedToken = jwtDecode(token) as DecodedToken;
           setUserRole(decodedToken.role);
           setEmployeeId(decodedToken.employee_Id);
+          setUserId(decodedToken.user_Id || null);
 
           const response = await axios.get(
             `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${decodedToken.employee_Id}`
@@ -129,6 +138,19 @@ const Sidebar = () => {
   };
 
   const getFilteredMenuItems = () => {
+    const baseMenuItems = [
+      ...menuItems,
+    ];
+
+    if (userId) {
+      baseMenuItems.push({
+        title: "My Roadmap",
+        link: `/pic-roadmap/${userId}`,
+        icon: FlagTriangleRight,
+        allowedRoles: ["PIC"],
+      });
+    }
+
     if (userRole === "Employee") {
       return [{
         title: "My Tasks",
@@ -137,7 +159,7 @@ const Sidebar = () => {
         allowedRoles: ["Employee"],
       }];
     }
-    return menuItems.filter(item => item.allowedRoles.includes(userRole));
+    return baseMenuItems.filter(item => item.allowedRoles.includes(userRole));
   };
 
   const LoadingProfile = () => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/sidebar";
 import TaskTimeline from "@/components/organisms/tasks-list-calendar";
 import TaskListTimeline from "@/components/organisms/TasklistTimeline";
@@ -8,7 +8,8 @@ import { Task } from "@/components/organisms/types/tasks";
 import { TaskDetails } from "@/components/organisms/TaskDetails";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 import ProtectedRoute from "@/components/protected-route";
-import NoTasksNotification from "@/app/task-lists/NoTasksNotification";
+import { useParams } from "next/navigation";
+import NoTasksNotification from "../NoTasksNotification";
 
 interface Employee {
   employee_Id: string;
@@ -67,81 +68,107 @@ function convertApiTaskToTask(apiTask: ApiTask): Task {
   };
 }
 
-export default function TaskLists({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const resolvedParams = use(params);
+export default function PicRoadmap() {
+  const params = useParams();
+  console.log("Params:", params); // Debug log for params
+
+  // Use id instead of user_Id from params
+  const id = params?.id as string;
+
+  const [loading, setLoading] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("Ongoing");
   const [teamFilter, setTeamFilter] = useState<string>("all");
-  const [noTasksOpen, setNoTasksOpen] = useState(false);
+  const [showNoTasksModal, setShowNoTasksModal] = useState(false);
 
   useEffect(() => {
     async function fetchTasks() {
+      if (!id) {
+        console.log("No ID found in params");
+        setError("ID is required");
+        setLoading(false);
+        return;
+      }
+
       try {
-        const empId = resolvedParams.id; // Use the resolved params
+        setLoading(true);
+        setError(null);
+        console.log("Fetching tasks for ID:", id);
+
         const response = await fetch(
-          `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/emp/read/${empId}`
+          `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/user/read/${id}`,
+          {
+            headers: {
+              'Accept': 'application/json',
+            },
+          }
         );
+
+        console.log("Response status:", response.status);
+
         if (response.status === 404) {
-          setNoTasksOpen(true);
+          setTasks([]);
+          setShowNoTasksModal(true);
           return;
         }
-        if (!response.ok) throw new Error("Failed to fetch tasks");
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch tasks: ${response.statusText}`);
+        }
 
         const data = await response.json();
-        console.log("API Response:", data);
+        console.log("API Response data:", data);
 
-        // Check if data is in the expected format and handle the response structure
         const apiTasks: ApiTask[] = Array.isArray(data.data)
           ? data.data
           : data.data || [];
+        console.log("Processed API tasks:", apiTasks);
+
         const convertedTasks = apiTasks.map(convertApiTaskToTask);
+        console.log("Converted tasks:", convertedTasks);
+
         setTasks(convertedTasks);
       } catch (error) {
-        console.error("Error fetching tasks:", error);
+        console.error("Error details:", error);
+        if (error instanceof Error && error.message.includes("404")) {
+          setTasks([]);
+          setShowNoTasksModal(true);
+        } else {
+          setError(error instanceof Error ? error.message : "Failed to fetch tasks");
+        }
       } finally {
+        console.log("Setting loading to false");
         setLoading(false);
       }
     }
 
     fetchTasks();
-  }, [resolvedParams.id]);
+  }, [id]); // Watch id instead of params
 
-  const handleTaskSelect = (task: Task) => {
-    setSelectedTask(task);
-  };
-
-  const handleStatusUpdate = (
-    taskId: string,
-    newStatus: "Ongoing" | "Done" | "Approved"
-  ) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, status: newStatus } : task
-      )
-    );
-
-    if (selectedTask?.id === taskId) {
-      setSelectedTask((prev) => (prev ? { ...prev, status: newStatus } : null));
-    }
-  };
-
-  const handleStatusFilter = (status: string) => {
-    setStatusFilter(status);
-  };
+  // Early return for loading and error states
+  if (!id) {
+    return <LoadingScreen />;
+  }
 
   if (loading) {
     return <LoadingScreen />;
   }
 
+  if (error && error !== "404") {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-red-500 text-center">
+          <h2 className="text-xl font-bold mb-2">Error</h2>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ProtectedRoute>
-      <NoTasksNotification isOpen={noTasksOpen} onClose={() => setNoTasksOpen(false)} />
       <div className="flex h-screen bg-gray-200 scrollbar-hide scrollbar-thumb-transparent">
         <Sidebar />
         <div className="grid grid-cols-4 w-[80%] flex-grow overflow-auto scrollbar-hide scrollbar-thumb-transparent h-screen ml-[0.417vw] py-[1.25vw] px-[1.25vw] space-x-[1.25vw]">
@@ -150,29 +177,38 @@ export default function TaskLists({
               <div className="w-full space-y-[1.25vw]">
                 <TaskTimeline
                   selectedTask={selectedTask}
-                  onTaskSelect={handleTaskSelect}
+                  onTaskSelect={setSelectedTask}
                   tasks={tasks}
                   statusFilter={statusFilter}
                 />
                 <TaskDetails
                   selectedTask={selectedTask}
-                  onStatusUpdate={handleStatusUpdate}
+                  onStatusUpdate={(taskId, newStatus) => {
+                    setTasks(tasks.map(task => task.id === taskId ? { ...task, status: newStatus } : task));
+                    if (selectedTask?.id === taskId) {
+                      setSelectedTask(prev => (prev ? { ...prev, status: newStatus } : null));
+                    }
+                  }}
                 />
               </div>
             </div>
           </div>
           <div className="col-span-1 h-full max-w-[21.5vw]">
             <TaskListTimeline
-              onTaskSelect={handleTaskSelect}
+              onTaskSelect={setSelectedTask}
               tasks={tasks}
               statusFilter={statusFilter}
-              onStatusFilter={handleStatusFilter}
-              teamFilter="all"
-              onTeamFilter={() => {}}
+              onStatusFilter={setStatusFilter}
+              teamFilter={teamFilter}
+              onTeamFilter={setTeamFilter}
               isVisible={false}
             />
           </div>
         </div>
+        <NoTasksNotification 
+          isOpen={showNoTasksModal} 
+          onClose={() => setShowNoTasksModal(false)} 
+        />
       </div>
     </ProtectedRoute>
   );
