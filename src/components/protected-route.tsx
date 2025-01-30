@@ -62,6 +62,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   ): boolean => {
     const { role, employee_Id } = userData;
 
+    if (path === "/roadmap") {
+      return role === "Manager";
+    }
+
     if (role === "Manager") {
       const isTaskListPath = path.startsWith("/task-lists/");
       const isEditProfilePath = path.startsWith("/edit-profile/");
@@ -112,6 +116,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         return;
       }
 
+      const timeout = setTimeout(() => {
+        setIsLoading(false);
+        router.push("/");
+      }, 10000);
+
       try {
         const decoded = jwtDecode<UserData>(token);
         const currentTime = Date.now() / 1000;
@@ -147,6 +156,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       } catch (error) {
         Cookies.remove("auth_token");
         router.push("/");
+      } finally {
+        clearTimeout(timeout);
       }
     };
 

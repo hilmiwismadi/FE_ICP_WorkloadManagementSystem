@@ -80,7 +80,7 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "Roadmap",
-    link: "/division-roadmap",
+    link: "/roadmap",
     icon: FlagTriangleRight,
     allowedRoles: ["Manager"],
   },
