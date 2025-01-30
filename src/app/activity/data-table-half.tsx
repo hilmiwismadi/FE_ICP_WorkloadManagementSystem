@@ -33,8 +33,8 @@ import {
 
 // WorkloadStatusBar Component
 const WorkloadStatusBar = ({ value }: { value: number }) => {
-  const normalize = value / 15; // Normalize to percentage based on max workload of 15
-  const percentage = normalize * 100;
+  const percentage = Math.round((value / 10.7) * 100);
+
 
   const getColor = () => {
     if (percentage >= 80) return "bg-red-500";
@@ -212,7 +212,7 @@ export function DataTableHalf<TData, TValue>({
                         } overflow-hidden`}
                       >
                         <div>
-                          {cell.column.id === "workload" ? (
+                          {cell.column.id === "mcda" ? (
                             <WorkloadStatusBar
                               value={cell.getValue() as number}
                             />

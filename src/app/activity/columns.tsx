@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export type TaskData = {
   description: string;
   type: string;
-  workload: number;
+  mcda: number;
   start_date: Date;
   end_date: Date;
   status: string;
@@ -71,7 +71,7 @@ export const columns: ColumnDef<TaskData>[] = [
     cell: Cell
   },
   {
-    accessorKey: "workload",
+    accessorKey: "mcda",
     header: ({ column }) => {
       return (
         <Button
