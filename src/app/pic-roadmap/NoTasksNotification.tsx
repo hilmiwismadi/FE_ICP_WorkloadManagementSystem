@@ -34,7 +34,7 @@ const NoTasksNotification: React.FC<{ isOpen: boolean; onClose: () => void }> = 
           <p className="text-center text-gray-600">
             You currently don&apos;t have any tasks assigned to any employee. You can assign a task by clicking the button below.
           </p>
-          <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md">
+          <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
             <Link href="/task" className="w-full h-full flex items-center justify-center">
               Assign Task
             </Link>

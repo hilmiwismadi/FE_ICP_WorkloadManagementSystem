@@ -24,6 +24,7 @@ interface UserData {
   image: string;
   iat: number;
   exp: number;
+  team: string; 
 }
 
 const Login = () => {
@@ -151,7 +152,7 @@ const Login = () => {
         return;
       }
 
-      const token = data.succes.accesToken;
+      const token = data.success.accessToken;
 
       try {
         const userData = jwtDecode<UserData>(token);

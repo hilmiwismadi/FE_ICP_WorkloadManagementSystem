@@ -8,6 +8,7 @@ import { Task } from "@/components/organisms/types/tasks";
 import { TaskDetails } from "@/components/organisms/TaskDetails";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 import ProtectedRoute from "@/components/protected-route";
+import NoTasksNotification from "@/app/task-lists/NoTasksNotification";
 
 interface Employee {
   employee_Id: string;
@@ -77,6 +78,7 @@ export default function TaskLists({
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("Ongoing");
   const [teamFilter, setTeamFilter] = useState<string>("all");
+  const [noTasksOpen, setNoTasksOpen] = useState(false);
 
   useEffect(() => {
     async function fetchTasks() {
@@ -85,6 +87,10 @@ export default function TaskLists({
         const response = await fetch(
           `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/emp/read/${empId}`
         );
+        if (response.status === 404) {
+          setNoTasksOpen(true);
+          return;
+        }
         if (!response.ok) throw new Error("Failed to fetch tasks");
 
         const data = await response.json();
@@ -135,6 +141,7 @@ export default function TaskLists({
 
   return (
     <ProtectedRoute>
+      <NoTasksNotification isOpen={noTasksOpen} onClose={() => setNoTasksOpen(false)} />
       <div className="flex h-screen bg-gray-200 scrollbar-hide scrollbar-thumb-transparent">
         <Sidebar />
         <div className="grid grid-cols-4 w-[80%] flex-grow overflow-auto scrollbar-hide scrollbar-thumb-transparent h-screen ml-[0.417vw] py-[1.25vw] px-[1.25vw] space-x-[1.25vw]">
