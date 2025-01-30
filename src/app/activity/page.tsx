@@ -127,34 +127,34 @@ export default function ActivityPage() {
       setIsLoading(true);
       if (!team) return;
 
-      // Fetch employees for specific team
-      const employeesResponse = await axios.get(
+      // Fetch employees for specific team (for top/bottom workload cards)
+      const teamEmployeesResponse = await axios.get(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/team/${encodeURIComponent(team)}`
+      );
+
+      // Fetch all employees for division metrics
+      const allEmployeesResponse = await axios.get(
+        "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
       );
       
       const tasksResponse = await axios.get(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read"
       );
 
-      const employeesResult = await employeesResponse.data;
+      const teamEmployeesResult = await teamEmployeesResponse.data;
+      const allEmployeesResult = await allEmployeesResponse.data;
       const tasksResult = await tasksResponse.data;
 
-      const employeesData = employeesResult.data || employeesResult;
+      const teamEmployeesData = teamEmployeesResult.data || teamEmployeesResult;
+      const allEmployeesData = allEmployeesResult.data || allEmployeesResult;
       const tasksData = tasksResult.data || tasksResult;
 
-      if (!Array.isArray(employeesData)) {
-        throw new Error(
-          `Expected employees data to be an array, got: ${typeof employeesData}`
-        );
+      if (!Array.isArray(teamEmployeesData) || !Array.isArray(allEmployeesData)) {
+        throw new Error("Invalid data format received from API");
       }
 
-      if (!Array.isArray(tasksData)) {
-        throw new Error(
-          `Expected tasks data to be an array, got: ${typeof tasksData}`
-        );
-      }
-
-      const processedEmployees = employeesData.map((emp: Employee) => {
+      // Process team employees for top/bottom cards
+      const processedTeamEmployees = teamEmployeesData.map((emp: Employee) => {
         const employeeTasks = tasksData.filter(
           (task: Task) =>
             task.employee_Id === emp.employee_Id && task.status === "Ongoing"
@@ -167,24 +167,25 @@ export default function ActivityPage() {
         };
       });
 
-      const sortedEmployees = [...processedEmployees].sort(
+      const sortedEmployees = [...processedTeamEmployees].sort(
         (a, b) => (b.workloadPercentage || 0) - (a.workloadPercentage || 0)
       );
 
       setTopEmployees(sortedEmployees.slice(0, 5));
       setBottomEmployees([...sortedEmployees].reverse().slice(0, 5));
 
-      const divisionData: { [key: string]: number[] } =
-        processedEmployees.reduce(
-          (acc: { [key: string]: number[] }, emp: Employee) => {
-            if (!acc[emp.team]) {
-              acc[emp.team] = [];
-            }
-            acc[emp.team].push(emp.workloadPercentage || 0);
-            return acc;
-          },
-          {}
-        );
+      // Process all employees for division metrics
+      const divisionData: { [key: string]: number[] } = allEmployeesData.reduce(
+        (acc: { [key: string]: number[] }, emp: Employee) => {
+          if (!acc[emp.team]) {
+            acc[emp.team] = [];
+          }
+          const workloadPercentage = Math.round((emp.current_Workload / 15) * 100);
+          acc[emp.team].push(workloadPercentage);
+          return acc;
+        },
+        {}
+      );
 
       const divisionAverages = Object.entries(divisionData)
         .map(([name, workloads], index) => ({
