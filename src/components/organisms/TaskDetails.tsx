@@ -202,7 +202,7 @@ export const TaskDetails = ({
 
     try {
       const response = await fetch(
-        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/edit/${taskData.id}`,
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/edit/status/${taskData.id}`,
         {
           method: "PUT",
           headers: {
