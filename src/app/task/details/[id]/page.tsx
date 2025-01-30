@@ -18,10 +18,25 @@ import {
   Send,
   CheckCheck,
   RefreshCw,
+  ThumbsUp,
+  ThumbsDown,
+  XCircle,
 } from "lucide-react"; 
 import { Task, Employee } from "@/app/task/types";
 import { io } from "socket.io-client";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogOverlay,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export interface Comment {
   comment_Id: string;
@@ -70,6 +85,14 @@ const TaskDetailPage = () => {
   const [hoverCardPosition, setHoverCardPosition] = useState<Record<string, string>>({});
   const [isMessageSent, setIsMessageSent] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showFeedback, setShowFeedback] = useState<{
+    show: boolean;
+    type: 'success' | 'error';
+    message: string;
+  }>({ show: false, type: 'success', message: '' });
 
   useEffect(() => {
     const authStorage = Cookies.get("auth_token");
@@ -228,13 +251,13 @@ const TaskDetailPage = () => {
     getEmployeeImage();
   }, [getEmployeeImage]);
 
-  const handleAddActivity = async () => {
+  const handleAddActivity = async (activity: Comment) => {
     if (!newActivity.trim() || isSending) return;
 
     try {
       setIsSending(true);
       
-      const normalizedType = activityType.charAt(0).toUpperCase() + activityType.slice(1).toLowerCase();
+      const normalizedType = activity.type.charAt(0).toUpperCase() + activity.type.slice(1).toLowerCase();
       
       const response = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/add/${taskId}`,
@@ -244,8 +267,8 @@ const TaskDetailPage = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            content: newActivity,
-            user_Id: user?.user_Id,
+            content: activity.content,
+            user_Id: activity.user_Id,
             task_Id: taskId,
             type: normalizedType,
           }),
@@ -264,8 +287,8 @@ const TaskDetailPage = () => {
         task_Id: taskId,
         type: normalizedType,
         user: {
-          email: user?.email,
-          role: user?.role,
+          email: activity.user?.email,
+          role: activity.user?.role,
         },
       });
 
@@ -304,7 +327,7 @@ const TaskDetailPage = () => {
     return (
       <div className="space-y-4">
         <AnimatePresence mode="popLayout">
-          {activities.map((activity, index) => (
+          {activities.map((activity) => (
             <motion.div
               key={activity.id}
               layout
@@ -322,7 +345,7 @@ const TaskDetailPage = () => {
                 >
                   {getActivityIcon(activity.type)}
                 </motion.div>
-                {index !== activities.length - 1 && (
+                {activities.indexOf(activity) !== activities.length - 1 && (
                   <div className="absolute top-10 left-1/2 bottom-0 w-0.5 bg-gray-200 -ml-[1px]" />
                 )}
               </div>
@@ -450,6 +473,134 @@ const TaskDetailPage = () => {
     });
   };
 
+  const handleApproveClick = () => {
+    if (task?.status !== "Done" || isUpdatingStatus) return;
+    setShowApproveDialog(true);
+  };
+
+  const handleRejectClick = () => {
+    if (task?.status !== "Done") return;
+    setShowRejectDialog(true);
+  };
+
+  const handleConfirmApprove = async () => {
+    try {
+      setIsUpdatingStatus(true);
+      const response = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/edit/status/${taskId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...task,
+            status: "Approved"
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update task status");
+      }
+
+      const updatedTask = await response.json();
+      setTask(prev => ({ ...prev, ...updatedTask.data }));
+
+      // Add approval activity
+      const approvalActivity: Comment = {
+        comment_Id: "",
+        content: "Task has been approved",
+        created_at: new Date().toISOString(),
+        type: "Comment",
+        user_Id: user?.user_Id,
+        user: {
+          email: user?.email,
+          role: user?.role,
+        },
+      };
+
+      // Emit the approval activity through the socket
+      socket.emit("comment", {
+        ...approvalActivity,
+        task_Id: taskId,
+        user: {
+          email: user?.email,
+          role: user?.role,
+        },
+      });
+
+      await handleAddActivity(approvalActivity);
+      setShowApproveDialog(false);
+      setShowFeedback({
+        show: true,
+        type: 'success',
+        message: 'Task approved successfully!'
+      });
+    } catch (error) {
+      console.error("Error approving task:", error);
+      setShowFeedback({
+        show: true,
+        type: 'error',
+        message: 'Failed to approve task. Please try again.'
+      });
+    } finally {
+      setIsUpdatingStatus(false);
+      setTimeout(() => {
+        setShowFeedback(prev => ({ ...prev, show: false }));
+      }, 3000);
+    }
+  };
+
+  const handleConfirmReject = async () => {
+    try {
+      // Log the click (placeholder for future API implementation)
+      console.log("Task rejected successfully");
+
+      // Add rejection activity
+      const rejectionActivity: Comment = {
+        comment_Id: "",
+        content: "Task has been rejected and sent back for revision",
+        created_at: new Date().toISOString(),
+        type: "Comment",
+        user_Id: user?.user_Id,
+        user: {
+          email: user?.email,
+          role: user?.role,
+        },
+      };
+
+      // Emit the rejection activity through the socket
+      socket.emit("comment", {
+        ...rejectionActivity,
+        task_Id: taskId,
+        user: {
+          email: user?.email,
+          role: user?.role,
+        },
+      });
+
+      await handleAddActivity(rejectionActivity);
+      setShowRejectDialog(false);
+      setShowFeedback({
+        show: true,
+        type: 'success',
+        message: 'Task rejected successfully!'
+      });
+    } catch (error) {
+      console.error("Error rejecting task:", error);
+      setShowFeedback({
+        show: true,
+        type: 'error',
+        message: 'Failed to reject task. Please try again.'
+      });
+    } finally {
+      setTimeout(() => {
+        setShowFeedback(prev => ({ ...prev, show: false }));
+      }, 3000);
+    }
+  };
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -485,33 +636,61 @@ const TaskDetailPage = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-1">
-                    {task?.priority && (
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs ${
-                          task.priority === "High"
-                            ? "bg-red-100 text-red-800"
-                            : task.priority === "Medium"
-                            ? "bg-orange-100 text-orange-800"
-                            : "bg-gray-100 text-gray-800"
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="flex gap-1">
+                      {task?.priority && (
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs ${
+                            task.priority === "High"
+                              ? "bg-red-100 text-red-800"
+                              : task.priority === "Medium"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {task.priority}
+                        </span>
+                      )}
+                      {task?.status && (
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs ${
+                            task.status === "Ongoing"
+                              ? "bg-blue-100 text-blue-800"
+                              : task.status === "Done"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {task.status}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <motion.button
+                        onClick={handleApproveClick}
+                        disabled={task?.status !== "Done" || isUpdatingStatus}
+                        className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
+                          task?.status === "Done"
+                            ? "bg-green-500 hover:bg-green-600 text-white"
+                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
                         }`}
                       >
-                        {task.priority}
-                      </span>
-                    )}
-                    {task?.status && (
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs ${
-                          task.status === "Ongoing"
-                            ? "bg-blue-100 text-blue-800"
-                            : task.status === "Done"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-green-100 text-green-800"
+                        <ThumbsUp className="w-3 h-3" />
+                        Approve
+                      </motion.button>
+                      <motion.button
+                        onClick={handleRejectClick}
+                        disabled={task?.status !== "Done"}
+                        className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
+                          task?.status === "Done"
+                            ? "bg-red-500 hover:bg-red-600 text-white"
+                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
                         }`}
                       >
-                        {task.status}
-                      </span>
-                    )}
+                        <ThumbsDown className="w-3 h-3" />
+                        Reject
+                      </motion.button>
+                    </div>
                   </div>
                 </div>
 
@@ -549,12 +728,34 @@ const TaskDetailPage = () => {
                     className="flex-1 px-[0.5vw] py-[0.3vw] text-[0.8vw] border rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-300"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
-                        handleAddActivity();
+                        handleAddActivity({
+                          comment_Id: "",
+                          content: newActivity,
+                          created_at: "",
+                          type: activityType,
+                          user_Id: user?.user_Id,
+                          user: {
+                            email: user?.email,
+                            role: user?.role,
+                          },
+                        });
                       }
                     }}
                   />
                   <motion.button
-                    onClick={handleAddActivity}
+                    onClick={() => {
+                      handleAddActivity({
+                        comment_Id: "",
+                        content: newActivity,
+                        created_at: "",
+                        type: activityType,
+                        user_Id: user?.user_Id,
+                        user: {
+                          email: user?.email,
+                          role: user?.role,
+                        },
+                      });
+                    }}
                     disabled={!newActivity.trim() || isSending}
                     className="px-[0.5vw] py-[0.3vw] bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
                   >
@@ -595,6 +796,136 @@ const TaskDetailPage = () => {
                 <TimelineComponent activities={displayActivities} />
               </div>
             </div>
+
+            {/* Approve Dialog */}
+            <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+              <AlertDialogOverlay className="bg-black/50 fixed inset-0" />
+              <AlertDialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[30vw] max-w-none z-50 bg-white rounded-[0.8vw] p-[1.5vw] shadow-lg">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: "1vw" }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: "1vw" }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-[1.5vw] font-semibold mb-[1vw]">
+                      Confirm Task Approval
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-[1vw]">
+                      Are you sure you want to approve this task? This action cannot be undone.
+                    </AlertDialogDescription>
+                    <motion.div
+                      className="mt-[1vw] p-[1vw] bg-gray-50 rounded-[0.4vw] text-[0.9vw]"
+                      initial={{ y: "1vw", opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      <div className="space-y-[0.5vw]">
+                        <div><strong>Task:</strong> {task?.title}</div>
+                        <div><strong>Status:</strong> {task?.status}</div>
+                        <div><strong>Priority:</strong> {task?.priority}</div>
+                      </div>
+                    </motion.div>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="mt-[1vw]">
+                    <AlertDialogCancel disabled={isUpdatingStatus} className="text-[0.8vw]">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleConfirmApprove}
+                      disabled={isUpdatingStatus}
+                      className="bg-green-600 hover:bg-green-700 text-[0.8vw]"
+                    >
+                      {isUpdatingStatus ? (
+                        <div className="flex items-center gap-[0.417vw]">
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="w-[0.833vw] h-[0.833vw] border-[0.417vw] border-white border-t-transparent rounded-full"
+                          />
+                          Approving...
+                        </div>
+                      ) : (
+                        "Confirm Approval"
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </motion.div>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Reject Dialog */}
+            <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+              <AlertDialogOverlay className="bg-black/50 fixed inset-0" />
+              <AlertDialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[30vw] max-w-none z-50 bg-white rounded-[0.8vw] p-[1.5vw] shadow-lg">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: "1vw" }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: "1vw" }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-[1.5vw] font-semibold mb-[1vw]">
+                      Confirm Task Rejection
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-[1vw]">
+                      Are you sure you want to reject this task? The task will be sent back for revision.
+                    </AlertDialogDescription>
+                    <motion.div
+                      className="mt-[1vw] p-[1vw] bg-gray-50 rounded-[0.4vw] text-[0.9vw]"
+                      initial={{ y: "1vw", opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      <div className="space-y-[0.5vw]">
+                        <div><strong>Task:</strong> {task?.title}</div>
+                        <div><strong>Status:</strong> {task?.status}</div>
+                        <div><strong>Priority:</strong> {task?.priority}</div>
+                      </div>
+                    </motion.div>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="mt-[1vw]">
+                    <AlertDialogCancel className="text-[0.8vw]">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleConfirmReject}
+                      className="bg-red-600 hover:bg-red-700 text-[0.8vw]"
+                    >
+                      Confirm Rejection
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </motion.div>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Feedback Alert */}
+            <AnimatePresence>
+              {showFeedback.show && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="fixed top-4 right-4 z-50"
+                >
+                  <Alert className={`w-[20vw] ${showFeedback.type === 'success' ? 'bg-green-50' : 'bg-red-50'}`}>
+                    <div className="flex items-center gap-2">
+                      {showFeedback.type === 'success' ? (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-red-600" />
+                      )}
+                      <AlertTitle className={`text-[0.9vw] ${showFeedback.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
+                        {showFeedback.type === 'success' ? 'Success' : 'Error'}
+                      </AlertTitle>
+                    </div>
+                    <AlertDescription className="text-[0.8vw] mt-2">
+                      {showFeedback.message}
+                    </AlertDescription>
+                  </Alert>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
