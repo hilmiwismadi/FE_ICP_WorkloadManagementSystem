@@ -67,12 +67,12 @@ export default function ProfilePage() {
           const employees = response.data.data;
           const totalWorkload = employees.reduce(
             (sum: number, emp: Employee) => {
-              const workloadPercentage = (emp.current_Workload / 15) * 100;
+              const workloadPercentage = (emp.current_Workload / 10.7) * 100;
               return sum + workloadPercentage;
             },
             0
           );
-          console.log(totalWorkload);
+
           const calculatedAverage = totalWorkload / employees.length;
           setAverageWorkload(Math.round(calculatedAverage));
         }
@@ -189,7 +189,7 @@ export default function ProfilePage() {
                       <WorkloadOverview
                         tasks={employee.assigns}
                         currentWorkload={Math.round(
-                          (employee.current_Workload / 15) * 100
+                          (employee.current_Workload / 10.7) * 100
                         )}
                         averageWorkload={averageWorkload}
                         className="rounded-[1vw] shadow-sm p-[1.25vw] h-full"
