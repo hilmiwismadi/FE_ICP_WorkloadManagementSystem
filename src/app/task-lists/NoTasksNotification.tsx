@@ -6,7 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import Link from 'next/link';
 
 const NoTasksNotification: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   return (
@@ -32,13 +31,8 @@ const NoTasksNotification: React.FC<{ isOpen: boolean; onClose: () => void }> = 
             </svg>
           </div>
           <p className="text-center text-gray-600">
-            You currently don&apos;t have any tasks assigned to any employee. You can assign a task by clicking the button below.
+            You currently don&apos;t have any tasks assigned. New tasks will appear here once they are assigned to you.
           </p>
-          <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md">
-            <Link href="/task" className="w-full h-full flex items-center justify-center">
-              Assign Task
-            </Link>
-          </button>
         </div>
       </DialogContent>
     </Dialog>
