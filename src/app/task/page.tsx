@@ -25,6 +25,7 @@ interface AuthUser {
   email: string;
   role: string;
   employee_Id: string;
+  team: string;
 }
 
 interface Employee {
@@ -64,11 +65,12 @@ const TaskPage = () => {
       try {
         const userData: AuthUser = jwtDecode(authStorage);
         setUser(userData);
+        fetchTasks(userData.team);
       } catch (error) {
         console.error("Error decoding auth token:", error);
       }
     }
-    Promise.all([fetchTasks(), fetchEmployees()]);
+    fetchEmployees();
   }, []);
 
   useEffect(() => {
@@ -102,10 +104,10 @@ const TaskPage = () => {
     setCurrentPage(1);
   }, [searchQuery, tasks, priorityFilter, statusFilter, dateSort]);
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (team: string) => {
     try {
       setLoading(true);
-      const fetchedTasks = await taskService.getAllTasks();
+      const fetchedTasks = await taskService.getTasksByTeam(team);
       if (fetchedTasks?.data && Array.isArray(fetchedTasks.data)) {
         setTasks(fetchedTasks.data);
         setFilteredTasks(fetchedTasks.data);
@@ -115,6 +117,7 @@ const TaskPage = () => {
       }
       console.log(fetchedTasks);
     } catch (error) {
+      console.error("Error fetching tasks:", error);
       setTasks([]);
       setFilteredTasks([]);
     } finally {
@@ -660,7 +663,7 @@ const TaskPage = () => {
               userId={user?.user_Id || ""}
               onClose={() => setIsModalOpen(false)}
               onSuccess={() => {
-                fetchTasks();
+                fetchTasks(user?.team || "");
                 setIsModalOpen(false);
               }}
             />
