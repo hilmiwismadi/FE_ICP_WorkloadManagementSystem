@@ -8,6 +8,8 @@ import { DataTable } from "./data-table";
 import ProtectedRoute from "@/components/protected-route";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 import { AddEmployeeModal } from "@/components/organisms/AddEmployeeModal";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
 interface ApiEmployeeData {
   employee_Id: string;
@@ -25,12 +27,18 @@ interface ApiEmployeeData {
 export default function Dashboard() {
   const [data, setData] = useState<EmployeeData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [team, setTeam] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
+      if (!team) return;
+      
+      console.log("Full decoded token:", jwtDecode(Cookies.get("auth_token") || ""));
+      console.log("Team from token:", team);
+      
       const response = await axios.get(
-        "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/team/${encodeURIComponent(team)}`
       );
   
       const result = response.data;
@@ -64,8 +72,24 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchData();
+    const authStorage = Cookies.get("auth_token");
+    if (authStorage) {
+      try {
+        const userData: { team: string } = jwtDecode(authStorage);
+        console.log("Decoded token data:", userData);
+        console.log("Team from decoded token:", userData.team);
+        setTeam(userData.team);
+      } catch (error) {
+        console.error("Error decoding auth token:", error);
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    if (team) {
+      fetchData();
+    }
+  }, [team]);
 
   if (isLoading && !data.length) {
     return <LoadingScreen />;

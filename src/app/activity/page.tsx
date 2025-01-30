@@ -17,6 +17,9 @@ import {
 } from "recharts";
 import Sidebar from "@/components/sidebar";
 import ProtectedRoute from "@/components/protected-route";
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+import Cookies from "js-cookie";
 
 interface Employee {
   employee_Id: string;
@@ -40,6 +43,16 @@ interface DivisionMetrics {
   name: string;
   averageWorkload: number;
   color: string;
+}
+
+interface JWTPayload {
+  user_Id: string;
+  email: string;
+  role: string;
+  employee_Id: string;
+  team: string;
+  iat: number;
+  exp: number;
 }
 
 const EmployeeMetricsCard = ({
@@ -98,6 +111,7 @@ export default function ActivityPage() {
   const [divisionMetrics, setDivisionMetrics] = useState<DivisionMetrics[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [team, setTeam] = useState<string | null>(null);
 
   const getBarColor = (index: number) => {
     const colors = ["#22c55e", "#eab308", "#ef4444"];
@@ -108,97 +122,118 @@ export default function ActivityPage() {
     router.push(`/activity/${employeeId}`);
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const [employeesResponse, tasksResponse] = await Promise.all([
-          fetch(
-            "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
-          ),
-          fetch(
-            "https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read"
-          ),
-        ]);
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      if (!team) return;
 
-        const employeesResult = await employeesResponse.json();
-        const tasksResult = await tasksResponse.json();
+      // Fetch employees for specific team (for top/bottom workload cards)
+      const teamEmployeesResponse = await axios.get(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/team/${encodeURIComponent(team)}`
+      );
 
-        const employeesData = employeesResult.data || employeesResult;
-        const tasksData = tasksResult.data || tasksResult;
+      // Fetch all employees for division metrics
+      const allEmployeesResponse = await axios.get(
+        "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
+      );
+      
+      const tasksResponse = await axios.get(
+        "https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read"
+      );
 
-        if (!Array.isArray(employeesData)) {
-          throw new Error(
-            `Expected employees data to be an array, got: ${typeof employeesData}`
-          );
-        }
+      const teamEmployeesResult = await teamEmployeesResponse.data;
+      const allEmployeesResult = await allEmployeesResponse.data;
+      const tasksResult = await tasksResponse.data;
 
-        if (!Array.isArray(tasksData)) {
-          throw new Error(
-            `Expected tasks data to be an array, got: ${typeof tasksData}`
-          );
-        }
+      const teamEmployeesData = teamEmployeesResult.data || teamEmployeesResult;
+      const allEmployeesData = allEmployeesResult.data || allEmployeesResult;
+      const tasksData = tasksResult.data || tasksResult;
 
-        const processedEmployees = employeesData.map((emp: Employee) => {
-          const employeeTasks = tasksData.filter(
-            (task: Task) =>
-              task.employee_Id === emp.employee_Id && task.status === "Ongoing"
-          );
-
-          return {
-            ...emp,
-            taskCount: employeeTasks.length,
-            workloadPercentage: Math.round((emp.current_Workload / 15) * 100),
-          };
-        });
-
-        const sortedEmployees = [...processedEmployees].sort(
-          (a, b) => (b.workloadPercentage || 0) - (a.workloadPercentage || 0)
-        );
-
-        setTopEmployees(sortedEmployees.slice(0, 5));
-        setBottomEmployees([...sortedEmployees].reverse().slice(0, 5));
-
-        const divisionData: { [key: string]: number[] } =
-          processedEmployees.reduce(
-            (acc: { [key: string]: number[] }, emp: Employee) => {
-              if (!acc[emp.team]) {
-                acc[emp.team] = [];
-              }
-              acc[emp.team].push(emp.workloadPercentage || 0);
-              return acc;
-            },
-            {}
-          );
-
-        const divisionAverages = Object.entries(divisionData)
-          .map(([name, workloads], index) => ({
-            name,
-            averageWorkload: Math.round(
-              workloads.reduce((sum, val) => sum + val, 0) / workloads.length
-            ),
-            color: getBarColor(index),
-          }))
-          .sort((a, b) => b.averageWorkload - a.averageWorkload);
-
-        setDivisionMetrics(divisionAverages);
-        setError(null);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError(
-          error instanceof Error
-            ? error.message
-            : "An error occurred while fetching data"
-        );
-      } finally {
-        setIsLoading(false);
+      if (!Array.isArray(teamEmployeesData) || !Array.isArray(allEmployeesData)) {
+        throw new Error("Invalid data format received from API");
       }
-    };
 
-    fetchData();
+      // Process team employees for top/bottom cards
+      const processedTeamEmployees = teamEmployeesData.map((emp: Employee) => {
+        const employeeTasks = tasksData.filter(
+          (task: Task) =>
+            task.employee_Id === emp.employee_Id && task.status === "Ongoing"
+        );
+
+        return {
+          ...emp,
+          taskCount: employeeTasks.length,
+          workloadPercentage: Math.round((emp.current_Workload / 15) * 100),
+        };
+      });
+
+      const sortedEmployees = [...processedTeamEmployees].sort(
+        (a, b) => (b.workloadPercentage || 0) - (a.workloadPercentage || 0)
+      );
+
+      setTopEmployees(sortedEmployees.slice(0, 5));
+      setBottomEmployees([...sortedEmployees].reverse().slice(0, 5));
+
+      // Process all employees for division metrics
+      const divisionData: { [key: string]: number[] } = allEmployeesData.reduce(
+        (acc: { [key: string]: number[] }, emp: Employee) => {
+          if (!acc[emp.team]) {
+            acc[emp.team] = [];
+          }
+          const workloadPercentage = Math.round((emp.current_Workload / 15) * 100);
+          acc[emp.team].push(workloadPercentage);
+          return acc;
+        },
+        {}
+      );
+
+      const divisionAverages = Object.entries(divisionData)
+        .map(([name, workloads], index) => ({
+          name,
+          averageWorkload: Math.round(
+            workloads.reduce((sum, val) => sum + val, 0) / workloads.length
+          ),
+          color: getBarColor(index),
+        }))
+        .sort((a, b) => b.averageWorkload - a.averageWorkload);
+
+      setDivisionMetrics(divisionAverages);
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while fetching data"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Effect to get team from auth token
+  useEffect(() => {
+    const authStorage = Cookies.get("auth_token");
+    if (authStorage) {
+      try {
+        const userData: JWTPayload = jwtDecode(authStorage);
+        console.log("Decoded token data:", userData);
+        console.log("Team from decoded token:", userData.team);
+        setTeam(userData.team);
+      } catch (error) {
+        console.error("Error decoding auth token:", error);
+      }
+    }
   }, []);
 
-  if (isLoading) {
+  // Effect to fetch data when team is available
+  useEffect(() => {
+    if (team) {
+      fetchData();
+    }
+  }, [team]);
+
+  if (isLoading && !divisionMetrics.length) {
     return <LoadingScreen />;
   }
 

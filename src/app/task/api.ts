@@ -7,6 +7,11 @@ export const taskService = {
       const response = await axios.get(`${BASE_URL}/task/read`);
       return response.data;
     },
+
+    getTasksByTeam: async (team: string) => {
+      const response = await axios.get(`${BASE_URL}/task/read/team/${encodeURIComponent(team)}`);
+      return response.data;
+    },
   
     getTasksByEmployee: async (empId: string) => {
       const response = await axios.get(`${BASE_URL}/task/read/${empId}`);
