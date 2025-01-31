@@ -130,14 +130,14 @@ const TaskDetailPage = () => {
     socket.on("comment", async (newComment: Comment) => {
       setComments((prev) => [...prev, newComment]);
 
-      const imageUrl = await getEmployeeImage(newComment.user_Id);
+      const imageUrl = await getEmployeeImage(newComment.user?.email);
       const newTimelineActivity: TimelineActivity = {
         id: newComment.comment_Id,
         type: newComment.type,
         content: newComment.content,
         user: newComment.user?.email || "Unknown User",
         timestamp: newComment.created_at,
-        userImage: imageUrl,
+        userImage: getImageUrl(imageUrl),
       };
 
       setActivities((prev) => [...prev, newTimelineActivity]);
@@ -205,7 +205,7 @@ const TaskDetailPage = () => {
             content: comment.content,
             user: comment.user?.email || "Unknown User",
             timestamp: comment.created_at,
-            userImage: await getEmployeeImage(comment.user_Id),
+            userImage: await getEmployeeImage(comment.user?.email),
           }))
         );
 
