@@ -157,6 +157,7 @@ export default function TaskLists({
                 <TaskDetails
                   selectedTask={selectedTask}
                   onStatusUpdate={handleStatusUpdate}
+                  onClose={() => setSelectedTask(null)}
                 />
               </div>
             </div>
