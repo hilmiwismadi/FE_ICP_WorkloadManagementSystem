@@ -408,7 +408,16 @@ export const TaskDetails = ({
         >
           <X className="w-5 h-5" />
         </button>
-        <h3 className="font-semibold text-lg mb-4">{taskData.title}</h3>
+        <div className="flex flex-row items-center justify-between mb-[1vw] mr-[2vw]">
+          <h3 className="font-semibold text-lg">{taskData.title}</h3>
+          <Button
+                variant="outline"
+                onClick={() => router.push(`/task/details/${taskData.id}`)}
+                className="px-4 py-2 text-blue-600 border-blue-600 hover:bg-blue-50"
+              >
+                See Details
+              </Button>
+        </div>
 
         <div className="grid grid-cols-4 gap-6">
           <div className="col-span-2">
