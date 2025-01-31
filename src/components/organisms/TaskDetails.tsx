@@ -36,14 +36,10 @@ interface Employee {
   employee_Id: string;
   name: string;
   image?: string;
-  email?: string;
   team?: string;
   skill?: string;
   phone?: string;
   current_Workload: number;
-  users?: Array<{
-    email: string;
-  }>;
 }
 
 interface Task {
@@ -59,6 +55,10 @@ interface Task {
     employee_Id: string;
     employee: Employee;
   }>;
+}
+
+interface TaskAssign {
+  employee: Employee; // Assuming Employee is already defined
 }
 
 interface TaskDetailsProps {
@@ -113,7 +113,6 @@ export const TaskDetails = ({
   const [hoverCardPosition, setHoverCardPosition] = useState<
     Record<string, string>
   >({});
-  const [employees, setEmployees] = useState<Employee[]>([]);
   const [taskData, setTaskData] = useState<Task | null>(initialTask);
   const [showFeedback, setShowFeedback] = useState<string | null>(null);
   const [statusUpdateResult, setStatusUpdateResult] = useState<{
@@ -132,7 +131,6 @@ export const TaskDetails = ({
           `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${initialTask.id}`
         );
         const result = await response.json();
-        console.log("Task API Response:", result); // Debug log
 
         if (result.data) {
           // Transform the data to match our Task interface
@@ -146,7 +144,6 @@ export const TaskDetails = ({
             assigns: result.data.assigns || [],
           };
           setTaskData(transformedTask);
-          console.log("Transformed task data:", transformedTask); // Debug log
         }
       } catch (error) {
         console.error("Error fetching task details:", error);
@@ -155,39 +152,8 @@ export const TaskDetails = ({
       }
     };
 
-    const fetchEmployees = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(
-          "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
-        );
-        const result = await response.json();
-
-        if (result.data && Array.isArray(result.data)) {
-          // Format the image URLs for each employee
-          const formattedEmployees = result.data.map((employee: any) => ({
-            ...employee,
-            image: getImageUrl(employee.image),
-          }));
-          setEmployees(formattedEmployees);
-          console.log("Stored employees:", formattedEmployees);
-        }
-      } catch (error) {
-        console.error("Error fetching employees:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchTaskDetails();
-    fetchEmployees();
   }, [initialTask?.id]);
-
-  const getEmployeeDetails = (employeeId: string) => {
-    const employee = employees.find((emp) => emp.employee_Id === employeeId);
-    console.log(`Looking for employee ${employeeId}:`, employee); // Debug log
-    return employee;
-  };
 
   const handleStatusChange = (newStatus: "Ongoing" | "Done") => {
     // Don't allow status change if current status is 'Approved'
@@ -261,23 +227,18 @@ export const TaskDetails = ({
     }
   };
 
-  const renderAssigneeImages = (assigns: any[]) => {
-    console.log("Rendering assigns:", assigns);
-
+  const renderAssigneeImages = (assigns: TaskAssign[]) => {
     if (!assigns || assigns.length === 0) {
-      console.log("No assigns found");
       return null;
     }
 
     return assigns.map((assign, index) => {
-      const employeeDetails = getEmployeeDetails(assign.employee_Id);
-      console.log("Found employee details:", employeeDetails);
-
-      const image = employeeDetails?.image;
+      const employee = assign.employee; 
+      const image = getImageUrl(employee.image);
 
       return (
         <div
-          key={assign.employee_Id}
+          key={employee.employee_Id}
           className="relative group"
           onMouseEnter={(event) => {
             const card = event.currentTarget.querySelector(".hover-card");
@@ -286,7 +247,7 @@ export const TaskDetails = ({
               const spaceBelow = window.innerHeight - rect.bottom;
               const spaceAbove = rect.top;
 
-              const employeeId = employeeDetails?.employee_Id as string;
+              const employeeId = employee.employee_Id as string;
               if (spaceBelow < rect.height && spaceAbove > rect.height) {
                 setHoverCardPosition((prev) => ({
                   ...prev,
@@ -303,11 +264,8 @@ export const TaskDetails = ({
         >
           <div className="w-[2.5vw] h-[2.5vw] rounded-full bg-gray-200 border-[0.08vw] border-white flex items-center justify-center overflow-hidden">
             <Image
-              src={
-                image ||
-                "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"
-              }
-              alt={employeeDetails?.name || `Employee ${index + 1}`}
+              src={image}
+              alt={employee.name || `Employee ${index + 1}`}
               width={32}
               height={32}
               className="w-full h-full object-cover"
@@ -315,68 +273,49 @@ export const TaskDetails = ({
           </div>
 
           {/* Hover Card */}
-          {employeeDetails && (
-            <motion.div
-              className={`absolute left-0 transform -translate-x-full 
-                ${
-                  hoverCardPosition[employeeDetails.employee_Id] === "above"
-                    ? "bottom-full mb-2"
-                    : "top-full mt-2"
-                } 
-                w-[12vw] bg-white rounded-lg shadow-lg p-[0.625vw] hidden group-hover:block z-50 border border-gray-200 hover-card`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-            >
-              <div className="flex items-start gap-[0.625vw]">
-                <Image
-                  src={
-                    image ||
-                    "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"
-                  }
-                  alt={employeeDetails.name}
-                  width={32}
-                  height={32}
-                  className="w-[2.5vw] h-[2.5vw] rounded-full object-cover"
-                />
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 text-[0.9vw]">
-                    {employeeDetails.name}
-                  </h4>
-                  <p className="text-[0.6vw] text-gray-500">
-                    {employeeDetails.users?.[0]?.email}
-                  </p>
-                </div>
+          <motion.div
+            className={`absolute left-0 transform -translate-x-full 
+              ${hoverCardPosition[employee.employee_Id] === "above" ? "bottom-full mb-2" : "top-full mt-2"} 
+              w-[12vw] bg-white rounded-lg shadow-lg p-[0.625vw] hidden group-hover:block z-50 border border-gray-200 hover-card`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+          >
+            <div className="flex items-start gap-[0.625vw]">
+              <Image
+                src={image}
+                alt={employee.name}
+                width={32}
+                height={32}
+                className="w-[2.5vw] h-[2.5vw] rounded-full object-cover"
+              />
+              <div className="flex-1">
+                <h4 className="font-medium text-gray-900 text-[0.9vw]">
+                  {employee.name}
+                </h4>
               </div>
-              <div className="mt-[0.5vw] space-y-[0.25vw] text-[0.6vw]">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Team:</span>
-                  <span className="text-gray-900">{employeeDetails.team}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Role:</span>
-                  <span className="text-gray-900">{employeeDetails.skill}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Workload:</span>
-                  <span
-                    className={`${getWorkloadColor(
-                      employeeDetails.current_Workload
-                    )}`}
-                  >
-                    {calculateWorkloadPercentage(
-                      employeeDetails.current_Workload
-                    ).toFixed(2)}
-                    %
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Phone:</span>
-                  <span className="text-gray-900">{employeeDetails.phone}</span>
-                </div>
+            </div>
+            <div className="mt-[0.5vw] space-y-[0.25vw] text-[0.6vw]">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Team:</span>
+                <span className="text-gray-900">{employee.team}</span>
               </div>
-            </motion.div>
-          )}
+              <div className="flex justify-between">
+                <span className="text-gray-500">Role:</span>
+                <span className="text-gray-900">{employee.skill}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Workload:</span>
+                <span className={`${getWorkloadColor(employee.current_Workload)}`}>
+                  {calculateWorkloadPercentage(employee.current_Workload).toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Phone:</span>
+                <span className="text-gray-900">{employee.phone}</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       );
     });

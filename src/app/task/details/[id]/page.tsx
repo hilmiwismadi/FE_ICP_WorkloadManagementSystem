@@ -60,6 +60,10 @@ export interface TimelineActivity {
 export type Priority = "High" | "Medium" | "Normal";
 export type Status = "Ongoing" | "Done" | "Approved";
 
+interface TaskAssign {
+  employee: Employee; // Assuming Employee is already defined
+}
+
 // Update socket initialization to include credentials and transports
 const socket = io("https://be-icpworkloadmanagementsystem.up.railway.app", {
   withCredentials: true,
@@ -78,7 +82,6 @@ const TaskDetailPage = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [user, setUser] = useState<any>(null);
-  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [activities, setActivities] = useState<TimelineActivity[]>([]);
   const [newActivity, setNewActivity] = useState("");
@@ -161,42 +164,9 @@ const TaskDetailPage = () => {
   };
 
   useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const response = await fetch(
-          "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
-        );
-        const result = await response.json();
-
-        let formattedEmployees;
-        if (Array.isArray(result)) {
-          formattedEmployees = result.map((emp: any) => ({
-            ...emp,
-            image: getImageUrl(emp.image),
-          }));
-        } else if (result.data && Array.isArray(result.data)) {
-          formattedEmployees = result.data.map((emp: any) => ({
-            ...emp,
-            image: getImageUrl(emp.image),
-          }));
-        } else {
-          formattedEmployees = [];
-        }
-        setEmployees(formattedEmployees);
-      } catch (error) {
-        console.error("Error fetching employees:", error);
-        setEmployees([]);
-      }
-    };
-
-    fetchEmployees();
-  }, []);
-
-  useEffect(() => {
     const fetchTaskAndComments = async () => {
       try {
         setLoading(true);
-
         const [taskResponse, commentsResponse] = await Promise.all([
           fetch(
             `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${taskId}`
@@ -254,12 +224,12 @@ const TaskDetailPage = () => {
 
   const getEmployeeImage = useCallback(
     async (email?: string) => {
-      const employee = employees.find((emp) =>
-        emp.users?.some((user) => user.email === email)
+      const employee = task?.assigns?.find((emp) =>
+        emp.employee.users?.some((user) => user.email === email)
       );
-      return getImageUrl(employee?.image);
+      return getImageUrl(employee?.employee.image);
     },
-    [employees]
+    [task]
   );
 
   useEffect(() => {
@@ -414,20 +384,18 @@ const TaskDetailPage = () => {
   const displayActivities =
     realTimeActivities.length > 0 ? realTimeActivities : activities;
 
-  const getEmployeeDetails = (employeeId: string) => {
-    return employees.find((emp) => emp.employee_Id === employeeId);
-  };
+  const renderAssigneeImages = (assigns: TaskAssign[]) => {
+    if (!assigns || assigns.length === 0) {
+      return null;
+    }
 
-  const renderAssigneeImages = (assigns: any[]) => {
     return assigns.map((assign, index) => {
-      const employeeDetails = getEmployeeDetails(assign.employee_Id);
-      const image =
-        employeeDetails?.image ||
-        "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"; // fallback image
+      const employee = assign.employee; // Directly use employee from assigns
+      const image = getImageUrl(employee.image);
 
       return (
         <div
-          key={index}
+          key={employee.employee_Id}
           className="relative group"
           onMouseEnter={(event) => {
             const card = event.currentTarget.querySelector(".hover-card");
@@ -436,7 +404,7 @@ const TaskDetailPage = () => {
               const spaceBelow = window.innerHeight - rect.bottom;
               const spaceAbove = rect.top;
 
-              const employeeId = employeeDetails?.employee_Id as string;
+              const employeeId = employee.employee_Id as string;
               if (spaceBelow < rect.height && spaceAbove > rect.height) {
                 setHoverCardPosition(
                   (prev) => ({ ...prev, [employeeId]: "above" } as any)
@@ -457,10 +425,10 @@ const TaskDetailPage = () => {
             />
           </div>
           {/* Hover Card */}
-          {employeeDetails && (
+          {employee && (
             <motion.div
               className={`absolute left-0 transform -translate-x-full ${
-                hoverCardPosition[employeeDetails.employee_Id] === "above"
+                hoverCardPosition[employee.employee_Id] === "above"
                   ? "bottom-full mb-2"
                   : "top-full mt-2"
               } w-[12vw] bg-white rounded-lg shadow-lg p-[0.625vw] hidden group-hover:block z-50 border border-gray-200 hover-card`}
@@ -470,44 +438,44 @@ const TaskDetailPage = () => {
             >
               <div className="flex items-start gap-[0.625vw]">
                 <img
-                  src={employeeDetails.image}
-                  alt={employeeDetails.name}
+                  src={getImageUrl(employee.image)}
+                  alt={employee.name}
                   className="w-[2.5vw] h-[2.5vw] rounded-full object-cover"
                 />
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-900 text-[0.9vw]">
-                    {employeeDetails.name}
+                    {employee.name}
                   </h4>
                   <p className="text-[0.6vw] text-gray-500">
-                    {employeeDetails.users?.[0]?.email}
+                    {employee.users?.[0]?.email}
                   </p>
                 </div>
               </div>
               <div className="mt-[0.5vw] space-y-[0.25vw] text-[0.6vw]">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Team:</span>
-                  <span className="text-gray-900">{employeeDetails.team}</span>
+                  <span className="text-gray-900">{employee.team}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Role:</span>
-                  <span className="text-gray-900">{employeeDetails.skill}</span>
+                  <span className="text-gray-900">{employee.skill}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Workload:</span>
                   <span
                     className={`${getWorkloadColor(
-                      employeeDetails.current_Workload
+                      employee.current_Workload
                     )}`}
                   >
                     {calculateWorkloadPercentage(
-                      employeeDetails.current_Workload
+                      employee.current_Workload
                     ).toFixed(2)}
                     %
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Phone:</span>
-                  <span className="text-gray-900">{employeeDetails.phone}</span>
+                  <span className="text-gray-900">{employee.phone}</span>
                 </div>
               </div>
             </motion.div>

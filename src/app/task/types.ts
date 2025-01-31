@@ -29,4 +29,5 @@ export interface Assign {
     current_Workload: number;
     start_Date: string;
     users?: { email: string; role: string; }[];
+    email?: string;
   }

@@ -29,18 +29,6 @@ interface AuthUser {
   team: string;
 }
 
-interface Employee {
-  employee_Id: string;
-  name: string;
-  image: string;
-  phone: string;
-  team: string;
-  skill: string;
-  current_Workload: number;
-  start_Date: string;
-  users?: { email: string; role: string }[];
-}
-
 const TaskPage = () => {
   const [viewType, setViewType] = useState<"board" | "list">("board");
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -49,10 +37,8 @@ const TaskPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-
   const [currentPage, setCurrentPage] = useState(1);
-  const [tasksPerPage] = useState(8); 
+  const [tasksPerPage] = useState(8);
   const [priorityFilter, setPriorityFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateSort, setDateSort] = useState<"asc" | "desc" | null>(null);
@@ -72,7 +58,6 @@ const TaskPage = () => {
         console.error("Error decoding auth token:", error);
       }
     }
-    fetchEmployees();
   }, []);
 
   useEffect(() => {
@@ -111,8 +96,23 @@ const TaskPage = () => {
       setLoading(true);
       const fetchedTasks = await taskService.getTasksByUser(userId);
       if (fetchedTasks?.data && Array.isArray(fetchedTasks.data)) {
-        setTasks(fetchedTasks.data);
-        setFilteredTasks(fetchedTasks.data);
+        // For each task, fetch the detailed data
+        const detailedTasks = await Promise.all(
+          fetchedTasks.data.map(async (task: any) => {
+            try {
+              const response = await fetch(
+                `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${task.task_Id}`
+              );
+              const detailedTask = await response.json();
+              return detailedTask.data;
+            } catch (error) {
+              console.error(`Error fetching task details for ${task.task_Id}:`, error);
+              return task; // Return original task if detailed fetch fails
+            }
+          })
+        );
+        setTasks(detailedTasks);
+        setFilteredTasks(detailedTasks);
         setShowNoTasksModal(false);
       } else {
         setTasks([]);
@@ -120,6 +120,7 @@ const TaskPage = () => {
         setShowNoTasksModal(true);
       }
     } catch (error) {
+      console.error("Error fetching tasks:", error);
       setTasks([]);
       setFilteredTasks([]);
       setShowNoTasksModal(true);
@@ -139,38 +140,6 @@ const TaskPage = () => {
       return `https://be-icpworkloadmanagementsystem.up.railway.app/api${imageUrl}`;
     }
     return imageUrl;
-  };
-
-  const fetchEmployees = async () => {
-    try {
-      const response = await fetch(
-        "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
-      );
-      const result = await response.json();
-
-      let formattedEmployees;
-      if (Array.isArray(result)) {
-        formattedEmployees = result.map((emp: any) => ({
-          ...emp,
-          image: getImageUrl(emp.image),
-        }));
-      } else if (result.data && Array.isArray(result.data)) {
-        formattedEmployees = result.data.map((emp: any) => ({
-          ...emp,
-          image: getImageUrl(emp.image),
-        }));
-      } else {
-        formattedEmployees = [];
-      }
-      setEmployees(formattedEmployees);
-    } catch (error) {
-      console.error("Error fetching employees:", error);
-      setEmployees([]);
-    }
-  };
-
-  const getEmployeeDetails = (employeeId: string) => {
-    return employees.find((emp) => emp.employee_Id === employeeId);
   };
 
   const groupedTasks = {
@@ -212,16 +181,13 @@ const TaskPage = () => {
   };
 
   const renderTaskCard = (task: Task) => {
-    const employeeImages = task.assigns?.map(assign => {
-      const employeeDetails = getEmployeeDetails(assign.employee_Id);
-      return {
-        image: employeeDetails?.image || "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ", // fallback image
-        details: employeeDetails,
-      };
-    });
+    const employeeDetails = task.assigns?.map(assign => ({
+      image: getImageUrl(assign.employee.image),
+      details: assign.employee
+    }));
 
-    const workloadPercentage = employeeImages[0]?.details?.current_Workload 
-      ? calculateWorkloadPercentage(employeeImages[0].details.current_Workload) 
+    const workloadPercentage = employeeDetails[0]?.details?.current_Workload 
+      ? calculateWorkloadPercentage(employeeDetails[0].details.current_Workload) 
       : 0;
 
     return (
@@ -237,9 +203,7 @@ const TaskPage = () => {
         <div className="flex justify-between items-start mb-[0.25vw]">
           <h3 className="font-medium text-gray-900 text-[0.9vw]">{task.title}</h3>
           <span
-            className={`px-[0.625vw] py-[0.15vw] rounded-full text-[0.625vw] ${
-              priorityColors[task.priority]
-            }`}
+            className={`px-[0.625vw] py-[0.15vw] rounded-full text-[0.625vw] ${priorityColors[task.priority]}`}
           >
             {task.priority}
           </span>
@@ -251,7 +215,7 @@ const TaskPage = () => {
         )}
         <div className="flex justify-between items-center">
           <div className="flex -space-x-[0.25vw]">
-            {employeeImages?.map((emp, index) => (
+            {employeeDetails?.map((emp, index) => (
               <div key={index} className="relative group cursor-pointer" onMouseEnter={(event) => {
                 const card = event.currentTarget.querySelector('.hover-card');
                 if (card && emp.details) {
@@ -269,7 +233,7 @@ const TaskPage = () => {
               }}>
                 <div className="w-[1.25vw] h-[1.25vw] rounded-full bg-gray-200 border-[0.08vw] border-white flex items-center justify-center overflow-hidden">
                   <img
-                    src={emp.image}
+                    src={emp.image || "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"}
                     alt={`Employee ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
@@ -284,14 +248,14 @@ const TaskPage = () => {
                   >
                     <div className="flex items-start gap-[0.625vw]">
                       <img
-                        src={emp.details.image}
+                        src={emp.image || "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"}
                         alt={emp.details.name}
                         className="w-[2.5vw] h-[2.5vw] rounded-full object-cover"
                       />
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900 text-[0.9vw]">{emp.details.name}</h4>
                         <p className="text-[0.6vw] text-gray-500">
-                          {emp.details.users?.[0]?.email}
+                          {emp.details.email}
                         </p>
                       </div>
                     </div>
@@ -329,16 +293,13 @@ const TaskPage = () => {
   };
 
   const renderTaskRow = (task: Task) => {
-    const employeeImages = task.assigns?.map(assign => {
-      const employeeDetails = getEmployeeDetails(assign.employee_Id);
-      return {
-        image: employeeDetails?.image || "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ", // fallback image
-        details: employeeDetails,
-      };
-    });
+    const employeeDetails = task.assigns?.map(assign => ({
+      image: assign.employee.image,
+      details: assign.employee
+    }));
 
-    const workloadPercentage = employeeImages[0]?.details?.current_Workload 
-      ? calculateWorkloadPercentage(employeeImages[0].details.current_Workload) 
+    const workloadPercentage = employeeDetails[0]?.details?.current_Workload 
+      ? calculateWorkloadPercentage(employeeDetails[0].details.current_Workload) 
       : 0;
 
     return (
@@ -362,14 +323,14 @@ const TaskPage = () => {
         </td>
         <td className="px-[1vw] py-[0.5vw]">
           <div className="flex -space-x-1">
-            {employeeImages?.map((emp, index) => (
+            {employeeDetails?.map((emp, index) => (
               <div key={index} className="relative group" onMouseEnter={(event) => {
                 const card = event.currentTarget.querySelector('.hover-card');
                 if (card) {
                   const rect = card.getBoundingClientRect();
                   const spaceBelow = window.innerHeight - rect.bottom;
                   const spaceAbove = rect.top;
-        
+
                   if (emp.details) {
                     const employeeId = emp.details.employee_Id; // Safely access employee_Id
                     if (spaceBelow < rect.height && spaceAbove > rect.height) {
@@ -382,7 +343,7 @@ const TaskPage = () => {
               }}>
                 <div className="w-[1.5vw] h-[1.5vw] rounded-full bg-gray-200 border-2 border-white flex items-center justify-center overflow-hidden hover:z-10 transition-all duration-200 hover:scale-110 cursor-pointer">
                   <img
-                    src={emp.image}
+                    src={emp.image || "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"}
                     alt={`Employee ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
@@ -397,14 +358,14 @@ const TaskPage = () => {
                   >
                     <div className="flex items-start gap-[0.625vw]">
                       <img
-                        src={emp.details.image}
+                        src={emp.image || "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"}
                         alt={emp.details.name}
                         className="w-[2.5vw] h-[2.5vw] rounded-full object-cover"
                       />
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900 text-[0.9vw]">{emp.details.name}</h4>
                         <p className="text-[0.6vw] text-gray-500">
-                          {emp.details.users?.[0]?.email}
+                          {emp.details.email}
                         </p>
                       </div>
                     </div>
@@ -436,18 +397,14 @@ const TaskPage = () => {
         </td>
         <td className="px-[1vw] py-[0.5vw]">
           <span
-            className={`px-[0.25vw] py-[0.1vw] rounded-full text-[0.625vw] ${
-              priorityColors[task.priority]
-            }`}
+            className={`px-[0.25vw] py-[0.1vw] rounded-full text-[0.625vw] ${priorityColors[task.priority]}`}
           >
             {task.priority}
           </span>
         </td>
         <td className="px-[1vw] py-[0.5vw]">
           <span
-            className={`px-[0.25vw] py-[0.1vw] rounded-full text-[0.625vw] ${
-              statusColors[task.status]
-            }`}
+            className={`px-[0.25vw] py-[0.1vw] rounded-full text-[0.625vw] ${statusColors[task.status]}`}
           >
             {task.status}
           </span>
