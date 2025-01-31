@@ -26,6 +26,7 @@ import {
   X,
   Check,
   AlertCircle,
+  Loader,
   Loader2,
   CheckCircle2,
 } from "lucide-react";
@@ -66,6 +67,7 @@ interface TaskDetailsProps {
     taskId: string,
     newStatus: "Ongoing" | "Done" | "Approved"
   ) => void;
+  onClose: () => void;
 }
 
 const calculateWorkloadPercentage = (workload: number): number => {
@@ -99,6 +101,7 @@ const getImageUrl = (imageUrl: string | undefined): string => {
 export const TaskDetails = ({
   selectedTask: initialTask,
   onStatusUpdate,
+  onClose,
 }: TaskDetailsProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -117,9 +120,11 @@ export const TaskDetails = ({
     success: boolean;
     message: string;
   } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchTaskDetails = async () => {
+      setIsLoading(true);
       if (!initialTask?.id) return;
 
       try {
@@ -145,10 +150,13 @@ export const TaskDetails = ({
         }
       } catch (error) {
         console.error("Error fetching task details:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     const fetchEmployees = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(
           "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
@@ -166,6 +174,8 @@ export const TaskDetails = ({
         }
       } catch (error) {
         console.error("Error fetching employees:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -372,6 +382,19 @@ export const TaskDetails = ({
     });
   };
 
+  const handleClose = () => {
+    setTaskData(null);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[38vh]">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-500 mb-2" />
+        <span className="text-gray-600 text-[0.7vw]">Loading, please wait . . .</span>
+      </div>
+    );
+  }
+
   if (!taskData) {
     return null;
   }
@@ -380,7 +403,7 @@ export const TaskDetails = ({
     <>
       <div className="p-6 border rounded-lg bg-white w-full min-h-[38vh] relative">
         <button
-          onClick={() => setTaskData(null)}
+          onClick={handleClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
         >
           <X className="w-5 h-5" />
@@ -577,7 +600,7 @@ export const TaskDetails = ({
                     >
                       {isSubmitting ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader className="w-4 h-4 animate-spin" />
                           Updating...
                         </>
                       ) : (
