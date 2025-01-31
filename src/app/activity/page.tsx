@@ -163,7 +163,7 @@ export default function ActivityPage() {
         return {
           ...emp,
           taskCount: employeeTasks.length,
-          workloadPercentage: Math.round((emp.current_Workload / 15) * 100),
+          workloadPercentage: Math.round((emp.current_Workload / 10.7) * 100),
         };
       });
 
@@ -180,7 +180,7 @@ export default function ActivityPage() {
           if (!acc[emp.team]) {
             acc[emp.team] = [];
           }
-          const workloadPercentage = Math.round((emp.current_Workload / 15) * 100);
+          const workloadPercentage = Math.round((emp.current_Workload / 10.7) * 100);
           acc[emp.team].push(workloadPercentage);
           return acc;
         },
