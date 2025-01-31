@@ -166,8 +166,8 @@ const TaskPage = () => {
   const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
 
   const calculateWorkloadPercentage = (workload: number): number => {
-    const normalize = workload / 15;
-    return normalize * 100;
+    const normalize = Math.round((workload / 10.7) * 100);
+    return normalize;
   };
 
   const getWorkloadColor = (percentage: number): string => {
@@ -271,7 +271,7 @@ const TaskPage = () => {
                       <div className="flex justify-between">
                         <span className="text-gray-500">Workload:</span>
                         <span className={`${getWorkloadColor(workloadPercentage)}`}>
-                          {workloadPercentage.toFixed(2)}%
+                          {workloadPercentage}%
                         </span>
                       </div>
                       <div className="flex justify-between">
