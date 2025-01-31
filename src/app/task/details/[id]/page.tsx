@@ -43,16 +43,25 @@ export interface Comment {
   comment_Id: string;
   content: string;
   created_at: string;
-  type: "Started" | "Comment" | "Bug" | "Completed" | "Assigned";
+  type: "Started" | "Comment" | "Bug" | "Approved" | "Assigned" | "Rejected";
   user_Id: string;
-  user?: { email: string; role: string };
+  user?: { 
+    email: string; 
+    employee?: { 
+      image: string; 
+    };
+    role: string;
+  };
 }
 
 export interface TimelineActivity {
   id: string;
-  type: "Started" | "Comment" | "Bug" | "Completed" | "Assigned";
+  type: "Started" | "Comment" | "Bug" | "Approved" | "Assigned" | "Rejected";
   content: string;
   user: string;
+  employee?: {
+    image: string;
+  };
   timestamp: string;
   userImage?: string;
 }
@@ -61,7 +70,7 @@ export type Priority = "High" | "Medium" | "Normal";
 export type Status = "Ongoing" | "Done" | "Approved";
 
 interface TaskAssign {
-  employee: Employee; // Assuming Employee is already defined
+  employee: Employee;
 }
 
 // Update socket initialization to include credentials and transports
@@ -73,6 +82,7 @@ const socket = io("https://be-icpworkloadmanagementsystem.up.railway.app", {
 
 interface CustomJwtPayload extends JwtPayload {
   role?: string;
+  employee_Id?: string;
 }
 
 const TaskDetailPage = () => {
@@ -138,6 +148,9 @@ const TaskDetailPage = () => {
         user: newComment.user?.email || "Unknown User",
         timestamp: newComment.created_at,
         userImage: getImageUrl(imageUrl),
+        employee: {
+          image: getImageUrl(newComment.user?.employee?.image),
+        },
       };
 
       setActivities((prev) => [...prev, newTimelineActivity]);
@@ -192,6 +205,9 @@ const TaskDetailPage = () => {
             user_Id: comment.user_Id,
             user: {
               email: comment.user?.email || "Unknown User",
+              employee: {
+                image: getImageUrl(comment.user?.employee?.image),
+              },
             },
           })
         );
@@ -206,6 +222,9 @@ const TaskDetailPage = () => {
             user: comment.user?.email || "Unknown User",
             timestamp: comment.created_at,
             userImage: await getEmployeeImage(comment.user?.email),
+            employee: {
+              image: getImageUrl(comment.user?.employee?.image),
+            },
           }))
         );
 
@@ -246,6 +265,14 @@ const TaskDetailPage = () => {
         activity.type.charAt(0).toUpperCase() +
         activity.type.slice(1).toLowerCase();
 
+      // Fetch employee image using the new API
+      const employeeImageResponse = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${user?.employee_Id}`
+      );
+      const employeeImageData = await employeeImageResponse.json();
+      const employeeImage = getImageUrl(employeeImageData.data?.image);
+
+      // Add the comment to the database
       const response = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/add/${taskId}`,
         {
@@ -264,6 +291,7 @@ const TaskDetailPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Error adding comment:", errorData);
         throw new Error(
           errorData.message || "Failed to save comment to database"
         );
@@ -271,6 +299,7 @@ const TaskDetailPage = () => {
 
       const data = await response.json();
 
+      // Emit the comment through the socket
       socket.emit("comment", {
         ...data.data,
         task_Id: taskId,
@@ -278,6 +307,9 @@ const TaskDetailPage = () => {
         user: {
           email: activity.user?.email,
           role: activity.user?.role,
+          employee: {
+            image: employeeImage,
+          },
         },
       });
 
@@ -299,10 +331,12 @@ const TaskDetailPage = () => {
         return <MessageSquare className="w-5 h-5 text-gray-500" />;
       case "Bug":
         return <BugIcon className="w-5 h-5 text-red-500" />;
-      case "Completed":
+      case "Approved":
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case "Assigned":
         return <UserPlus className="w-5 h-5 text-purple-500" />;
+      case "Rejected":
+        return <XCircle className="w-5 h-5 text-red-500" />;
       default:
         return null;
     }
@@ -345,7 +379,7 @@ const TaskDetailPage = () => {
               >
                 <div className="flex items-center gap-[0.6vw] mb-[1vw]">
                   <img
-                    src={activity.userImage}
+                    src={getImageUrl(activity.employee?.image)}
                     alt={activity.user}
                     className="w-6 h-6 rounded-full"
                   />
@@ -419,7 +453,7 @@ const TaskDetailPage = () => {
         >
           <div className="w-[2.5vw] h-[2.5vw] rounded-full bg-gray-200 border-[0.08vw] border-white flex items-center justify-center overflow-hidden">
             <img
-              src={image}
+              src={getImageUrl(employee.image)}
               alt={`Employee ${index + 1}`}
               className="w-full h-full object-cover"
             />
@@ -524,11 +558,14 @@ const TaskDetailPage = () => {
         comment_Id: "",
         content: "Task has been approved",
         created_at: new Date().toISOString(),
-        type: "Comment",
+        type: "Approved",
         user_Id: user?.user_Id,
         user: {
           email: user?.email,
           role: user?.role,
+          employee: {
+            image: getImageUrl(user?.employee?.image),
+          },
         },
       };
 
@@ -539,6 +576,9 @@ const TaskDetailPage = () => {
         user: {
           email: user?.email,
           role: user?.role,
+          employee: {
+            image: getImageUrl(user?.employee?.image),
+          },
         },
       });
 
@@ -569,16 +609,22 @@ const TaskDetailPage = () => {
       // Log the click (placeholder for future API implementation)
       console.log("Task rejected successfully");
 
+      const employeeImage = getImageUrl(user?.employee?.image);
+      console.log(employeeImage);
+
       // Add rejection activity
       const rejectionActivity: Comment = {
         comment_Id: "",
         content: "Task has been rejected and sent back for revision",
         created_at: new Date().toISOString(),
-        type: "Comment",
+        type: "Rejected",
         user_Id: user?.user_Id,
         user: {
           email: user?.email,
           role: user?.role,
+          employee: {
+            image: employeeImage,
+          },
         },
       };
 
@@ -589,10 +635,14 @@ const TaskDetailPage = () => {
         user: {
           email: user?.email,
           role: user?.role,
+          employee: {
+            image: employeeImage,
+          },
         },
       });
 
       await handleAddActivity(rejectionActivity);
+      console.log(rejectionActivity);
       setShowRejectDialog(false);
       setShowFeedback({
         show: true,
@@ -751,8 +801,9 @@ const TaskDetailPage = () => {
                     <option value="comment">Comment</option>
                     <option value="bug">Bug</option>
                     <option value="started">Started</option>
-                    <option value="completed">Completed</option>
+                    <option value="approved">Approved</option>
                     <option value="assigned">Assigned</option>
+                    <option value="rejected">Rejected</option>
                   </select>
                   <input
                     type="text"
@@ -771,6 +822,9 @@ const TaskDetailPage = () => {
                           user: {
                             email: user?.email,
                             role: user?.role,
+                            employee: {
+                              image: getImageUrl(user?.employee?.image),
+                            },
                           },
                         });
                       }
@@ -787,6 +841,9 @@ const TaskDetailPage = () => {
                         user: {
                           email: user?.email,
                           role: user?.role,
+                          employee: {
+                            image: getImageUrl(user?.employee?.image),
+                          },
                         },
                       });
                     }}
