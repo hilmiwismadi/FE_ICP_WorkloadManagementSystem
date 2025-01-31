@@ -21,6 +21,7 @@ interface Task {
   status: string;
   type: string;
   workload: number;
+  mcda: number;
 }
 
 interface Employee {
@@ -131,6 +132,7 @@ export default function Activity() {
                 task_id: task.task_Id,
                 description: task.description,
                 workload: task.workload,
+                mcda: task.mcda,
                 start_date: task.start_Date,
                 end_date: task.end_Date,
                 status: task.status,

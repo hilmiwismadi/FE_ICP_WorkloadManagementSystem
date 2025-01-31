@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button"
 
 // WorkloadStatusBar Component
 const WorkloadStatusBar = ({ value }: { value: number }) => {
-  const normalize = value / 15;
-  const percentage = normalize * 100;
+  const percentage = Math.round((value / 10.7) * 100);
   
   const getColor = () => {
     if (percentage >= 80) return 'bg-red-500';
