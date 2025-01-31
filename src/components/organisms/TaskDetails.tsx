@@ -119,14 +119,14 @@ export const TaskDetails = ({
     success: boolean;
     message: string;
   } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchTaskDetails = async () => {
-      setIsLoading(true);
       if (!initialTask?.id) return;
 
       try {
+        setIsLoading(true);
         const response = await fetch(
           `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${initialTask.id}`
         );
@@ -327,7 +327,7 @@ export const TaskDetails = ({
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[38vh]">
+      <div className="flex flex-col items-center justify-center h-[35vh]">
         <Loader2 className="w-6 h-6 animate-spin text-gray-500 mb-2" />
         <span className="text-gray-600 text-[0.7vw]">Loading, please wait . . .</span>
       </div>
@@ -340,7 +340,7 @@ export const TaskDetails = ({
 
   return (
     <>
-      <div className="p-6 border rounded-lg bg-white w-full min-h-[38vh] relative">
+      <div className="p-6 border rounded-lg bg-white w-full relative">
         <button
           onClick={handleClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
@@ -367,30 +367,30 @@ export const TaskDetails = ({
           </div>
 
           <div className="col-span-1 space-y-auto flex flex-col justify-between">
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="w-4 h-4 text-gray-500" />
+            <div className="flex items-center gap-2 text-[0.9vw]">
+              <Calendar className="w-[1.2vw] h-[1.2vw] text-gray-500" />
               <span>
-                Duration: {format(new Date(taskData.startDate), "MMM d")} -{" "}
+                <strong>Duration:</strong> {format(new Date(taskData.startDate), "MMM d")} -{" "}
                 {format(new Date(taskData.endDate), "MMM d")}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Activity className="w-4 h-4 text-gray-500" />
+            <div className="flex items-center gap-2 text-[0.9vw]">
+              <Activity className="w-[1.2vw] h-[1.2vw] text-gray-500" />
               <span>
-                Workload:{" "}
+                <strong>Workload:</strong>{" "}
                 <span className="font-medium">{taskData.workload}</span>
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <AlertTriangle className="w-4 h-4 text-gray-500" />
+            <div className="flex items-center gap-2 text-[0.9vw]">
+              <AlertTriangle className="w-[1.2vw] h-[1.2vw] text-gray-500" />
               <span>
-                Urgency:{" "}
+                <strong>Urgency:</strong>{" "}
                 <span
-                  className={`px-2 py-1 rounded-full text-xs ${
+                  className={`px-[0.5vw] py-[0.1vw] rounded-full text-[0.8vw] ${
                     taskData.urgency === "High"
                       ? "bg-red-100 text-red-800"
                       : taskData.urgency === "Medium"
-                      ? "bg-orange-100 text-orange-800"
+                      ? "bg-amber-100 text-amber-800"
                       : "bg-blue-100 text-blue-800"
                   }`}
                 >
@@ -398,14 +398,14 @@ export const TaskDetails = ({
                 </span>
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-gray-500" />
+            <div className="flex items-center gap-2 text-[0.9vw]">
+              <Clock className="w-[1.2vw] h-[1.2vw] text-gray-500" />
               <span>
-                Status:{" "}
+                <strong>Status:</strong>{" "}
                 <span
-                  className={`px-2 py-1 rounded-full text-xs ${
+                  className={`px-[0.5vw] py-[0.1vw] rounded-full text-[0.8vw] ${
                     taskData.status === "Ongoing"
-                      ? "bg-yellow-100 text-yellow-800"
+                      ? "bg-amber-100 text-amber-800"
                       : taskData.status === "Done"
                       ? "bg-green-100 text-green-800"
                       : "bg-blue-100 text-blue-800"
@@ -418,14 +418,14 @@ export const TaskDetails = ({
           </div>
 
           <div className="col-span-1 flex flex-col justify-between">
-            <h3 className="font-semibold text-gray-600 mb-2 text-sm">
+            <h3 className="font-semibold text-gray-600 mb-2 text-[0.9vw]">
               Assignees
             </h3>
             <div className="flex flex-wrap gap-2 mb-auto">
               {taskData?.assigns ? (
                 renderAssigneeImages(taskData.assigns)
               ) : (
-                <div className="text-gray-500 text-sm">No assignees found</div>
+                <div className="text-gray-500 text-[0.8vw]">No assignees found</div>
               )}
             </div>
             <div className="flex items-center space-x-4 justify-end">
