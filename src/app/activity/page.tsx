@@ -36,7 +36,9 @@ interface Task {
   type: string;
   status: string;
   workload: number;
-  employee_Id: string;
+  assigns: {
+    employee_Id: string;
+  }[];
 }
 
 interface DivisionMetrics {
@@ -157,15 +159,17 @@ export default function ActivityPage() {
       const processedTeamEmployees = teamEmployeesData.map((emp: Employee) => {
         const employeeTasks = tasksData.filter(
           (task: Task) =>
-            task.employee_Id === emp.employee_Id && task.status === "Ongoing"
+            task.assigns.some(assign => assign.employee_Id === emp.employee_Id) && task.status === "Ongoing"
         );
 
         return {
           ...emp,
           taskCount: employeeTasks.length,
-          workloadPercentage: Math.round((emp.current_Workload / 15) * 100),
+          workloadPercentage: Math.round((emp.current_Workload / 10.7) * 100),
         };
       });
+
+      
 
       const sortedEmployees = [...processedTeamEmployees].sort(
         (a, b) => (b.workloadPercentage || 0) - (a.workloadPercentage || 0)
@@ -180,7 +184,7 @@ export default function ActivityPage() {
           if (!acc[emp.team]) {
             acc[emp.team] = [];
           }
-          const workloadPercentage = Math.round((emp.current_Workload / 15) * 100);
+          const workloadPercentage = Math.round((emp.current_Workload / 10.7) * 100);
           acc[emp.team].push(workloadPercentage);
           return acc;
         },
