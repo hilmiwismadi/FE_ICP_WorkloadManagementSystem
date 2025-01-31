@@ -37,6 +37,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { JwtPayload } from "jwt-decode";
 
 export interface Comment {
   comment_Id: string;
@@ -65,6 +66,10 @@ const socket = io("https://be-icpworkloadmanagementsystem.up.railway.app", {
   transports: ["websocket", "polling"],
   reconnection: true,
 });
+
+interface CustomJwtPayload extends JwtPayload {
+  role?: string;
+}
 
 const TaskDetailPage = () => {
   const { id: taskId } = useParams();
@@ -95,13 +100,17 @@ const TaskDetailPage = () => {
     type: "success" | "error";
     message: string;
   }>({ show: false, type: "success", message: "" });
+  const [canManageTask, setCanManageTask] = useState(false);
 
   useEffect(() => {
     const authStorage = Cookies.get("auth_token");
     if (authStorage) {
       try {
-        const userData = jwtDecode(authStorage);
+        const userData = jwtDecode<CustomJwtPayload>(authStorage);
         setUser(userData);
+        setCanManageTask(
+          userData?.role === "Manager" || userData?.role === "PIC"
+        );
       } catch (error) {
         console.error("Error decoding auth token:", error);
       }
@@ -111,13 +120,11 @@ const TaskDetailPage = () => {
   useEffect(() => {
     // Socket.IO event listeners
     socket.on("connect", () => {
-      console.log("Connected to Socket.IO server");
       // Join task-specific room
       socket.emit("join-task", taskId);
     });
 
     socket.on("comment", async (newComment: Comment) => {
-      console.log("Received new comment:", newComment);
       setComments((prev) => [...prev, newComment]);
 
       const imageUrl = await getEmployeeImage(newComment.user_Id);
@@ -203,9 +210,6 @@ const TaskDetailPage = () => {
           taskResponse.json(),
           commentsResponse.json(),
         ]);
-
-        console.log("Task Data:", taskData);
-        console.log("Comments Data:", commentsData);
 
         setTask(taskData.data);
 
@@ -514,12 +518,12 @@ const TaskDetailPage = () => {
   };
 
   const handleApproveClick = () => {
-    if (task?.status !== "Done" || isUpdatingStatus) return;
+    if (!canManageTask || task?.status !== "Done" || isUpdatingStatus) return;
     setShowApproveDialog(true);
   };
 
   const handleRejectClick = () => {
-    if (task?.status !== "Done") return;
+    if (!canManageTask || task?.status !== "Done") return;
     setShowRejectDialog(true);
   };
 
@@ -641,6 +645,41 @@ const TaskDetailPage = () => {
     }
   };
 
+  const renderActionButtons = () => {
+    if (!canManageTask) {
+      return null;
+    }
+
+    return (
+      <div className="flex flex-row items-center justify-center gap-2">
+        <motion.button
+          onClick={handleApproveClick}
+          disabled={task?.status !== "Done" || isUpdatingStatus}
+          className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
+            task?.status === "Done"
+              ? "bg-green-500 hover:bg-green-600 text-white"
+              : "bg-gray-100 text-gray-400 cursor-not-allowed"
+          }`}
+        >
+          <ThumbsUp className="w-3 h-3" />
+          Approve
+        </motion.button>
+        <motion.button
+          onClick={handleRejectClick}
+          disabled={task?.status !== "Done"}
+          className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
+            task?.status === "Done"
+              ? "bg-red-500 hover:bg-red-600 text-white"
+              : "bg-gray-100 text-gray-400 cursor-not-allowed"
+          }`}
+        >
+          <ThumbsDown className="w-3 h-3" />
+          Reject
+        </motion.button>
+      </div>
+    );
+  };
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -717,32 +756,7 @@ const TaskDetailPage = () => {
                       {task.description}
                     </p>
                   )}
-                  <div className="flex flex-row items-center justify-center gap-2">
-                    <motion.button
-                      onClick={handleApproveClick}
-                      disabled={task?.status !== "Done" || isUpdatingStatus}
-                      className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
-                        task?.status === "Done"
-                          ? "bg-green-500 hover:bg-green-600 text-white"
-                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      <ThumbsUp className="w-3 h-3" />
-                      Approve
-                    </motion.button>
-                    <motion.button
-                      onClick={handleRejectClick}
-                      disabled={task?.status !== "Done"}
-                      className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
-                        task?.status === "Done"
-                          ? "bg-red-500 hover:bg-red-600 text-white"
-                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      <ThumbsDown className="w-3 h-3" />
-                      Reject
-                    </motion.button>
-                  </div>
+                  {renderActionButtons()}
                 </div>
                 <div className="border-t pt-2">
                   <h3 className="font-semibold text-gray-600 mb-[0.5vw] text-xs">
