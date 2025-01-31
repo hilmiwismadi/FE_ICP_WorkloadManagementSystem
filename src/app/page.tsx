@@ -160,7 +160,7 @@ const Login = () => {
 
         setTimeout(() => {
           Cookies.set("auth_token", token, {
-            expires: 1 / 24,
+            expires: 7,
             path: "/",
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",

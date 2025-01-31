@@ -19,6 +19,7 @@ import { jwtDecode } from "jwt-decode";
 import ProtectedRoute from "@/components/protected-route";
 import { useRouter } from 'next/navigation';
 import LoadingScreen from "@/components/organisms/LoadingScreen";
+import NoTasksNotification from "./NoTasksNotification";
 
 interface AuthUser {
   user_Id: string;
@@ -56,6 +57,7 @@ const TaskPage = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [dateSort, setDateSort] = useState<"asc" | "desc" | null>(null);
   const [hoverCardPosition, setHoverCardPosition] = useState<{ [key: string]: 'above' | 'below' | null }>({});
+  const [showNoTasksModal, setShowNoTasksModal] = useState(false);
 
   const router = useRouter();
 
@@ -65,7 +67,7 @@ const TaskPage = () => {
       try {
         const userData: AuthUser = jwtDecode(authStorage);
         setUser(userData);
-        fetchTasks(userData.team);
+        fetchTasks(userData.user_Id);
       } catch (error) {
         console.error("Error decoding auth token:", error);
       }
@@ -104,22 +106,23 @@ const TaskPage = () => {
     setCurrentPage(1);
   }, [searchQuery, tasks, priorityFilter, statusFilter, dateSort]);
 
-  const fetchTasks = async (team: string) => {
+  const fetchTasks = async (userId: string) => {
     try {
       setLoading(true);
-      const fetchedTasks = await taskService.getTasksByTeam(team);
+      const fetchedTasks = await taskService.getTasksByUser(userId);
       if (fetchedTasks?.data && Array.isArray(fetchedTasks.data)) {
         setTasks(fetchedTasks.data);
         setFilteredTasks(fetchedTasks.data);
+        setShowNoTasksModal(false);
       } else {
         setTasks([]);
         setFilteredTasks([]);
+        setShowNoTasksModal(true);
       }
-      console.log(fetchedTasks);
     } catch (error) {
-      console.error("Error fetching tasks:", error);
       setTasks([]);
       setFilteredTasks([]);
+      setShowNoTasksModal(true);
     } finally {
       setLoading(false);
     }
@@ -654,6 +657,11 @@ const TaskPage = () => {
                 )}
               </div>
             </div>
+            <NoTasksNotification 
+              isOpen={showNoTasksModal} 
+              onClose={() => setShowNoTasksModal(false)} 
+              onOpenModal={() => setIsModalOpen(true)}
+            />
           </div>
         </div>
 
@@ -663,7 +671,7 @@ const TaskPage = () => {
               userId={user?.user_Id || ""}
               onClose={() => setIsModalOpen(false)}
               onSuccess={() => {
-                fetchTasks(user?.team || "");
+                fetchTasks(user?.user_Id || "");
                 setIsModalOpen(false);
               }}
             />
