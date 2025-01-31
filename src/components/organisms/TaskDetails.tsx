@@ -347,16 +347,17 @@ export const TaskDetails = ({
         >
           <X className="w-5 h-5" />
         </button>
-        <div className="flex flex-row items-center justify-between mb-[1vw] mr-[2vw]">
+        <div className="flex flex-row items-center justify-start gap-[1vw] mb-[1vw] mr-[2vw]">
           <h3 className="font-semibold text-lg">{taskData.title}</h3>
           <Button
-                variant="outline"
-                onClick={() => router.push(`/task/details/${taskData.id}`)}
-                className="px-4 py-2 text-blue-600 border-blue-600 hover:bg-blue-50"
-              >
-                See Details
-              </Button>
+            variant="outline"
+            onClick={() => router.push(`/task/details/${taskData.id}`)}
+            className="px-[0.625vw] py-[0.3125vw] text-[0.8vw] hover:bg-blue-600 hover:text-white border-blue-600 bg-white text-blue-600"
+          >
+            See Details
+          </Button>
         </div>
+        <span className="block h-[1px] bg-gray-300 mb-4" />
 
         <div className="grid grid-cols-4 gap-6">
           <div className="col-span-2">
@@ -428,37 +429,42 @@ export const TaskDetails = ({
               )}
             </div>
             <div className="flex items-center space-x-4 justify-end">
-              <Button
-                variant={taskData.status === "Ongoing" ? "default" : "outline"}
-                onClick={() => handleStatusChange("Ongoing")}
-                disabled={
-                  taskData.status === "Approved" ||
-                  taskData.status === "Ongoing"
-                }
-                className={`px-4 py-2 ${
-                  taskData.status === "Ongoing"
-                    ? "bg-yellow-500 hover:bg-yellow-600"
-                    : "text-yellow-600 border-yellow-600 hover:bg-yellow-50"
-                }`}
-              >
-                Ongoing
-              </Button>
-              <Button
-                variant={taskData.status === "Done" ? "default" : "outline"}
-                onClick={() => handleStatusChange("Done")}
-                disabled={
-                  taskData.status === "Approved" || taskData.status === "Done"
-                }
-                className={`px-4 py-2 ${
-                  taskData.status === "Done"
-                    ? "bg-green-500 hover:bg-green-600"
-                    : "text-green-600 border-green-600 hover:bg-green-50"
-                }`}
-              >
-                Done
-              </Button>
+              {/* Only show buttons if the task is not approved */}
+              {taskData.status !== "Approved" && (
+                <>
+                  <Button
+                    variant={taskData.status === "Ongoing" ? "default" : "outline"}
+                    onClick={() => handleStatusChange("Ongoing")}
+                    disabled={
+                      taskData.status === "Approved" ||
+                      taskData.status === "Ongoing"
+                    }
+                    className={`px-[0.625vw] py-[0.3125vw] text-[0.8vw] ${
+                      taskData.status === "Ongoing"
+                        ? "bg-amber-500 hover:bg-amber-600"
+                        : "text-amber-600 border-amber-600 hover:bg-amber-600 hover:text-white"
+                    }`}
+                  >
+                    Ongoing
+                  </Button>
+                  <Button
+                    variant={taskData.status === "Done" ? "default" : "outline"}
+                    onClick={() => handleStatusChange("Done")}
+                    disabled={
+                      taskData.status === "Approved" || taskData.status === "Done"
+                    }
+                    className={`px-[0.625vw] py-[0.3125vw] text-[0.8vw] ${
+                      taskData.status === "Done"
+                        ? "bg-blue-500 hover:bg-blue-600"
+                        : "text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white"
+                    }`}
+                  >
+                    Done
+                  </Button>
+                </>
+              )}
               {taskData.status === "Approved" && (
-                <span className="px-4 py-2 bg-blue-500 text-white rounded-md">
+                <span className="px-[0.625vw] py-[0.3125vw] text-[0.8vw] bg-green-500 text-white rounded-md">
                   Approved
                 </span>
               )}
