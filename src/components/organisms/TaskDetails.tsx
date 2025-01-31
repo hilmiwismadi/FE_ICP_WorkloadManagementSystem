@@ -26,6 +26,7 @@ import {
   X,
   Check,
   AlertCircle,
+  Loader,
   Loader2,
   CheckCircle2,
 } from "lucide-react";
@@ -35,14 +36,10 @@ interface Employee {
   employee_Id: string;
   name: string;
   image?: string;
-  email?: string;
   team?: string;
   skill?: string;
   phone?: string;
   current_Workload: number;
-  users?: Array<{
-    email: string;
-  }>;
 }
 
 interface Task {
@@ -60,12 +57,17 @@ interface Task {
   }>;
 }
 
+interface TaskAssign {
+  employee: Employee; // Assuming Employee is already defined
+}
+
 interface TaskDetailsProps {
   selectedTask: Task | null;
   onStatusUpdate: (
     taskId: string,
     newStatus: "Ongoing" | "Done" | "Approved"
   ) => void;
+  onClose: () => void;
 }
 
 const calculateWorkloadPercentage = (workload: number): number => {
@@ -99,6 +101,7 @@ const getImageUrl = (imageUrl: string | undefined): string => {
 export const TaskDetails = ({
   selectedTask: initialTask,
   onStatusUpdate,
+  onClose,
 }: TaskDetailsProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,16 +113,17 @@ export const TaskDetails = ({
   const [hoverCardPosition, setHoverCardPosition] = useState<
     Record<string, string>
   >({});
-  const [employees, setEmployees] = useState<Employee[]>([]);
   const [taskData, setTaskData] = useState<Task | null>(initialTask);
   const [showFeedback, setShowFeedback] = useState<string | null>(null);
   const [statusUpdateResult, setStatusUpdateResult] = useState<{
     success: boolean;
     message: string;
   } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchTaskDetails = async () => {
+      setIsLoading(true);
       if (!initialTask?.id) return;
 
       try {
@@ -127,7 +131,6 @@ export const TaskDetails = ({
           `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${initialTask.id}`
         );
         const result = await response.json();
-        console.log("Task API Response:", result); // Debug log
 
         if (result.data) {
           // Transform the data to match our Task interface
@@ -141,43 +144,16 @@ export const TaskDetails = ({
             assigns: result.data.assigns || [],
           };
           setTaskData(transformedTask);
-          console.log("Transformed task data:", transformedTask); // Debug log
         }
       } catch (error) {
         console.error("Error fetching task details:", error);
-      }
-    };
-
-    const fetchEmployees = async () => {
-      try {
-        const response = await fetch(
-          "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
-        );
-        const result = await response.json();
-
-        if (result.data && Array.isArray(result.data)) {
-          // Format the image URLs for each employee
-          const formattedEmployees = result.data.map((employee: any) => ({
-            ...employee,
-            image: getImageUrl(employee.image),
-          }));
-          setEmployees(formattedEmployees);
-          console.log("Stored employees:", formattedEmployees);
-        }
-      } catch (error) {
-        console.error("Error fetching employees:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchTaskDetails();
-    fetchEmployees();
   }, [initialTask?.id]);
-
-  const getEmployeeDetails = (employeeId: string) => {
-    const employee = employees.find((emp) => emp.employee_Id === employeeId);
-    console.log(`Looking for employee ${employeeId}:`, employee); // Debug log
-    return employee;
-  };
 
   const handleStatusChange = (newStatus: "Ongoing" | "Done") => {
     // Don't allow status change if current status is 'Approved'
@@ -251,23 +227,18 @@ export const TaskDetails = ({
     }
   };
 
-  const renderAssigneeImages = (assigns: any[]) => {
-    console.log("Rendering assigns:", assigns);
-
+  const renderAssigneeImages = (assigns: TaskAssign[]) => {
     if (!assigns || assigns.length === 0) {
-      console.log("No assigns found");
       return null;
     }
 
     return assigns.map((assign, index) => {
-      const employeeDetails = getEmployeeDetails(assign.employee_Id);
-      console.log("Found employee details:", employeeDetails);
-
-      const image = employeeDetails?.image;
+      const employee = assign.employee; 
+      const image = getImageUrl(employee.image);
 
       return (
         <div
-          key={assign.employee_Id}
+          key={employee.employee_Id}
           className="relative group"
           onMouseEnter={(event) => {
             const card = event.currentTarget.querySelector(".hover-card");
@@ -276,7 +247,7 @@ export const TaskDetails = ({
               const spaceBelow = window.innerHeight - rect.bottom;
               const spaceAbove = rect.top;
 
-              const employeeId = employeeDetails?.employee_Id as string;
+              const employeeId = employee.employee_Id as string;
               if (spaceBelow < rect.height && spaceAbove > rect.height) {
                 setHoverCardPosition((prev) => ({
                   ...prev,
@@ -293,11 +264,8 @@ export const TaskDetails = ({
         >
           <div className="w-[2.5vw] h-[2.5vw] rounded-full bg-gray-200 border-[0.08vw] border-white flex items-center justify-center overflow-hidden">
             <Image
-              src={
-                image ||
-                "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"
-              }
-              alt={employeeDetails?.name || `Employee ${index + 1}`}
+              src={image}
+              alt={employee.name || `Employee ${index + 1}`}
               width={32}
               height={32}
               className="w-full h-full object-cover"
@@ -305,72 +273,66 @@ export const TaskDetails = ({
           </div>
 
           {/* Hover Card */}
-          {employeeDetails && (
-            <motion.div
-              className={`absolute left-0 transform -translate-x-full 
-                ${
-                  hoverCardPosition[employeeDetails.employee_Id] === "above"
-                    ? "bottom-full mb-2"
-                    : "top-full mt-2"
-                } 
-                w-[12vw] bg-white rounded-lg shadow-lg p-[0.625vw] hidden group-hover:block z-50 border border-gray-200 hover-card`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-            >
-              <div className="flex items-start gap-[0.625vw]">
-                <Image
-                  src={
-                    image ||
-                    "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"
-                  }
-                  alt={employeeDetails.name}
-                  width={32}
-                  height={32}
-                  className="w-[2.5vw] h-[2.5vw] rounded-full object-cover"
-                />
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 text-[0.9vw]">
-                    {employeeDetails.name}
-                  </h4>
-                  <p className="text-[0.6vw] text-gray-500">
-                    {employeeDetails.users?.[0]?.email}
-                  </p>
-                </div>
+          <motion.div
+            className={`absolute left-0 transform -translate-x-full 
+              ${hoverCardPosition[employee.employee_Id] === "above" ? "bottom-full mb-2" : "top-full mt-2"} 
+              w-[12vw] bg-white rounded-lg shadow-lg p-[0.625vw] hidden group-hover:block z-50 border border-gray-200 hover-card`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+          >
+            <div className="flex items-start gap-[0.625vw]">
+              <Image
+                src={image}
+                alt={employee.name}
+                width={32}
+                height={32}
+                className="w-[2.5vw] h-[2.5vw] rounded-full object-cover"
+              />
+              <div className="flex-1">
+                <h4 className="font-medium text-gray-900 text-[0.9vw]">
+                  {employee.name}
+                </h4>
               </div>
-              <div className="mt-[0.5vw] space-y-[0.25vw] text-[0.6vw]">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Team:</span>
-                  <span className="text-gray-900">{employeeDetails.team}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Role:</span>
-                  <span className="text-gray-900">{employeeDetails.skill}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Workload:</span>
-                  <span
-                    className={`${getWorkloadColor(
-                      employeeDetails.current_Workload
-                    )}`}
-                  >
-                    {calculateWorkloadPercentage(
-                      employeeDetails.current_Workload
-                    ).toFixed(2)}
-                    %
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Phone:</span>
-                  <span className="text-gray-900">{employeeDetails.phone}</span>
-                </div>
+            </div>
+            <div className="mt-[0.5vw] space-y-[0.25vw] text-[0.6vw]">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Team:</span>
+                <span className="text-gray-900">{employee.team}</span>
               </div>
-            </motion.div>
-          )}
+              <div className="flex justify-between">
+                <span className="text-gray-500">Role:</span>
+                <span className="text-gray-900">{employee.skill}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Workload:</span>
+                <span className={`${getWorkloadColor(employee.current_Workload)}`}>
+                  {calculateWorkloadPercentage(employee.current_Workload).toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Phone:</span>
+                <span className="text-gray-900">{employee.phone}</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       );
     });
   };
+
+  const handleClose = () => {
+    setTaskData(null);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[38vh]">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-500 mb-2" />
+        <span className="text-gray-600 text-[0.7vw]">Loading, please wait . . .</span>
+      </div>
+    );
+  }
 
   if (!taskData) {
     return null;
@@ -380,12 +342,21 @@ export const TaskDetails = ({
     <>
       <div className="p-6 border rounded-lg bg-white w-full min-h-[38vh] relative">
         <button
-          onClick={() => setTaskData(null)}
+          onClick={handleClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
         >
           <X className="w-5 h-5" />
         </button>
-        <h3 className="font-semibold text-lg mb-4">{taskData.title}</h3>
+        <div className="flex flex-row items-center justify-between mb-[1vw] mr-[2vw]">
+          <h3 className="font-semibold text-lg">{taskData.title}</h3>
+          <Button
+                variant="outline"
+                onClick={() => router.push(`/task/details/${taskData.id}`)}
+                className="px-4 py-2 text-blue-600 border-blue-600 hover:bg-blue-50"
+              >
+                See Details
+              </Button>
+        </div>
 
         <div className="grid grid-cols-4 gap-6">
           <div className="col-span-2">
@@ -577,7 +548,7 @@ export const TaskDetails = ({
                     >
                       {isSubmitting ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader className="w-4 h-4 animate-spin" />
                           Updating...
                         </>
                       ) : (

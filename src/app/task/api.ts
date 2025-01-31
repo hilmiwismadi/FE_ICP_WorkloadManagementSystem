@@ -8,8 +8,8 @@ export const taskService = {
       return response.data;
     },
 
-    getTasksByTeam: async (team: string) => {
-      const response = await axios.get(`${BASE_URL}/task/read/team/${encodeURIComponent(team)}`);
+    getTasksByUser: async (userId: string) => {
+      const response = await axios.get(`${BASE_URL}/task/user/read/${userId}`);
       return response.data;
     },
   

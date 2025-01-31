@@ -21,7 +21,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   XCircle,
-} from "lucide-react"; 
+} from "lucide-react";
 import { Task, Employee } from "@/app/task/types";
 import { io } from "socket.io-client";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
@@ -37,6 +37,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { JwtPayload } from "jwt-decode";
 
 export interface Comment {
   comment_Id: string;
@@ -59,12 +60,20 @@ export interface TimelineActivity {
 export type Priority = "High" | "Medium" | "Normal";
 export type Status = "Ongoing" | "Done" | "Approved";
 
+interface TaskAssign {
+  employee: Employee; // Assuming Employee is already defined
+}
+
 // Update socket initialization to include credentials and transports
 const socket = io("https://be-icpworkloadmanagementsystem.up.railway.app", {
   withCredentials: true,
   transports: ["websocket", "polling"],
   reconnection: true,
 });
+
+interface CustomJwtPayload extends JwtPayload {
+  role?: string;
+}
 
 const TaskDetailPage = () => {
   const { id: taskId } = useParams();
@@ -73,7 +82,6 @@ const TaskDetailPage = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [user, setUser] = useState<any>(null);
-  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [activities, setActivities] = useState<TimelineActivity[]>([]);
   const [newActivity, setNewActivity] = useState("");
@@ -82,7 +90,9 @@ const TaskDetailPage = () => {
   const [realTimeActivities, setRealTimeActivities] = useState<
     TimelineActivity[]
   >([]);
-  const [hoverCardPosition, setHoverCardPosition] = useState<Record<string, string>>({});
+  const [hoverCardPosition, setHoverCardPosition] = useState<
+    Record<string, string>
+  >({});
   const [isMessageSent, setIsMessageSent] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -90,16 +100,20 @@ const TaskDetailPage = () => {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showFeedback, setShowFeedback] = useState<{
     show: boolean;
-    type: 'success' | 'error';
+    type: "success" | "error";
     message: string;
-  }>({ show: false, type: 'success', message: '' });
+  }>({ show: false, type: "success", message: "" });
+  const [canManageTask, setCanManageTask] = useState(false);
 
   useEffect(() => {
     const authStorage = Cookies.get("auth_token");
     if (authStorage) {
       try {
-        const userData = jwtDecode(authStorage);
+        const userData = jwtDecode<CustomJwtPayload>(authStorage);
         setUser(userData);
+        setCanManageTask(
+          userData?.role === "Manager" || userData?.role === "PIC"
+        );
       } catch (error) {
         console.error("Error decoding auth token:", error);
       }
@@ -109,13 +123,11 @@ const TaskDetailPage = () => {
   useEffect(() => {
     // Socket.IO event listeners
     socket.on("connect", () => {
-      console.log("Connected to Socket.IO server");
       // Join task-specific room
       socket.emit("join-task", taskId);
     });
 
     socket.on("comment", async (newComment: Comment) => {
-      console.log("Received new comment:", newComment);
       setComments((prev) => [...prev, newComment]);
 
       const imageUrl = await getEmployeeImage(newComment.user_Id);
@@ -152,40 +164,9 @@ const TaskDetailPage = () => {
   };
 
   useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        const response = await fetch("https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read");
-        const result = await response.json();
-
-        let formattedEmployees;
-        if (Array.isArray(result)) {
-          formattedEmployees = result.map((emp: any) => ({
-            ...emp,
-            image: getImageUrl(emp.image),
-          }));
-        } else if (result.data && Array.isArray(result.data)) {
-          formattedEmployees = result.data.map((emp: any) => ({
-            ...emp,
-            image: getImageUrl(emp.image),
-          }));
-        } else {
-          formattedEmployees = [];
-        }
-        setEmployees(formattedEmployees);
-      } catch (error) {
-        console.error("Error fetching employees:", error);
-        setEmployees([]);
-      }
-    };
-
-    fetchEmployees();
-  }, []);
-
-  useEffect(() => {
     const fetchTaskAndComments = async () => {
       try {
         setLoading(true);
-      
         const [taskResponse, commentsResponse] = await Promise.all([
           fetch(
             `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${taskId}`
@@ -200,32 +181,33 @@ const TaskDetailPage = () => {
           commentsResponse.json(),
         ]);
 
-        console.log("Task Data:", taskData);
-        console.log("Comments Data:", commentsData);
-
         setTask(taskData.data);
-        
-        const updatedComments = (commentsData.data || []).map((comment: any) => ({
-          comment_Id: comment.comment_Id,
-          content: comment.content,
-          created_at: comment.created_at,
-          type: comment.type,
-          user_Id: comment.user_Id,
-          user: {
-            email: comment.user?.email || "Unknown User",
-          },
-        }));
+
+        const updatedComments = (commentsData.data || []).map(
+          (comment: any) => ({
+            comment_Id: comment.comment_Id,
+            content: comment.content,
+            created_at: comment.created_at,
+            type: comment.type,
+            user_Id: comment.user_Id,
+            user: {
+              email: comment.user?.email || "Unknown User",
+            },
+          })
+        );
 
         setComments(updatedComments);
 
-        const timelineActivities = await Promise.all(updatedComments.map(async (comment: any) => ({
-          id: comment.comment_Id,
-          type: comment.type,
-          content: comment.content,
-          user: comment.user?.email || "Unknown User",
-          timestamp: comment.created_at,
-          userImage: await getEmployeeImage(comment.user_Id),
-        })));
+        const timelineActivities = await Promise.all(
+          updatedComments.map(async (comment: any) => ({
+            id: comment.comment_Id,
+            type: comment.type,
+            content: comment.content,
+            user: comment.user?.email || "Unknown User",
+            timestamp: comment.created_at,
+            userImage: await getEmployeeImage(comment.user_Id),
+          }))
+        );
 
         setActivities(timelineActivities);
       } catch (error) {
@@ -240,12 +222,15 @@ const TaskDetailPage = () => {
     }
   }, [taskId]);
 
-  const getEmployeeImage = useCallback(async (email?: string) => {
-    const employee = employees.find((emp) =>
-      emp.users?.some((user) => user.email === email)
-    );
-    return getImageUrl(employee?.image);
-  }, [employees]);
+  const getEmployeeImage = useCallback(
+    async (email?: string) => {
+      const employee = task?.assigns?.find((emp) =>
+        emp.employee.users?.some((user) => user.email === email)
+      );
+      return getImageUrl(employee?.employee.image);
+    },
+    [task]
+  );
 
   useEffect(() => {
     getEmployeeImage();
@@ -256,9 +241,11 @@ const TaskDetailPage = () => {
 
     try {
       setIsSending(true);
-      
-      const normalizedType = activity.type.charAt(0).toUpperCase() + activity.type.slice(1).toLowerCase();
-      
+
+      const normalizedType =
+        activity.type.charAt(0).toUpperCase() +
+        activity.type.slice(1).toLowerCase();
+
       const response = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/add/${taskId}`,
         {
@@ -277,7 +264,9 @@ const TaskDetailPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save comment to database");
+        throw new Error(
+          errorData.message || "Failed to save comment to database"
+        );
       }
 
       const data = await response.json();
@@ -315,7 +304,7 @@ const TaskDetailPage = () => {
       case "Assigned":
         return <UserPlus className="w-5 h-5 text-purple-500" />;
       default:
-        return null; 
+        return null;
     }
   };
 
@@ -360,7 +349,9 @@ const TaskDetailPage = () => {
                     alt={activity.user}
                     className="w-6 h-6 rounded-full"
                   />
-                  <span className="font-medium text-[0.9vw] text-gray-900">{activity.user}</span>
+                  <span className="font-medium text-[0.9vw] text-gray-900">
+                    {activity.user}
+                  </span>
                   <span className="text-sm text-gray-500 text-[0.9vw]">
                     <Clock className="w-4 h-4 inline mr-[0.4vw]" />
                     {new Date(activity.timestamp).toLocaleString()}
@@ -382,42 +373,50 @@ const TaskDetailPage = () => {
 
   const getWorkloadColor = (percentage: number): string => {
     if (percentage < 40) {
-      return "text-green-600"; 
+      return "text-green-600";
     } else if (percentage < 80) {
-      return "text-yellow-600"; 
+      return "text-yellow-600";
     } else {
-      return "text-red-600"; 
+      return "text-red-600";
     }
   };
 
   const displayActivities =
     realTimeActivities.length > 0 ? realTimeActivities : activities;
 
-  const getEmployeeDetails = (employeeId: string) => {
-    return employees.find((emp) => emp.employee_Id === employeeId);
-  };
+  const renderAssigneeImages = (assigns: TaskAssign[]) => {
+    if (!assigns || assigns.length === 0) {
+      return null;
+    }
 
-  const renderAssigneeImages = (assigns: any[]) => {
     return assigns.map((assign, index) => {
-      const employeeDetails = getEmployeeDetails(assign.employee_Id);
-      const image = employeeDetails?.image || "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ"; // fallback image
+      const employee = assign.employee; // Directly use employee from assigns
+      const image = getImageUrl(employee.image);
 
       return (
-        <div key={index} className="relative group" onMouseEnter={(event) => {
-          const card = event.currentTarget.querySelector('.hover-card');
-          if (card) {
-            const rect = card.getBoundingClientRect();
-            const spaceBelow = window.innerHeight - rect.bottom;
-            const spaceAbove = rect.top;
+        <div
+          key={employee.employee_Id}
+          className="relative group"
+          onMouseEnter={(event) => {
+            const card = event.currentTarget.querySelector(".hover-card");
+            if (card) {
+              const rect = card.getBoundingClientRect();
+              const spaceBelow = window.innerHeight - rect.bottom;
+              const spaceAbove = rect.top;
 
-            const employeeId = employeeDetails?.employee_Id as string; 
-            if (spaceBelow < rect.height && spaceAbove > rect.height) {
-              setHoverCardPosition(prev => ({ ...prev, [employeeId]: 'above' } as any)); 
-            } else {
-              setHoverCardPosition(prev => ({ ...prev, [employeeId]: 'below' } as any)); 
+              const employeeId = employee.employee_Id as string;
+              if (spaceBelow < rect.height && spaceAbove > rect.height) {
+                setHoverCardPosition(
+                  (prev) => ({ ...prev, [employeeId]: "above" } as any)
+                );
+              } else {
+                setHoverCardPosition(
+                  (prev) => ({ ...prev, [employeeId]: "below" } as any)
+                );
+              }
             }
-          }
-        }}>
+          }}
+        >
           <div className="w-[2.5vw] h-[2.5vw] rounded-full bg-gray-200 border-[0.08vw] border-white flex items-center justify-center overflow-hidden">
             <img
               src={image}
@@ -426,44 +425,57 @@ const TaskDetailPage = () => {
             />
           </div>
           {/* Hover Card */}
-          {employeeDetails && (
+          {employee && (
             <motion.div
-              className={`absolute left-0 transform -translate-x-full ${hoverCardPosition[employeeDetails.employee_Id] === 'above' ? 'bottom-full mb-2' : 'top-full mt-2'} w-[12vw] bg-white rounded-lg shadow-lg p-[0.625vw] hidden group-hover:block z-50 border border-gray-200 hover-card`}
+              className={`absolute left-0 transform -translate-x-full ${
+                hoverCardPosition[employee.employee_Id] === "above"
+                  ? "bottom-full mb-2"
+                  : "top-full mt-2"
+              } w-[12vw] bg-white rounded-lg shadow-lg p-[0.625vw] hidden group-hover:block z-50 border border-gray-200 hover-card`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
             >
               <div className="flex items-start gap-[0.625vw]">
                 <img
-                  src={employeeDetails.image}
-                  alt={employeeDetails.name}
+                  src={getImageUrl(employee.image)}
+                  alt={employee.name}
                   className="w-[2.5vw] h-[2.5vw] rounded-full object-cover"
                 />
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 text-[0.9vw]">{employeeDetails.name}</h4>
+                  <h4 className="font-medium text-gray-900 text-[0.9vw]">
+                    {employee.name}
+                  </h4>
                   <p className="text-[0.6vw] text-gray-500">
-                    {employeeDetails.users?.[0]?.email}
+                    {employee.users?.[0]?.email}
                   </p>
                 </div>
               </div>
               <div className="mt-[0.5vw] space-y-[0.25vw] text-[0.6vw]">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Team:</span>
-                  <span className="text-gray-900">{employeeDetails.team}</span>
+                  <span className="text-gray-900">{employee.team}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Role:</span>
-                  <span className="text-gray-900">{employeeDetails.skill}</span>
+                  <span className="text-gray-900">{employee.skill}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Workload:</span>
-                  <span className={`${getWorkloadColor(employeeDetails.current_Workload)}`}>
-                    {calculateWorkloadPercentage(employeeDetails.current_Workload).toFixed(2)}%
+                  <span
+                    className={`${getWorkloadColor(
+                      employee.current_Workload
+                    )}`}
+                  >
+                    {calculateWorkloadPercentage(
+                      employee.current_Workload
+                    ).toFixed(2)}
+                    %
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Phone:</span>
-                  <span className="text-gray-900">{employeeDetails.phone}</span>
+                  <span className="text-gray-900">{employee.phone}</span>
                 </div>
               </div>
             </motion.div>
@@ -474,12 +486,12 @@ const TaskDetailPage = () => {
   };
 
   const handleApproveClick = () => {
-    if (task?.status !== "Done" || isUpdatingStatus) return;
+    if (!canManageTask || task?.status !== "Done" || isUpdatingStatus) return;
     setShowApproveDialog(true);
   };
 
   const handleRejectClick = () => {
-    if (task?.status !== "Done") return;
+    if (!canManageTask || task?.status !== "Done") return;
     setShowRejectDialog(true);
   };
 
@@ -495,7 +507,7 @@ const TaskDetailPage = () => {
           },
           body: JSON.stringify({
             ...task,
-            status: "Approved"
+            status: "Approved",
           }),
         }
       );
@@ -505,7 +517,7 @@ const TaskDetailPage = () => {
       }
 
       const updatedTask = await response.json();
-      setTask(prev => ({ ...prev, ...updatedTask.data }));
+      setTask((prev) => ({ ...prev, ...updatedTask.data }));
 
       // Add approval activity
       const approvalActivity: Comment = {
@@ -534,20 +546,20 @@ const TaskDetailPage = () => {
       setShowApproveDialog(false);
       setShowFeedback({
         show: true,
-        type: 'success',
-        message: 'Task approved successfully!'
+        type: "success",
+        message: "Task approved successfully!",
       });
     } catch (error) {
       console.error("Error approving task:", error);
       setShowFeedback({
         show: true,
-        type: 'error',
-        message: 'Failed to approve task. Please try again.'
+        type: "error",
+        message: "Failed to approve task. Please try again.",
       });
     } finally {
       setIsUpdatingStatus(false);
       setTimeout(() => {
-        setShowFeedback(prev => ({ ...prev, show: false }));
+        setShowFeedback((prev) => ({ ...prev, show: false }));
       }, 3000);
     }
   };
@@ -584,21 +596,56 @@ const TaskDetailPage = () => {
       setShowRejectDialog(false);
       setShowFeedback({
         show: true,
-        type: 'success',
-        message: 'Task rejected successfully!'
+        type: "success",
+        message: "Task rejected successfully!",
       });
     } catch (error) {
       console.error("Error rejecting task:", error);
       setShowFeedback({
         show: true,
-        type: 'error',
-        message: 'Failed to reject task. Please try again.'
+        type: "error",
+        message: "Failed to reject task. Please try again.",
       });
     } finally {
       setTimeout(() => {
-        setShowFeedback(prev => ({ ...prev, show: false }));
+        setShowFeedback((prev) => ({ ...prev, show: false }));
       }, 3000);
     }
+  };
+
+  const renderActionButtons = () => {
+    if (!canManageTask) {
+      return null;
+    }
+
+    return (
+      <div className="flex flex-row items-center justify-center gap-2">
+        <motion.button
+          onClick={handleApproveClick}
+          disabled={task?.status !== "Done" || isUpdatingStatus}
+          className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
+            task?.status === "Done"
+              ? "bg-green-500 hover:bg-green-600 text-white"
+              : "bg-gray-100 text-gray-400 cursor-not-allowed"
+          }`}
+        >
+          <ThumbsUp className="w-3 h-3" />
+          Approve
+        </motion.button>
+        <motion.button
+          onClick={handleRejectClick}
+          disabled={task?.status !== "Done"}
+          className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
+            task?.status === "Done"
+              ? "bg-red-500 hover:bg-red-600 text-white"
+              : "bg-gray-100 text-gray-400 cursor-not-allowed"
+          }`}
+        >
+          <ThumbsDown className="w-3 h-3" />
+          Reject
+        </motion.button>
+      </div>
+    );
   };
 
   if (loading) {
@@ -624,7 +671,11 @@ const TaskDetailPage = () => {
                         <Calendar className="w-3 h-3" />
                         <span className="text-xs">
                           {task?.start_Date && task?.end_Date
-                            ? `${new Date(task.start_Date).toLocaleDateString()} - ${new Date(task.end_Date).toLocaleDateString()}`
+                            ? `${new Date(
+                                task.start_Date
+                              ).toLocaleDateString()} - ${new Date(
+                                task.end_Date
+                              ).toLocaleDateString()}`
                             : "N/A"}
                         </span>
                       </div>
@@ -665,41 +716,20 @@ const TaskDetailPage = () => {
                         </span>
                       )}
                     </div>
-                    <div className="flex gap-2">
-                      <motion.button
-                        onClick={handleApproveClick}
-                        disabled={task?.status !== "Done" || isUpdatingStatus}
-                        className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
-                          task?.status === "Done"
-                            ? "bg-green-500 hover:bg-green-600 text-white"
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        }`}
-                      >
-                        <ThumbsUp className="w-3 h-3" />
-                        Approve
-                      </motion.button>
-                      <motion.button
-                        onClick={handleRejectClick}
-                        disabled={task?.status !== "Done"}
-                        className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
-                          task?.status === "Done"
-                            ? "bg-red-500 hover:bg-red-600 text-white"
-                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        }`}
-                      >
-                        <ThumbsDown className="w-3 h-3" />
-                        Reject
-                      </motion.button>
-                    </div>
                   </div>
                 </div>
-
-                {task?.description && (
-                  <p className="text-gray-600 mb-2 text-xs">{task.description}</p>
-                )}
-
+                <div className="flex flex-row justify-between items-center mb-[1vw]">
+                  {task?.description && (
+                    <p className="text-gray-600 text-[0.8vw]">
+                      {task.description}
+                    </p>
+                  )}
+                  {renderActionButtons()}
+                </div>
                 <div className="border-t pt-2">
-                  <h3 className="font-semibold text-gray-600 mb-[0.5vw] text-xs">Assignees</h3>
+                  <h3 className="font-semibold text-gray-600 mb-[0.5vw] text-xs">
+                    Assignees
+                  </h3>
                   <div className="flex gap-[0.5vw]">
                     {task?.assigns && renderAssigneeImages(task.assigns)}
                   </div>
@@ -711,7 +741,11 @@ const TaskDetailPage = () => {
                 <div className="flex gap-2 relative">
                   <select
                     value={activityType}
-                    onChange={(e) => setActivityType(e.target.value as TimelineActivity["type"])}
+                    onChange={(e) =>
+                      setActivityType(
+                        e.target.value as TimelineActivity["type"]
+                      )
+                    }
                     className="px-[0.5vw] py-[0.3vw] text-[0.8vw] border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="comment">Comment</option>
@@ -727,7 +761,7 @@ const TaskDetailPage = () => {
                     placeholder="Add an activity..."
                     className="flex-1 px-[0.5vw] py-[0.3vw] text-[0.8vw] border rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-300"
                     onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
+                      if (e.key === "Enter") {
                         handleAddActivity({
                           comment_Id: "",
                           content: newActivity,
@@ -762,7 +796,11 @@ const TaskDetailPage = () => {
                     {isSending ? (
                       <motion.div
                         animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
                       >
                         <RefreshCw className="w-4 h-4" />
                       </motion.div>
@@ -770,7 +808,7 @@ const TaskDetailPage = () => {
                       <Send className="w-4 h-4" />
                     )}
                   </motion.button>
-                  
+
                   {/* Success Message */}
                   <AnimatePresence>
                     {isMessageSent && (
@@ -781,7 +819,9 @@ const TaskDetailPage = () => {
                         className="absolute -top-6 right-0 flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-full"
                       >
                         <CheckCheck className="w-4 h-4" />
-                        <span className="text-xs">Message sent successfully!</span>
+                        <span className="text-xs">
+                          Message sent successfully!
+                        </span>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -798,7 +838,10 @@ const TaskDetailPage = () => {
             </div>
 
             {/* Approve Dialog */}
-            <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+            <AlertDialog
+              open={showApproveDialog}
+              onOpenChange={setShowApproveDialog}
+            >
               <AlertDialogOverlay className="bg-black/50 fixed inset-0" />
               <AlertDialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[30vw] max-w-none z-50 bg-white rounded-[0.8vw] p-[1.5vw] shadow-lg">
                 <motion.div
@@ -812,7 +855,8 @@ const TaskDetailPage = () => {
                       Confirm Task Approval
                     </AlertDialogTitle>
                     <AlertDialogDescription className="text-[1vw]">
-                      Are you sure you want to approve this task? This action cannot be undone.
+                      Are you sure you want to approve this task? This action
+                      cannot be undone.
                     </AlertDialogDescription>
                     <motion.div
                       className="mt-[1vw] p-[1vw] bg-gray-50 rounded-[0.4vw] text-[0.9vw]"
@@ -821,14 +865,23 @@ const TaskDetailPage = () => {
                       transition={{ delay: 0.1 }}
                     >
                       <div className="space-y-[0.5vw]">
-                        <div><strong>Task:</strong> {task?.title}</div>
-                        <div><strong>Status:</strong> {task?.status}</div>
-                        <div><strong>Priority:</strong> {task?.priority}</div>
+                        <div>
+                          <strong>Task:</strong> {task?.title}
+                        </div>
+                        <div>
+                          <strong>Status:</strong> {task?.status}
+                        </div>
+                        <div>
+                          <strong>Priority:</strong> {task?.priority}
+                        </div>
                       </div>
                     </motion.div>
                   </AlertDialogHeader>
                   <AlertDialogFooter className="mt-[1vw]">
-                    <AlertDialogCancel disabled={isUpdatingStatus} className="text-[0.8vw]">
+                    <AlertDialogCancel
+                      disabled={isUpdatingStatus}
+                      className="text-[0.8vw]"
+                    >
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
@@ -840,7 +893,11 @@ const TaskDetailPage = () => {
                         <div className="flex items-center gap-[0.417vw]">
                           <motion.div
                             animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            transition={{
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: "linear",
+                            }}
                             className="w-[0.833vw] h-[0.833vw] border-[0.417vw] border-white border-t-transparent rounded-full"
                           />
                           Approving...
@@ -855,7 +912,10 @@ const TaskDetailPage = () => {
             </AlertDialog>
 
             {/* Reject Dialog */}
-            <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+            <AlertDialog
+              open={showRejectDialog}
+              onOpenChange={setShowRejectDialog}
+            >
               <AlertDialogOverlay className="bg-black/50 fixed inset-0" />
               <AlertDialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[30vw] max-w-none z-50 bg-white rounded-[0.8vw] p-[1.5vw] shadow-lg">
                 <motion.div
@@ -869,7 +929,8 @@ const TaskDetailPage = () => {
                       Confirm Task Rejection
                     </AlertDialogTitle>
                     <AlertDialogDescription className="text-[1vw]">
-                      Are you sure you want to reject this task? The task will be sent back for revision.
+                      Are you sure you want to reject this task? The task will
+                      be sent back for revision.
                     </AlertDialogDescription>
                     <motion.div
                       className="mt-[1vw] p-[1vw] bg-gray-50 rounded-[0.4vw] text-[0.9vw]"
@@ -878,9 +939,15 @@ const TaskDetailPage = () => {
                       transition={{ delay: 0.1 }}
                     >
                       <div className="space-y-[0.5vw]">
-                        <div><strong>Task:</strong> {task?.title}</div>
-                        <div><strong>Status:</strong> {task?.status}</div>
-                        <div><strong>Priority:</strong> {task?.priority}</div>
+                        <div>
+                          <strong>Task:</strong> {task?.title}
+                        </div>
+                        <div>
+                          <strong>Status:</strong> {task?.status}
+                        </div>
+                        <div>
+                          <strong>Priority:</strong> {task?.priority}
+                        </div>
                       </div>
                     </motion.div>
                   </AlertDialogHeader>
@@ -908,15 +975,27 @@ const TaskDetailPage = () => {
                   exit={{ opacity: 0, y: -20 }}
                   className="fixed top-4 right-4 z-50"
                 >
-                  <Alert className={`w-[20vw] ${showFeedback.type === 'success' ? 'bg-green-50' : 'bg-red-50'}`}>
+                  <Alert
+                    className={`w-[20vw] ${
+                      showFeedback.type === "success"
+                        ? "bg-green-50"
+                        : "bg-red-50"
+                    }`}
+                  >
                     <div className="flex items-center gap-2">
-                      {showFeedback.type === 'success' ? (
+                      {showFeedback.type === "success" ? (
                         <CheckCircle className="w-4 h-4 text-green-600" />
                       ) : (
                         <XCircle className="w-4 h-4 text-red-600" />
                       )}
-                      <AlertTitle className={`text-[0.9vw] ${showFeedback.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
-                        {showFeedback.type === 'success' ? 'Success' : 'Error'}
+                      <AlertTitle
+                        className={`text-[0.9vw] ${
+                          showFeedback.type === "success"
+                            ? "text-green-800"
+                            : "text-red-800"
+                        }`}
+                      >
+                        {showFeedback.type === "success" ? "Success" : "Error"}
                       </AlertTitle>
                     </div>
                     <AlertDescription className="text-[0.8vw] mt-2">

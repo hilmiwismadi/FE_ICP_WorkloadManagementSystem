@@ -189,6 +189,7 @@ export default function PicRoadmap() {
                       setSelectedTask(prev => (prev ? { ...prev, status: newStatus } : null));
                     }
                   }}
+                  onClose={() => setSelectedTask(null)}
                 />
               </div>
             </div>
