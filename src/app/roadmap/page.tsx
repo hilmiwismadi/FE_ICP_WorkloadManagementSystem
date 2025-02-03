@@ -157,6 +157,7 @@ export default function DivisionRoadmap({
                   selectedTask={selectedTask}
                   onStatusUpdate={handleStatusUpdate}
                   onClose={() => setSelectedTask(null)}
+                  showStatusButtons={false}
                 />
               </div>
             </div>

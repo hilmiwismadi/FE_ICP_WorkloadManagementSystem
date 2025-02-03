@@ -68,6 +68,7 @@ interface TaskDetailsProps {
     newStatus: "Ongoing" | "Done" | "Approved"
   ) => void;
   onClose: () => void;
+  showStatusButtons: boolean;
 }
 
 const calculateWorkloadPercentage = (workload: number): number => {
@@ -102,6 +103,7 @@ export const TaskDetails = ({
   selectedTask: initialTask,
   onStatusUpdate,
   onClose,
+  showStatusButtons,
 }: TaskDetailsProps) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -233,7 +235,7 @@ export const TaskDetails = ({
     }
 
     return assigns.map((assign, index) => {
-      const employee = assign.employee; 
+      const employee = assign.employee;
       const image = getImageUrl(employee.image);
 
       return (
@@ -275,7 +277,11 @@ export const TaskDetails = ({
           {/* Hover Card */}
           <motion.div
             className={`absolute left-0 transform -translate-x-full 
-              ${hoverCardPosition[employee.employee_Id] === "above" ? "bottom-full mb-2" : "top-full mt-2"} 
+              ${
+                hoverCardPosition[employee.employee_Id] === "above"
+                  ? "bottom-full mb-2"
+                  : "top-full mt-2"
+              } 
               w-[12vw] bg-white rounded-lg shadow-lg p-[0.625vw] hidden group-hover:block z-50 border border-gray-200 hover-card`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -329,7 +335,9 @@ export const TaskDetails = ({
     return (
       <div className="flex flex-col items-center justify-center h-[35vh]">
         <Loader2 className="w-6 h-6 animate-spin text-gray-500 mb-2" />
-        <span className="text-gray-600 text-[0.7vw]">Loading, please wait . . .</span>
+        <span className="text-gray-600 text-[0.7vw]">
+          Loading, please wait . . .
+        </span>
       </div>
     );
   }
@@ -370,7 +378,8 @@ export const TaskDetails = ({
             <div className="flex items-center gap-2 text-[0.9vw]">
               <Calendar className="w-[1.2vw] h-[1.2vw] text-gray-500" />
               <span>
-                <strong>Duration:</strong> {format(new Date(taskData.startDate), "MMM d")} -{" "}
+                <strong>Duration:</strong>{" "}
+                {format(new Date(taskData.startDate), "MMM d")} -{" "}
                 {format(new Date(taskData.endDate), "MMM d")}
               </span>
             </div>
@@ -425,15 +434,19 @@ export const TaskDetails = ({
               {taskData?.assigns ? (
                 renderAssigneeImages(taskData.assigns)
               ) : (
-                <div className="text-gray-500 text-[0.8vw]">No assignees found</div>
+                <div className="text-gray-500 text-[0.8vw]">
+                  No assignees found
+                </div>
               )}
             </div>
             <div className="flex items-center space-x-4 justify-end">
-              {/* Only show buttons if the task is not approved */}
-              {taskData.status !== "Approved" && (
+              {/* Only show buttons if the task is not approved and showStatusButtons is true */}
+              {showStatusButtons && taskData.status !== "Approved" && (
                 <>
                   <Button
-                    variant={taskData.status === "Ongoing" ? "default" : "outline"}
+                    variant={
+                      taskData.status === "Ongoing" ? "default" : "outline"
+                    }
                     onClick={() => handleStatusChange("Ongoing")}
                     disabled={
                       taskData.status === "Approved" ||
@@ -451,7 +464,8 @@ export const TaskDetails = ({
                     variant={taskData.status === "Done" ? "default" : "outline"}
                     onClick={() => handleStatusChange("Done")}
                     disabled={
-                      taskData.status === "Approved" || taskData.status === "Done"
+                      taskData.status === "Approved" ||
+                      taskData.status === "Done"
                     }
                     className={`px-[0.625vw] py-[0.3125vw] text-[0.8vw] ${
                       taskData.status === "Done"

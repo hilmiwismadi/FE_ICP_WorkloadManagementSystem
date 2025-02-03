@@ -158,6 +158,7 @@ export default function TaskLists({
                   selectedTask={selectedTask}
                   onStatusUpdate={handleStatusUpdate}
                   onClose={() => setSelectedTask(null)}
+                  showStatusButtons={true}
                 />
               </div>
             </div>
