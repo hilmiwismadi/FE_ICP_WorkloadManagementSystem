@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import axios from "axios";
 import Sidebar from "../../../components/sidebar";
-import { TaskData, columns } from "../columns";
+import { TaskData, columns } from "../../dashboard/columns";
 import { DataTableHalf } from "@/app/activity/data-table-half";
 import UserProfile from "../user-profile";
 import SearchBar from "@/components/organisms/SearchBarActivity";
