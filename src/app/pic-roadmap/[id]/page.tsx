@@ -190,6 +190,7 @@ export default function PicRoadmap() {
                     }
                   }}
                   onClose={() => setSelectedTask(null)}
+                  showStatusButtons={false}
                 />
               </div>
             </div>
