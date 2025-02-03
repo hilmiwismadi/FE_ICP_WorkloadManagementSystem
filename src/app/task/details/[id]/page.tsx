@@ -532,6 +532,13 @@ const TaskDetailPage = () => {
   const handleConfirmApprove = async () => {
     try {
       setIsUpdatingStatus(true);
+
+      const employeeImageResponse = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${user?.employee_Id}`
+      );
+      const employeeImageData = await employeeImageResponse.json();
+      const employeeImage = getImageUrl(employeeImageData.data?.image);
+
       const response = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/edit/status/${taskId}`,
         {
@@ -564,25 +571,43 @@ const TaskDetailPage = () => {
           email: user?.email,
           role: user?.role,
           employee: {
-            image: getImageUrl(user?.employee?.image),
+            image: employeeImage,
           },
         },
       };
 
+      const commentResponse = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/add/${taskId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            content: approvalActivity.content,
+            user_Id: approvalActivity.user_Id,
+            task_Id: taskId,
+            type: approvalActivity.type,
+          }),
+        }
+      );
+
+      const data = await commentResponse.json();
+
       // Emit the approval activity through the socket
       socket.emit("comment", {
-        ...approvalActivity,
+        ...data.data,
         task_Id: taskId,
+        type: approvalActivity.type,
         user: {
-          email: user?.email,
-          role: user?.role,
+          email: approvalActivity.user?.email,
+          role: approvalActivity.user?.role,
           employee: {
-            image: getImageUrl(user?.employee?.image),
+            image: employeeImage,
           },
         },
       });
 
-      await handleAddActivity(approvalActivity);
       setShowApproveDialog(false);
       setShowFeedback({
         show: true,
@@ -609,8 +634,11 @@ const TaskDetailPage = () => {
       // Log the click (placeholder for future API implementation)
       console.log("Task rejected successfully");
 
-      const employeeImage = getImageUrl(user?.employee?.image);
-      console.log(employeeImage);
+      const employeeImageResponse = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${user?.employee_Id}`
+      );
+      const employeeImageData = await employeeImageResponse.json();
+      const employeeImage = getImageUrl(employeeImageData.data?.image);
 
       // Add rejection activity
       const rejectionActivity: Comment = {
@@ -628,21 +656,38 @@ const TaskDetailPage = () => {
         },
       };
 
-      // Emit the rejection activity through the socket
+      const response = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/add/${taskId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            content: rejectionActivity.content,
+            user_Id: rejectionActivity.user_Id,
+            task_Id: taskId,
+            type: rejectionActivity.type,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      // Emit the comment through the socket
       socket.emit("comment", {
-        ...rejectionActivity,
+        ...data.data,
         task_Id: taskId,
+        type: rejectionActivity.type,
         user: {
-          email: user?.email,
-          role: user?.role,
+          email: rejectionActivity.user?.email,
+          role: rejectionActivity.user?.role,
           employee: {
             image: employeeImage,
           },
         },
       });
-
-      await handleAddActivity(rejectionActivity);
-      console.log(rejectionActivity);
+      
       setShowRejectDialog(false);
       setShowFeedback({
         show: true,
