@@ -24,7 +24,7 @@ export default function TaskList({ tasks }: any) {
                   <div className="space-y-[0.217vw]">
                     <h3 className="font-medium text-[1.25vw]">{task.type}</h3>
                     <p className="font-medium text-gray-500">{task.title}</p>
-                    <p className="text-sm text-gray-500">{task.description}</p>
+                    <p className="text-sm text-gray-500 line-clamp-2 mb-2 break-all">{task.description}</p>
                     <p className="text-sm text-gray-500">Due: {task.dueDate}</p>
                   </div>
                   <div className="flex items-end">
