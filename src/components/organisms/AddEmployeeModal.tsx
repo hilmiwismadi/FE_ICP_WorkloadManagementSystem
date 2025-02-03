@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus, CheckCircle2, Upload } from "lucide-react";
 import { format } from "date-fns";
@@ -33,6 +33,8 @@ import {
   AlertDialogTitle,
   AlertDialogOverlay,
 } from "@/components/ui/alert-dialog";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
 interface NewEmployeeData {
   id: string;
@@ -71,6 +73,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [userRole, setUserRole] = useState<string>("");
 
   const [formData, setFormData] = useState<NewEmployeeData>({
     id: "",
@@ -83,6 +86,21 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
     email: "",
     role: "Employee",
   });
+
+  useEffect(() => {
+    const authToken = Cookies.get("auth_token");
+    if (authToken) {
+      try {
+        const decodedToken: { role: string; team: string } = jwtDecode(authToken);
+        setUserRole(decodedToken.role);
+        if (decodedToken.role === "PIC") {
+          setFormData(prev => ({ ...prev, team: decodedToken.team }));
+        }
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -299,26 +317,34 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
                 <label className="text-[1vw] font-medium">
                   Team <span className="text-red-500">*</span>
                 </label>
-                <Select
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, team: value }))
-                  }
-                >
-                  <SelectTrigger className="h-[2.5vw] text-[0.8vw]">
-                    <SelectValue placeholder="Select team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TEAM_OPTIONS.map((team) => (
-                      <SelectItem
-                        key={team}
-                        value={team}
-                        className="text-[0.8vw]"
-                      >
-                        {team}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {userRole === "PIC" ? (
+                  <Input
+                    value={formData.team}
+                    disabled
+                    className="h-[2.5vw] text-[0.8vw] bg-gray-100"
+                  />
+                ) : (
+                  <Select
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, team: value }))
+                    }
+                  >
+                    <SelectTrigger className="h-[2.5vw] text-[0.8vw]">
+                      <SelectValue placeholder="Select team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TEAM_OPTIONS.map((team) => (
+                        <SelectItem
+                          key={team}
+                          value={team}
+                          className="text-[0.8vw]"
+                        >
+                          {team}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div className="space-y-[0.25vw]">
                 <label className="text-[1vw] font-medium">

@@ -168,7 +168,7 @@ export default function WorkloadOverview({ tasks, currentWorkload, averageWorklo
                 stroke="#fff" 
                 fontSize="0.8vw"
               />
-              <Tooltip 
+              <Tooltip
                 labelFormatter={(week) => `Week ${week}`}
                 formatter={(value: number, name: string) => [
                   `${value} Workload Units`, 

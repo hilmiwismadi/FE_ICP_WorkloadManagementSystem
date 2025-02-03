@@ -1,118 +1,131 @@
-"use client"
- 
-import { ColumnDef } from "@tanstack/react-table"
-import { ChevronRight, ArrowUpDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { ColumnDef, Row } from "@tanstack/react-table";
+import { ArrowUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-// WorkloadStatusBar Component
-const WorkloadStatusBar = ({ value }: { value: number }) => {
-  const percentage = Math.round((value / 10.7) * 100);
-  
-  const getColor = () => {
-    if (percentage >= 80) return 'bg-red-500';
-    if (percentage >= 40) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
+export type TaskData = {
+  description: string;
+  type: string;
+  mcda: number;
+  start_date: Date;
+  end_date: Date;
+  status: string;
+};
 
-  if (value === 0) {
-    return (
-      <div className="flex items-center space-x-2 justify-start">
-        <div className="w-full h-2 bg-gray-200 rounded-full" />
-        <span className="text-gray-500 text-sm">Idle</span>
-      </div>
-    );
-  }
+const Cell = ({ row }: { row: Row<TaskData> }) => {
+  const description = row.getValue("description") as string;
+  const [isOpen, setIsOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <div className="flex items-center space-x-2 justify-start">
-      <div className="w-full h-2 bg-gray-200 rounded-full">
-        <div
-          className={`h-full rounded-full ${getColor()}`}
-          style={{ width: `${percentage}%` }}
-        />
+    <div>
+      <div 
+        className="cursor-pointer hover:text-blue-500"
+        onClick={() => setIsOpen(true)}
+      >
+        {description.length > 50 ? `${description.slice(0, 50)}...` : description}
       </div>
-      <span className="text-[0.875vw] text-gray-600">{Number(percentage.toFixed(1))}%</span>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setIsOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white p-6 rounded-lg max-w-2xl max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold mb-4">Description</h3>
+              <p className="whitespace-pre-wrap">{description}</p>
+              <button
+                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={() => setIsOpen(false)}
+              >
+                Close
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
-export type EmployeeData = {
-  employee_id: string
-  name: string
-  email: string
-  phone: string
-  team: string
-  skill: string
-  current_workload: number
-}
- 
-export const columns: ColumnDef<EmployeeData>[] = [
+export const columns: ColumnDef<TaskData>[] = [
   {
-    accessorKey: "employee_id",
-    header: "ID",
+    accessorKey: "type",
+    header: "Type",
   },
   {
-    accessorKey: "name",
-    header: "Nama",
+    accessorKey: "description",
+    header: "Description",
+    cell: Cell
   },
   {
-    accessorKey: "email",
-    header: "E-mail",
-  },
-  {
-    accessorKey: "phone",
-    header: "Contact",
-  },
-  {
-    accessorKey: "team",
-    header: "Divisi",
-  },
-  {
-    accessorKey: "skill",
-    header: "Skill",
-  },
-  {
-    accessorKey: "current_workload",
+    accessorKey: "mcda",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting()}
-          className="text-[1vw] px-0"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Workload
-          <ArrowUpDown className="text-[1vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
+          <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const workload = row.getValue("current_workload") as number;
-      return <WorkloadStatusBar value={workload} />;
-    },
-    sortingFn: (rowA, rowB, columnId) => {
-      const valueA = rowA.getValue(columnId) as number;
-      const valueB = rowB.getValue(columnId) as number;
-      return valueA - valueB;
+      );
     },
   },
   {
-    id: "actions",
-    header: "",
-    cell: ({ row }) => {
+    accessorKey: "start_date",
+    header: ({ column }) => {
       return (
-        <div className="flex justify-end">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="bg-navy hover:bg-blue-500 w-[2vw] h-[2vw]"
-            onClick={(e) => {
-              e.stopPropagation();
-              const employeeId = row.original.employee_id;
-              window.location.href = `/profile/${employeeId}`;
-            }}
-          >
-            <ChevronRight className="h-[1vw] w-[1vw] text-white" />
-          </Button>
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Start Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+  },
+  {
+    accessorKey: "end_date",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          End Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      return (
+        <div className={`
+          px-2 py-1 rounded-full text-center text-sm w-fit
+          ${status.toLowerCase() === 'ongoing' ? 'bg-yellow-100 text-yellow-800' : 
+            status.toLowerCase() === 'done' ? 'bg-blue-100 text-blue-800' : 
+            status.toLowerCase() === 'approved' ? 'bg-green-100 text-green-800' :
+            'bg-gray-100 text-gray-800'}
+        `}>
+          {status}
         </div>
       );
     },
