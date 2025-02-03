@@ -53,7 +53,7 @@ const TaskPage = () => {
       try {
         const userData: AuthUser = jwtDecode(authStorage);
         setUser(userData);
-        fetchTasks(userData.user_Id);
+        fetchTasks(userData.team); // Changed to pass team instead of user_Id
       } catch (error) {
         console.error("Error decoding auth token:", error);
       }
@@ -91,19 +91,23 @@ const TaskPage = () => {
     setCurrentPage(1);
   }, [searchQuery, tasks, priorityFilter, statusFilter, dateSort]);
 
-  const fetchTasks = async (userId: string) => {
+  const fetchTasks = async (team: string) => {
     try {
       setLoading(true);
-      const fetchedTasks = await taskService.getTasksByUser(userId);
+      const response = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/team/${team}`
+      );
+      const fetchedTasks = await response.json();
+      
       if (fetchedTasks?.data && Array.isArray(fetchedTasks.data)) {
         // For each task, fetch the detailed data
         const detailedTasks = await Promise.all(
           fetchedTasks.data.map(async (task: any) => {
             try {
-              const response = await fetch(
+              const taskResponse = await fetch(
                 `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${task.task_Id}`
               );
-              const detailedTask = await response.json();
+              const detailedTask = await taskResponse.json();
               return detailedTask.data;
             } catch (error) {
               console.error(`Error fetching task details for ${task.task_Id}:`, error);
@@ -477,7 +481,7 @@ const TaskPage = () => {
                 <div className="flex justify-between items-center mb-[1vw]">
                   <div>
                     <h1 className="text-[1.4vw] font-bold text-gray-900">
-                      Tasks
+                      Tasks - {user?.team}
                     </h1>
                     <p className="text-[0.8vw] text-gray-500">
                       {filteredTasks.length} tasks total
@@ -497,6 +501,7 @@ const TaskPage = () => {
                         <option value="Normal">Normal</option>
                       </select>
 
+                      {viewType === "list" && (
                       <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
@@ -507,11 +512,17 @@ const TaskPage = () => {
                         <option value="Done">Done</option>
                         <option value="Approved">Approved</option>
                       </select>
+                       )}
                     </div>
 
                     <div className="flex bg-gray-300 rounded-[0.3vw] p-[0.2vw]">
                       <button
-                        onClick={() => setViewType("board")}
+                        onClick={() => {
+                          setViewType("board")
+                          setStatusFilter(""); // Clear status filter when switching to board view
+                        
+                        }}
+                        
                         className={`px-[0.6vw] py-[0.2vw] rounded-[0.2vw] transition-all ${
                           viewType === "board"
                             ? "bg-white shadow text-gray-900"
@@ -628,7 +639,7 @@ const TaskPage = () => {
               userId={user?.user_Id || ""}
               onClose={() => setIsModalOpen(false)}
               onSuccess={() => {
-                fetchTasks(user?.user_Id || "");
+                fetchTasks(user?.team || "");
                 setIsModalOpen(false);
               }}
             />
