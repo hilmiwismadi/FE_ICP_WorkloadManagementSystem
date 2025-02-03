@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, CheckCircle2, Upload } from "lucide-react";
+import { X, Plus, CheckCircle2, Upload, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import ErrorModal from "./ErrorMessage";
 
 interface NewEmployeeData {
   id: string;
@@ -70,6 +71,8 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showError, setShowError] = useState(false);
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -91,10 +94,11 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
     const authToken = Cookies.get("auth_token");
     if (authToken) {
       try {
-        const decodedToken: { role: string; team: string } = jwtDecode(authToken);
+        const decodedToken: { role: string; team: string } =
+          jwtDecode(authToken);
         setUserRole(decodedToken.role);
         if (decodedToken.role === "PIC") {
-          setFormData(prev => ({ ...prev, team: decodedToken.team }));
+          setFormData((prev) => ({ ...prev, team: decodedToken.team }));
         }
       } catch (error) {
         console.error("Error decoding token:", error);
@@ -171,9 +175,11 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
 
   const handleConfirmedSubmit = async () => {
     setIsSubmitting(true);
+    setShowError(false);
+    setErrorMessage(null);
     try {
       const formDataToSend = new FormData();
-      
+
       formDataToSend.append("id", formData.id);
       formDataToSend.append("name", formData.name);
       formDataToSend.append("phone", formData.phone);
@@ -191,22 +197,26 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/add",
         {
           method: "POST",
-          body: formDataToSend, 
+          body: formDataToSend,
         }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to add employee");
+      const responseData = await response.json(); // ✅ Get JSON response
+
+      if (!response.ok || responseData.error) {
+        throw new Error(responseData.error || "Failed to add employee");
       }
 
       setShowConfirmation(false);
       setShowSuccess(true);
+
+      // ✅ Show backend success message
       toast({
         title: "Success!",
-        description: "Employee added successfully",
+        description: responseData.message || "Employee added successfully",
         duration: 3000,
       });
+
       if (onSuccess) {
         onSuccess();
       }
@@ -228,13 +238,26 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
         setSelectedFile(null);
         setImagePreview("");
       }, 1500);
-    } catch (error) {
-      console.error("Error adding employee:", error);
+    } catch (error: any) {
+      console.error("Error creating task:", error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to create task. Please try again.";
+      setErrorMessage(message);
+      // console.error("Error adding employee:", error.message);
+      setShowError(true);
+
+      // ✅ Show backend error message
       toast({
         title: "Error",
-        description: "Failed to add employee. Please try again.",
+        description:
+          error.message || "Failed to add employee. Please try again.",
         variant: "destructive",
+        duration: 4000,
       });
+
+      setShowSuccess(false); // Ensure the success modal doesn't show on failure
     } finally {
       setIsSubmitting(false);
       setShowConfirmation(false);
@@ -277,6 +300,32 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
                     <p className="text-[1.2vw] font-semibold text-green-600">
                       Employee added successfully!
                     </p>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {showError && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                >
+                  <motion.div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6 flex flex-col items-center">
+                    <div className="flex items-center mb-4">
+                      <AlertCircle className="w-6 h-6 text-red-500" />
+                    </div>
+                    <p className="text-md font-semibold text-red-600">
+                      {errorMessage}
+                    </p>
+                    <button
+                      onClick={() => setShowError(false)}
+                      className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                    >
+                      Close
+                    </button>
                   </motion.div>
                 </motion.div>
               )}
@@ -423,7 +472,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
                   />
                   <label
                     htmlFor="image-upload"
-                    className="flex items-center justify-center h-[2.5vw] px-4 border rounded-md cursor-pointer hover:bg-gray-50"
+                    className="flex items-center justify-center h-[2.5vw] px-2 border rounded-md cursor-pointer hover:bg-gray-50 line-clamp-2 mb-2 break-all"
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     <span className="text-[0.8vw]">
@@ -446,7 +495,8 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
             <div className="flex justify-end gap-[0.833vw] pt-[0.833vw]">
               <Button
                 type="button"
-                onClick={() => setIsOpen(false)}variant="ghost"
+                onClick={() => setIsOpen(false)}
+                variant="ghost"
                 className="text-red-500 hover:text-red-600 hover:bg-transparent text-[0.8vw]"
               >
                 Cancel
