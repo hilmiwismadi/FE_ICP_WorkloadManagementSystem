@@ -58,7 +58,11 @@ export default function CompactTaskList({
     <Card className="w-full border-gray-200 shadow-md">
       <CardHeader className="p-4 bg-gray-50 border-b border-gray-200">
         <div className="flex flex-col gap-[1vw] justify-between items-center">
-          <div className={`w-full flex items-center ${!isVisible ? 'justify-between' : ''}`}>
+          <div
+            className={`w-full flex items-center ${
+              !isVisible ? "justify-between" : ""
+            }`}
+          >
             <div className="text-sm font-bold text-gray-800 uppercase tracking-wider">
               Task
             </div>
@@ -87,10 +91,10 @@ export default function CompactTaskList({
             )}
           </div>
           {isVisible && (
-            <div className="flex justify-between gap-[0.5vw] w-full">
+            <div className="flex  gap-[0.5vw] w-full">
               <div>
                 <Select onValueChange={onTeamFilter} value={teamFilter}>
-                  <SelectTrigger className="w-[122.5px] gap-[0.5vw] h-8 text-xs border-gray-300 focus:ring-2 focus:ring-blue-500">
+                  <SelectTrigger className="w-[8vw] h-8 text-[0.8vw] border-gray-300 focus:ring-2 focus:ring-blue-500">
                     <SelectValue placeholder="Filter Team" />
                   </SelectTrigger>
                   <SelectContent>
@@ -111,7 +115,7 @@ export default function CompactTaskList({
               </div>
               <div>
                 <Select onValueChange={onStatusFilter} value={statusFilter}>
-                  <SelectTrigger className="w-[122.5px] gap-[0.5vw] h-8 text-xs border-gray-300 focus:ring-2 focus:ring-blue-500">
+                  <SelectTrigger className="w-[8vw] gap-[0.5vw] h-8 text-[0.8vw] border-gray-300 focus:ring-2 focus:ring-blue-500">
                     <SelectValue placeholder="Filter Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -150,10 +154,10 @@ export default function CompactTaskList({
               <div className="p-3">
                 <div className="flex justify-between items-start">
                   <div className="flex-grow pr-2">
-                    <h3 className="text-xs font-semibold text-gray-900 mb-1 truncate group-hover:text-blue-700 transition-colors">
+                    <h3 className="text-xs font-semibold text-gray-900 mb-1 truncate group-hover:text-blue-700 transition-colors w-[15vw] overflow-clip">
                       {task.title}
                     </h3>
-                    <p className="text-xs text-gray-600 line-clamp-2 mb-2">
+                    <p className="text-xs text-gray-600  line-clamp-2 mb-2 break-all w-[15vw] overflow-clip">
                       {task.description}
                     </p>
                     <div className="flex justify-between items-center">
