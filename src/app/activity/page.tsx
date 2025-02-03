@@ -24,25 +24,40 @@ interface ApiEmployeeData {
   }>;
 }
 
+interface DecodedToken {
+  team: string;
+  role: string;
+}
+
 export default function Dashboard() {
   const [data, setData] = useState<EmployeeData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [team, setTeam] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchDataByRole = async () => {
     try {
       setIsLoading(true);
-      if (!team) return;
-      
-      console.log("Full decoded token:", jwtDecode(Cookies.get("auth_token") || ""));
-      console.log("Team from token:", team);
-      
-      const response = await axios.get(
-        `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/team/${encodeURIComponent(team)}`
-      );
-  
+      let response;
+
+      if (userRole === "Manager") {
+        // Fetch all employees data for managers
+        response = await axios.get(
+          "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
+        );
+      } else if (userRole === "PIC" && team) {
+        // Fetch team-specific data for PICs
+        response = await axios.get(
+          `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/team/${encodeURIComponent(team)}`
+        );
+      } else {
+        console.error("Invalid role or missing team");
+        setData([]);
+        return;
+      }
+
       const result = response.data;
-  
+
       if (result.error) {
         console.error("API Error:", result.error);
         setData([]);
@@ -75,10 +90,10 @@ export default function Dashboard() {
     const authStorage = Cookies.get("auth_token");
     if (authStorage) {
       try {
-        const userData: { team: string } = jwtDecode(authStorage);
+        const userData: DecodedToken = jwtDecode(authStorage);
         console.log("Decoded token data:", userData);
-        console.log("Team from decoded token:", userData.team);
         setTeam(userData.team);
+        setUserRole(userData.role);
       } catch (error) {
         console.error("Error decoding auth token:", error);
       }
@@ -86,10 +101,10 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (team) {
-      fetchData();
+    if (userRole === "Manager" || (userRole === "PIC" && team)) {
+      fetchDataByRole();
     }
-  }, [team]);
+  }, [team, userRole]);
 
   if (isLoading && !data.length) {
     return <LoadingScreen />;
@@ -104,12 +119,12 @@ export default function Dashboard() {
             <DataTable 
               columns={columns} 
               data={data} 
-              onRefresh={fetchData}
+              onRefresh={fetchDataByRole}
               isLoading={isLoading}
               addEmployeeModal={
                 <AddEmployeeModal 
                   onSuccess={async () => {
-                    await fetchData();
+                    await fetchDataByRole();
                   }} 
                 />
               }
