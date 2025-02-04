@@ -33,7 +33,7 @@ import {
 
 // WorkloadStatusBar Component
 const WorkloadStatusBar = ({ value }: { value: number }) => {
-  const percentage = Math.round((value / 10.7) * 100);
+  const percentage = Math.round(value * 100);
 
 
   const getColor = () => {
