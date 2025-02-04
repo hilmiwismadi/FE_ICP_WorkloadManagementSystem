@@ -1,5 +1,5 @@
 import * as React from "react";
-import axios from "axios";
+import { useRouter } from "next/navigation";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -11,7 +11,7 @@ import {
   getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, CheckCircle, X } from "lucide-react";
+import { ArrowUpDown, ArrowRight, X } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -24,21 +24,9 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-
-// WorkloadStatusBar Component
+// WorkloadStatusBar Component remains the same
 const WorkloadStatusBar = ({ value }: { value: number }) => {
-  const normalize = value / 15;
+  const normalize = value / 13.7;
   const percentage = normalize * 100;
 
   const getColor = () => {
@@ -50,7 +38,7 @@ const WorkloadStatusBar = ({ value }: { value: number }) => {
   if (value === 0) {
     return (
       <div className="flex items-center space-x-2 justify-center">
-        <div className="w-28 h-2 bg-gray-200 rounded-full" />
+        <div className="w-[6vw] h-2 bg-gray-200 rounded-full" />
         <span className="text-gray-500 text-sm">Idle</span>
       </div>
     );
@@ -58,7 +46,7 @@ const WorkloadStatusBar = ({ value }: { value: number }) => {
 
   return (
     <div className="flex items-center space-x-2 justify-center">
-      <div className="w-28 h-2 bg-gray-200 rounded-full">
+      <div className="w-[6vw] h-2 bg-gray-200 rounded-full">
         <div
           className={`h-full rounded-full ${getColor()}`}
           style={{ width: `${percentage}%` }}
@@ -95,47 +83,13 @@ export function DataTable({
   isLoading = false,
   onTaskUpdate,
 }: DataTableProps) {
-  const [updating, setUpdating] = React.useState<string | null>(null);
-  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
+  const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
   const [fullDescription, setFullDescription] = useState("");
 
   const formatDateForDisplay = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString();
-  };
-
-  const formatDateForAPI = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toISOString().split("T")[0];
-  };
-
-  const handleStatusChange = async (task: Task) => {
-    try {
-      setUpdating(task.task_Id);
-
-      const updateData = {
-        status: "Approved",
-        start_Date: formatDateForAPI(task.start_Date),
-        end_Date: formatDateForAPI(task.end_Date),
-        description: task.description,
-        workload: task.workload,
-        type: task.type,
-        employee_Id: task.employee_Id,
-        user_Id: task.user_Id,
-      };
-
-      await axios.put(
-        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/edit/${task.task_Id}`,
-        updateData
-      );
-      onTaskUpdate?.();
-    } catch (error) {
-      console.error("Error updating task status:", error);
-    } finally {
-      setUpdating(null);
-      setSelectedTask(null);
-    }
   };
 
   const openModal = (description: string) => {
@@ -231,7 +185,7 @@ export function DataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-[0.8vw]"
+            className="text-[0.8vw] p-[0vw]"
           >
             Start Date
             <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
@@ -249,7 +203,7 @@ export function DataTable({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-[0.8vw]"
+            className="text-[0.8vw] p-[0vw]"
           >
             End Date
             <ArrowUpDown className="text-[0.8vw] ml-[0.417vw] h-[0.833vw] w-[0.833vw]" />
@@ -262,46 +216,23 @@ export function DataTable({
     },
     {
       id: "actions",
-      header: "Actions",
+      header: () => {
+        return <div className="w-full text-[0.8vw] flex align-center justify-center">Actions</div>;
+      },
       cell: ({ row }) => {
         const task = row.original;
         const isDone = task.status.toLowerCase() === "done";
 
         return isDone ? (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center gap-2 text-[0.8vw] text-green-600 hover:text-green-700 hover:bg-green-50"
-                disabled={updating === task.task_Id}
-              >
-                <CheckCircle className="h-4 w-4" />
-                {updating === task.task_Id ? "Updating..." : "Approve Task"}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="max-w-md rounded-lg shadow-lg border border-gray-300">
-              <AlertDialogHeader>
-                <AlertDialogTitle className="text-lg font-semibold border-b border-gray-300 pb-2">
-                  Approve Task Completion
-                </AlertDialogTitle>
-                <AlertDialogDescription className="text-gray-700">
-                    Are you sure you want to mark this task as <span className="font-bold">Approved</span>?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel className="text-[0.8vw] text-gray-600 hover:text-gray-800">
-                  Cancel
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => handleStatusChange(task)}
-                  className="bg-green-600 hover:bg-green-700 text-white text-[0.8vw] rounded-md px-4 py-2"
-                >
-                  Confirm
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-2 text-[0.8vw] text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            onClick={() => router.push(`/task/details/${task.task_Id}`)}
+          >
+            <ArrowRight className="h-4 w-4" />
+            View Details
+          </Button>
         ) : null;
       },
     },
@@ -357,9 +288,10 @@ export function DataTable({
                             "workload",
                             "start_Date",
                             "end_Date",
+                            "actions"
                           ].includes(header.column.id)
-                            ? "pl-[1vw] pr-[1vw] text-center"
-                            : "pl-[1vw] pr-[3vw]"
+                            ? "pl-[1vw] pr-[1vw] text-center text-[0.8vw]"
+                            : "pl-[1vw] pr-[3vw] text-[0.8vw]"
                         }`}
                       >
                         {header.isPlaceholder
@@ -390,6 +322,7 @@ export function DataTable({
                             "workload",
                             "start_Date",
                             "end_Date",
+                            "actions"
                           ].includes(cell.column.id)
                             ? "px-[1vw] py-[0.5vw] text-center"
                             : "px-[1vw] py-[0.5vw]"
