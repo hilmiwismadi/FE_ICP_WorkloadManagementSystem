@@ -170,7 +170,7 @@ const TaskPage = () => {
   const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
 
   const calculateWorkloadPercentage = (workload: number): number => {
-    const normalize = Math.round((workload / 10.7) * 100);
+    const normalize = Math.round(workload * 100);
     return normalize;
   };
 
