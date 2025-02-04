@@ -66,6 +66,7 @@ interface DataTableProps<TData, TValue> {
   addEmployeeModal: React.ReactNode;
   onRefresh: () => Promise<void>;
   isLoading: boolean;
+  Role: string;
 }
 
 // Define the custom filter function type
@@ -85,14 +86,20 @@ interface ColumnFilterDropdownProps {
   column: any;
   popoverOpen: boolean;
   setPopoverOpen: (open: boolean) => void;
+  Role: string;
 }
 
 const ColumnFilterDropdown = ({ 
   column,
   popoverOpen,
-  setPopoverOpen 
+  setPopoverOpen,
+  Role
 }: ColumnFilterDropdownProps) => {
   const [selectedValues, setSelectedValues] = React.useState<string[]>([]);
+
+  if (Role !== "Manager") {
+    return <div className="text-[1vw]">Divisi</div>;
+  }
 
   // Update selected values when filter value changes
   React.useEffect(() => {
@@ -205,7 +212,8 @@ export function DataTable<TData, TValue>({
   data,
   addEmployeeModal,
   onRefresh,
-  isLoading
+  isLoading,
+  Role
 }: DataTableProps<TData, TValue>) {
   const router = useRouter();
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -236,6 +244,7 @@ export function DataTable<TData, TValue>({
               column={table.getColumn("team")} 
               popoverOpen={popoverOpen}
               setPopoverOpen={setPopoverOpen}
+              Role={Role}
             />
           ),
         };

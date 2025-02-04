@@ -128,6 +128,7 @@ export default function Dashboard() {
                   }} 
                 />
               }
+              Role={userRole || "PIC"}
             />
           </div>
         </div>
