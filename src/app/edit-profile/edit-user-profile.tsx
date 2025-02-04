@@ -525,35 +525,6 @@ export default function EditUserProfile({
 
       {/* Profile Details */}
       <Card className="mt-[1.5vw] p-[1.5vw] space-y-[1.5vw] relative">
-        <AnimatePresence>
-          {showSuccess && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50"
-            >
-              <motion.div
-                initial={{ y: 20 }}
-                animate={{ y: 0 }}
-                className="flex flex-col items-center space-y-[1vw]"
-              >
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <CheckCircle2 className="w-[4vw] h-[4vw] text-green-500" />
-                </motion.div>
-                <p className="text-[1.2vw] font-semibold text-green-600">
-                  {confirmationType === "profile"
-                    ? "Profile updated successfully!"
-                    : "Password changed successfully!"}
-                </p>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         <div className="space-y-[1vw]">
           {Object.entries(formData).map(([field, value]) => (
             <div key={field}>
@@ -808,6 +779,34 @@ export default function EditUserProfile({
               </Button>
             </div>
           </Card>
+          <AnimatePresence>
+            {showSuccess && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50"
+              >
+                <motion.div
+                  initial={{ y: 20 }}
+                  animate={{ y: 0 }}
+                  className="flex flex-col items-center space-y-[1vw]"
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <CheckCircle2 className="w-[4vw] h-[4vw] text-green-500" />
+                  </motion.div>
+                  <p className="text-[1.2vw] font-semibold text-green-600">
+                    {confirmationType === "profile"
+                      ? "Profile updated successfully!"
+                      : "Password changed successfully!"}
+                  </p>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
