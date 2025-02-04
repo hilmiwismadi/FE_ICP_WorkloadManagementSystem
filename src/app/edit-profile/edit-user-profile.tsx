@@ -231,9 +231,22 @@ export default function EditUserProfile({
 
   const fetchAvailableTechStack = async () => {
     try {
+      const cookies = document.cookie;
+      const parsedCookies = parse(cookies);
+      const token = parsedCookies.auth_token;
+
+      if (!token) {
+        console.error("No auth token found in cookies");
+        return;
+      }
+
+      const decodedToken: any = jwtDecode(token);
+      const employee_Id = decodedToken.employee_Id;
+
       console.log("Fetching available tech stack...");
+
       const response = await fetch(
-        "https://be-icpworkloadmanagementsystem.up.railway.app/api/tech/read"
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/tech/read/${employee_Id}`
       );
 
       console.log("Available tech stack response status:", response.status);
@@ -295,11 +308,11 @@ export default function EditUserProfile({
             const response = await fetch(
               `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${employee_Id}`
             );
-    
+
             console.log("User tech stack response status:", response.status);
             const data = await response.json();
             console.log("User tech stack response data:", data);
-    
+
             if (response.ok && data.data) {
               // Map skills array and extract the necessary data
               const mappedSkills = data.data.skills.map((skill: any) => ({
@@ -307,7 +320,7 @@ export default function EditUserProfile({
                 name: skill.techStack.name,
                 image: skill.techStack.image,
               }));
-    
+
               setUserTechStack(mappedSkills);
             }
           };
