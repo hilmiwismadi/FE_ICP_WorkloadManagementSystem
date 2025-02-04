@@ -276,7 +276,7 @@ export const TaskDetails = ({
 
           {/* Hover Card */}
           <motion.div
-            className={`absolute left-0 transform -translate-x-full 
+            className={`absolute z-50 right-0 transform -translate-x-full 
               ${
                 hoverCardPosition[employee.employee_Id] === "above"
                   ? "bottom-full mb-2"
