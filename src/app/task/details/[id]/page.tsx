@@ -7,6 +7,7 @@ import Sidebar from "@/components/sidebar";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 import ProtectedRoute from "@/components/protected-route";
+import CommentInputDialog from "@/components/organisms/CommentInputDialog";
 import {
   Activity,
   Calendar,
@@ -45,10 +46,10 @@ export interface Comment {
   created_at: string;
   type: "Started" | "Comment" | "Bug" | "Approved" | "Assigned" | "Rejected";
   user_Id: string;
-  user?: { 
-    email: string; 
-    employee?: { 
-      image: string; 
+  user?: {
+    email: string;
+    employee?: {
+      image: string;
     };
     role: string;
   };
@@ -114,6 +115,11 @@ const TaskDetailPage = () => {
     message: string;
   }>({ show: false, type: "success", message: "" });
   const [canManageTask, setCanManageTask] = useState(false);
+  const [showCommentDialog, setShowCommentDialog] = useState(false);
+  const [commentType, setCommentType] = useState<"Reject" | "Approve">(
+    "Reject"
+  );
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   useEffect(() => {
     const authStorage = Cookies.get("auth_token");
@@ -497,9 +503,7 @@ const TaskDetailPage = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-500">Workload:</span>
                   <span
-                    className={`${getWorkloadColor(
-                      employee.current_Workload
-                    )}`}
+                    className={`${getWorkloadColor(employee.current_Workload)}`}
                   >
                     {calculateWorkloadPercentage(
                       employee.current_Workload
@@ -519,26 +523,54 @@ const TaskDetailPage = () => {
     });
   };
 
-  const handleApproveClick = () => {
-    if (!canManageTask || task?.status !== "Done" || isUpdatingStatus) return;
-    setShowApproveDialog(true);
-  };
+  // const handleApproveClick = () => {
+  //   if (!canManageTask || task?.status !== "Done" || isUpdatingStatus) return;
+  //   setShowApproveDialog(true);
+  // };
+
+  // const handleRejectClick = () => {
+  //   if (!canManageTask || task?.status !== "Done") return;
+  //   setShowRejectDialog(true);
+  // };
 
   const handleRejectClick = () => {
-    if (!canManageTask || task?.status !== "Done") return;
-    setShowRejectDialog(true);
+    setCommentType("Reject");
+    setShowCommentDialog(true);
   };
 
-  const handleConfirmApprove = async () => {
+  const handleApproveClick = () => {
+    setCommentType("Approve");
+    setShowCommentDialog(true);
+  };
+
+  const handleConfirmApprove = async (content: string) => {
     try {
       setIsUpdatingStatus(true);
 
+      // Fetch current user's employee details
       const employeeImageResponse = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${user?.employee_Id}`
       );
       const employeeImageData = await employeeImageResponse.json();
       const employeeImage = getImageUrl(employeeImageData.data?.image);
 
+      // Fetch task details to get assignees
+      const taskResponse = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${taskId}`
+      );
+      const taskData = await taskResponse.json();
+
+      // Format names and collect emails
+      const assignedEmployees = taskData.data.assigns;
+      const formattedNames = assignedEmployees
+        .map((assign: TaskAssign) => assign.employee.name.split(" ")[0])
+        .join(", ");
+
+      const emailAddresses = assignedEmployees
+        .map((assign: TaskAssign) => assign.employee.users?.[0]?.email ?? "")
+        .filter(Boolean);
+
+      // Update task status
       const response = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/edit/status/${taskId}`,
         {
@@ -563,7 +595,7 @@ const TaskDetailPage = () => {
       // Add approval activity
       const approvalActivity: Comment = {
         comment_Id: "",
-        content: "Task has been approved",
+        content: content,
         created_at: new Date().toISOString(),
         type: "Approved",
         user_Id: user?.user_Id,
@@ -592,11 +624,34 @@ const TaskDetailPage = () => {
         }
       );
 
-      const data = await commentResponse.json();
+      const commentData = await commentResponse.json();
+
+      // Send email notification
+      const emailResponse = await fetch(
+        "https://be-icpworkloadmanagementsystem.up.railway.app/api/sendMail/accept",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            to: emailAddresses,
+            subject: `Task Approved: ${taskData.data.title}`,
+            name: formattedNames,
+            title: taskData.data.title,
+            content: approvalActivity.content,
+            task_Id: taskData.data.task_Id,
+          }),
+        }
+      );
+
+      if (!emailResponse.ok) {
+        console.error("Failed to send email notification");
+      }
 
       // Emit the approval activity through the socket
       socket.emit("comment", {
-        ...data.data,
+        ...commentData.data,
         task_Id: taskId,
         type: approvalActivity.type,
         user: {
@@ -608,7 +663,7 @@ const TaskDetailPage = () => {
         },
       });
 
-      setShowApproveDialog(false);
+      setShowCommentDialog(false);
       setShowFeedback({
         show: true,
         type: "success",
@@ -629,21 +684,37 @@ const TaskDetailPage = () => {
     }
   };
 
-  const handleConfirmReject = async () => {
+  const handleConfirmReject = async (content: string) => {
     try {
-      // Log the click (placeholder for future API implementation)
       console.log("Task rejected successfully");
 
+      // Fetch current user's employee details
       const employeeImageResponse = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${user?.employee_Id}`
       );
       const employeeImageData = await employeeImageResponse.json();
       const employeeImage = getImageUrl(employeeImageData.data?.image);
 
+      // Fetch task details
+      const taskResponse = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${taskId}`
+      );
+      const taskData = await taskResponse.json();
+
+      // Format names and collect emails
+      const assignedEmployees = taskData.data.assigns;
+      const formattedNames = assignedEmployees
+        .map((assign: TaskAssign) => assign.employee.name.split(" ")[0])
+        .join(", ");
+
+      const emailAddresses = assignedEmployees
+        .map((assign: TaskAssign) => assign.employee.users?.[0]?.email ?? "")
+        .filter(Boolean);
+
       // Add rejection activity
       const rejectionActivity: Comment = {
         comment_Id: "",
-        content: "Task has been rejected and sent back for revision",
+        content: content,
         created_at: new Date().toISOString(),
         type: "Rejected",
         user_Id: user?.user_Id,
@@ -656,7 +727,8 @@ const TaskDetailPage = () => {
         },
       };
 
-      const response = await fetch(
+      // Add comment
+      const commentResponse = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/add/${taskId}`,
         {
           method: "POST",
@@ -672,11 +744,34 @@ const TaskDetailPage = () => {
         }
       );
 
-      const data = await response.json();
+      const commentData = await commentResponse.json();
+
+      // Send email notification with all names formatted
+      const emailResponse = await fetch(
+        "https://be-icpworkloadmanagementsystem.up.railway.app/api/sendMail/reject",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            to: emailAddresses,
+            subject: `Task Rejected: ${taskData.data.title}`,
+            name: formattedNames,
+            title: taskData.data.title,
+            task_Id: taskData.data.task_Id,
+            content: rejectionActivity.content,
+          }),
+        }
+      );
+
+      if (!emailResponse.ok) {
+        console.error("Failed to send email notification");
+      }
 
       // Emit the comment through the socket
       socket.emit("comment", {
-        ...data.data,
+        ...commentData.data,
         task_Id: taskId,
         type: rejectionActivity.type,
         user: {
@@ -687,8 +782,9 @@ const TaskDetailPage = () => {
           },
         },
       });
-      
-      setShowRejectDialog(false);
+
+      // setShowRejectDialog(false);
+      setShowCommentDialog(false);
       setShowFeedback({
         show: true,
         type: "success",
@@ -987,7 +1083,7 @@ const TaskDetailPage = () => {
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={handleConfirmApprove}
+                      onClick={() => handleConfirmApprove("")}
                       disabled={isUpdatingStatus}
                       className="bg-green-600 hover:bg-green-700 text-[0.8vw]"
                     >
@@ -1012,6 +1108,26 @@ const TaskDetailPage = () => {
                 </motion.div>
               </AlertDialogContent>
             </AlertDialog>
+
+            {/* Comment Dialog */}
+            <CommentInputDialog
+              isOpen={showCommentDialog}
+              onClose={() => setShowCommentDialog(false)}
+              onSubmit={(content) => {
+                if (commentType === "Reject") {
+                  handleConfirmReject(content);
+                } else {
+                  handleConfirmApprove(content);
+                }
+              }}
+              title={`${commentType} Task Message`}
+              type={commentType}
+              defaultContent={
+                commentType === "Reject"
+                  ? "The task has been rejected. Please make the necessary changes and resubmit."
+                  : "The task has been approved. Keep up the Good job!"
+              }
+            />
 
             {/* Reject Dialog */}
             <AlertDialog
@@ -1058,7 +1174,7 @@ const TaskDetailPage = () => {
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={handleConfirmReject}
+                      onClick={() => handleConfirmReject("")}
                       className="bg-red-600 hover:bg-red-700 text-[0.8vw]"
                     >
                       Confirm Rejection
