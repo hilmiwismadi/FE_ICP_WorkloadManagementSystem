@@ -97,10 +97,6 @@ const ColumnFilterDropdown = ({
 }: ColumnFilterDropdownProps) => {
   const [selectedValues, setSelectedValues] = React.useState<string[]>([]);
 
-  if (Role !== "Manager") {
-    return <div className="text-[1vw]">Divisi</div>;
-  }
-
   // Update selected values when filter value changes
   React.useEffect(() => {
     const currentFilterValue = column.getFilterValue();
@@ -108,6 +104,10 @@ const ColumnFilterDropdown = ({
       setSelectedValues(currentFilterValue);
     }
   }, [column]);
+
+  if (Role !== "Manager") {
+    return <div className="text-[1vw]">Divisi</div>;
+  }
 
   const toggleOption = (value: string) => {
     const newValues = selectedValues.includes(value)

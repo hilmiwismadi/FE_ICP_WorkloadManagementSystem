@@ -71,7 +71,6 @@ interface UserProfileProps {
   onSave: (formData: FormData) => Promise<boolean>;
   onImageChange: (file: File | null) => void;
   selectedImage: File | null;
-  techStack: string[];
 }
 
 export default function EditUserProfile({
@@ -79,7 +78,6 @@ export default function EditUserProfile({
   onSave,
   onImageChange,
   selectedImage,
-  techStack,
 }: UserProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
