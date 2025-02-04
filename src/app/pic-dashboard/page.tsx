@@ -149,7 +149,7 @@ export default function Dashboard() {
                         {employees.map((emp) => (
                           <motion.div
                             key={emp.employee_id}
-                            className="border p-4 rounded-lg shadow-md flex items-center space-x-4 mb-4 transition-transform transform hover:scale-105"
+                            className="border p-4 rounded-lg shadow-md flex items-center space-x-4 mb-4 transition-transform transform"
                           >
                             <img
                               src={emp.image}
