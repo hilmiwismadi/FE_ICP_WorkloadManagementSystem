@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, ChevronDown, X } from 'lucide-react';
+import { Search, ChevronDown } from 'lucide-react';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 
 // Types
 type Employee = {
@@ -21,6 +23,12 @@ type ApiResponse = {
   error: string | null;
 };
 
+type JWTPayload = {
+  team: string;
+  role: string;
+  // Add other JWT payload fields if needed
+};
+
 export default function CustomSearchBar() {
   const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
@@ -31,16 +39,50 @@ export default function CustomSearchBar() {
   const [teams, setTeams] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [team, setTeam] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   
   const searchRef = useRef<HTMLDivElement>(null);
   const teamDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch employees data
+  // Effect to get team and role from auth token
+  useEffect(() => {
+    const authStorage = Cookies.get("auth_token");
+    if (authStorage) {
+      try {
+        const userData: JWTPayload = jwtDecode(authStorage);
+        console.log("Decoded token data:", userData);
+        console.log("Team from decoded token:", userData.team);
+        console.log("Role from decoded token:", userData.role);
+        setTeam(userData.team);
+        setUserRole(userData.role);
+      } catch (error) {
+        console.error("Error decoding auth token:", error);
+        setError("Failed to decode authentication token");
+      }
+    } else {
+      setError("No authentication token found");
+    }
+  }, []);
+
+  // Effect to fetch employees based on role
   useEffect(() => {
     const fetchEmployees = async () => {
+      // Don't fetch if we don't have the role yet
+      if (!userRole) return;
+      
+      // For PIC role, we also need the team
+      if (userRole === "PIC" && !team) return;
+
       try {
         setIsLoading(true);
-        const response = await fetch('https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read');
+        
+        // Determine the API endpoint based on role
+        const apiUrl = userRole === "Manager" 
+          ? "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
+          : `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/team/${team}`;
+
+        const response = await fetch(apiUrl);
         if (!response.ok) {
           throw new Error('Failed to fetch employees');
         }
@@ -65,7 +107,7 @@ export default function CustomSearchBar() {
     };
 
     fetchEmployees();
-  }, []);
+  }, [team, userRole]); // Dependencies on both team and userRole
 
   // Handle clicks outside of dropdowns
   useEffect(() => {
@@ -89,7 +131,7 @@ export default function CustomSearchBar() {
       employee.employee_Id.toLowerCase().includes(searchValue.toLowerCase());
     const matchesTeam = 
       selectedTeams.length === 0 || selectedTeams.includes(employee.team);
-    return matchesSearch && matchesTeam;
+    return matchesSearch && (userRole === "PIC" ? true : matchesTeam);
   });
 
   const handleEmployeeSelect = (employeeId: string) => {
@@ -109,7 +151,7 @@ export default function CustomSearchBar() {
   if (error) {
     return (
       <div className="text-red-500 p-4">
-        Error loading employees: {error}
+        Error: {error}
       </div>
     );
   }
@@ -154,39 +196,41 @@ export default function CustomSearchBar() {
         )}
       </div>
 
-      {/* Team Filter */}
-      <div className="relative" ref={teamDropdownRef}>
-        <button
-          onClick={() => setIsTeamDropdownOpen(!isTeamDropdownOpen)}
-          className="flex items-center gap-[0.417vw] px-[0.833vw] py-[0.625vw] rounded-lg border bg-white border-gray-300 hover:bg-gray-50 transition-colors"
-          disabled={isLoading}
-        >
-          <span className="text-[1vw] font-medium">
-            Teams ({selectedTeams.length})
-          </span>
-          <ChevronDown className="w-[1vw] h-[1vw]" />
-        </button>
+      {/* Team Filter - Only shown for Manager role */}
+      {userRole === "Manager" && (
+        <div className="relative" ref={teamDropdownRef}>
+          <button
+            onClick={() => setIsTeamDropdownOpen(!isTeamDropdownOpen)}
+            className="flex items-center gap-[0.417vw] px-[0.833vw] py-[0.625vw] rounded-lg border bg-white border-gray-300 hover:bg-gray-50 transition-colors"
+            disabled={isLoading}
+          >
+            <span className="text-[1vw] font-medium">
+              Teams ({selectedTeams.length})
+            </span>
+            <ChevronDown className="w-[1vw] h-[1vw]" />
+          </button>
 
-        {/* Teams Dropdown */}
-        {isTeamDropdownOpen && !isLoading && (
-          <div className="absolute right-0 mt-[0.417vw] w-[16vw] bg-white rounded-lg shadow-lg border border-gray-200 z-10 p-[0.417vw] space-y-[0.417vw]">
-            {teams.map(team => (
-              <label
-                key={team}
-                className="flex items-center gap-[0.417vw] px-[0.833vw] py-[0.417vw] hover:bg-gray-50 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedTeams.includes(team)}
-                  onChange={() => toggleTeam(team)}
-                  className="w-[0.833vw] h-[0.833vw] rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-[1vw]">{team}</span>
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
+          {/* Teams Dropdown */}
+          {isTeamDropdownOpen && !isLoading && (
+            <div className="absolute right-0 mt-[0.417vw] w-[16vw] bg-white rounded-lg shadow-lg border border-gray-200 z-10 p-[0.417vw] space-y-[0.417vw]">
+              {teams.map(team => (
+                <label
+                  key={team}
+                  className="flex items-center gap-[0.417vw] px-[0.833vw] py-[0.417vw] hover:bg-gray-50 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedTeams.includes(team)}
+                    onChange={() => toggleTeam(team)}
+                    className="w-[0.833vw] h-[0.833vw] rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-[1vw]">{team}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

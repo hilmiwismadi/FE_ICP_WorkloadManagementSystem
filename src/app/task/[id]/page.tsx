@@ -13,6 +13,7 @@ import LoadingScreen from "@/components/organisms/LoadingScreen";
 import ProtectedRoute from "@/components/protected-route";
 import { jwtDecode } from "jwt-decode";
 import { AnimatePresence } from "framer-motion";
+import Cookies from "js-cookie";
 
 interface TaskDetails {
   task_Id: string;
@@ -62,6 +63,14 @@ interface ApiResponse {
   error: null | string;
 }
 
+interface AuthUser {
+  user_Id: string;
+  email: string;
+  role: string;
+  employee_Id: string;
+  team: string;
+}
+
 export default function TaskPageId() {
   const { id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,6 +79,21 @@ export default function TaskPageId() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const authStorage = Cookies.get("auth_token");
+    if (authStorage) {
+      try {
+        const userData: AuthUser = jwtDecode(authStorage);
+        setUser(userData);
+      } catch (error) {
+        console.error("Error decoding auth token:", error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const fetchEmployeeData = async () => {
@@ -111,7 +135,6 @@ export default function TaskPageId() {
           // Extract tasks from assignments
           const tasksList = user.assigns.map(assignment => assignment.task);
           setTasks(tasksList);
-          setUserId(user.employee_Id);
         }
       } catch (error) {
         const errorMessage =
@@ -210,7 +233,7 @@ export default function TaskPageId() {
         <AnimatePresence>
           {isModalOpen && (
             <BulkTaskModal
-              userId={userId || ""}
+              userId={(user?.user_Id) || ""}
               onClose={() => setIsModalOpen(false)}
               onSuccess={handleSubmit}
             />
