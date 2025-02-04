@@ -12,6 +12,9 @@ import Sidebar from "@/components/sidebar";
 import ActivityDetailsButton from "@/components/ui/ActivityDetailsButton";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 import ProtectedRoute from "@/components/protected-route";
+import { jwtDecode } from "jwt-decode";
+import { parse } from "cookie";
+import { IdCardIcon } from "lucide-react";
 
 interface Employee {
   employee_Id: string;
@@ -48,11 +51,18 @@ interface Employee {
   }>;
 }
 
+interface TechStack {
+  techStack_Id: number;
+  name: string;
+  image: string;
+}
+
 export default function ProfilePage() {
   const { id } = useParams();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [averageWorkload, setAverageWorkload] = useState<number>(0);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const [techStacks, setTechStacks] = useState<TechStack[]>([]);
 
   // Fetch all employees data to calculate average workload
   useEffect(() => {
@@ -76,7 +86,6 @@ export default function ProfilePage() {
           const calculatedAverage = totalWorkload / employees.length;
           setAverageWorkload(Math.round(calculatedAverage));
         }
- 
       } catch (error) {
         console.error("Failed to fetch employees data:", error);
       }
@@ -116,30 +125,63 @@ export default function ProfilePage() {
       : "Unknown Batch",
   };
 
-  const programmingLanguages =
-    employee?.techStacks.map((stack) => ({
-      name: stack.name,
-      icon: stack.image,
-    })) || [];
+  useEffect(() => {
+    const fetchTechStacks = async () => {
+      try {
+    
+        const response = await fetch(
+          `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${id}`
+        );
+    
+        console.log("User tech stack response status:", response.status);
+        const data = await response.json();
+        console.log("Full API Response:", data);
+    
+        // Check if data and skills exist
+        if (response.ok && data?.data?.skills?.length > 0) {
+          // Map skills array and extract the necessary data
+          const mappedSkills = data.data.skills.map((skill: any) => ({
+            skill_Id: skill.skill_Id,
+            name: skill.techStack?.name || "Unknown",
+            image: skill.techStack?.image || "/placeholder.png",
+          }));
+    
+          console.log("Mapped Skills:", mappedSkills);
+          setTechStacks(mappedSkills);
+        } else {
+          console.warn("No skills data found for this employee.");
+          setTechStacks([]); // Ensure state is reset if no skills exist
+        }
+      } catch (error) {
+        console.error("Failed to fetch tech stacks:", error);
+      }
+    };
+    
 
+    if (id) {
+      fetchTechStacks();
+    }
+  }, [id]);
   const tasks = employee?.assigns
     ? employee.assigns
-        .filter((assign) => assign && assign.task && assign.task.status === "Ongoing")
+        .filter(
+          (assign) => assign && assign.task && assign.task.status === "Ongoing"
+        )
         .map((assign) => ({
-          id: assign.task.task_Id || '',
-          type: assign.task.type || '',
-          title: assign.task.title || '',
-          description: assign.task.description || '',
-          status: assign.task.status || '',
-          priority: assign.task.workload || '',
+          id: assign.task.task_Id || "",
+          type: assign.task.type || "",
+          title: assign.task.title || "",
+          description: assign.task.description || "",
+          status: assign.task.status || "",
+          priority: assign.task.workload || "",
           dueDate: assign.task.end_Date
             ? new Date(assign.task.end_Date).toLocaleDateString()
             : "N/A",
           startDate: assign.task.start_Date
             ? new Date(assign.task.start_Date).toISOString()
             : null,
-          endDate: assign.task.end_Date 
-            ? new Date(assign.task.end_Date).toISOString() 
+          endDate: assign.task.end_Date
+            ? new Date(assign.task.end_Date).toISOString()
             : null,
         }))
     : [];
@@ -180,8 +222,8 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-12 gap-[1.25vw]">
                     <div className="col-span-12 md:col-span-5 space-y-[1.25vw]">
                       <ProgrammingLanguages
-                        languages={programmingLanguages}
-                        className="bg-white rounded-full shadow-sm p-[1.25vw] min-h-[24vw]"
+                        techStacks={techStacks}
+                        className="bg-navy  shadow-sm p-[1.25vw] min-h-[12vw]"
                       />
                       <WorkExperience experience={workExperience} />
                     </div>
