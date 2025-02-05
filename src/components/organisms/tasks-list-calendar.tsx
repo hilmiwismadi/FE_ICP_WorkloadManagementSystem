@@ -30,13 +30,13 @@ const TaskTimeline = ({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
 
-  const getTaskColor = (workload: string, urgency: string): string => {
-    if (urgency === "critical") return "bg-red-600";
-    if (urgency === "high") return "bg-orange-600";
-    if (workload === "high") return "bg-yellow-600";
-    if (workload === "medium") return "bg-blue-600";
+  const getTaskColor = (workload: string, priority: string): string => {
+    if (priority === "high") return "bg-red-600";
+    if (priority=== "medium") return "bg-orange-600";
     return "bg-green-600";
   };
+
+  console.log(tasks);
 
   const getDaysForView = () => {
     const start =
@@ -150,10 +150,10 @@ const TaskTimeline = ({
           )}
         </div>
 
-        <div className="w-full relative z-20">
+        <div className="w-[65.5vw] relative z-20">
           {/* Date Headers */}
           <div
-            className="grid gap-0 w-full border-b"
+            className="grid gap-0 w-full border-b bg-black"
             style={{
               gridTemplateColumns: `repeat(${days.length}, minmax(2vw, 1fr))`,
             }}
@@ -222,7 +222,7 @@ const TaskTimeline = ({
                   key={task.id}
                   className={`absolute cursor-pointer transition-all ${getTaskColor(
                     task.workload,
-                    task.urgency
+                    task.priority
                   )} rounded p-1 text-white text-[0.6rem] truncate`}
                   style={{
                     left: `${(startPosition / days.length) * 100}%`,

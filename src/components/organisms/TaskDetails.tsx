@@ -49,7 +49,7 @@ interface Task {
   startDate: Date;
   endDate: Date;
   workload: string;
-  urgency: string;
+  priority: string;
   status: string;
   assigns?: Array<{
     employee_Id: string;
@@ -396,14 +396,14 @@ export const TaskDetails = ({
                 <strong>Urgency:</strong>{" "}
                 <span
                   className={`px-[0.5vw] py-[0.1vw] rounded-full text-[0.8vw] ${
-                    taskData.urgency === "High"
+                    taskData.priority === "High"
                       ? "bg-red-100 text-red-800"
-                      : taskData.urgency === "Medium"
+                      : taskData.priority === "Medium"
                       ? "bg-amber-100 text-amber-800"
                       : "bg-blue-100 text-blue-800"
                   }`}
                 >
-                  {taskData.urgency}
+                  {taskData.priority}
                 </span>
               </span>
             </div>
