@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 
 interface TechStack {
-  techStack_Id: number;
+  skill_Id: string;
   name: string;
   image: string;
 }
@@ -46,7 +46,7 @@ export default function ProgrammingLanguages({
           <div className="grid grid-cols-2 gap-[1vw]">
             {techStacks.map((tech) => (
               <div
-                key={tech.techStack_Id}
+                key={tech.skill_Id}
                 className="flex items-center justify-center bg-white rounded-[0.5vw] w-full h-[3vw]"
               >
                 <div className="relative flex justify-center items-center gap-[0.4vw]">
