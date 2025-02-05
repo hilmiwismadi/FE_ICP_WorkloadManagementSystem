@@ -52,7 +52,7 @@ interface Employee {
 }
 
 interface TechStack {
-  techStack_Id: number;
+  skill_Id: string;
   name: string;
   image: string;
 }

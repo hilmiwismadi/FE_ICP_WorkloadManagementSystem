@@ -164,7 +164,7 @@ export default function EditUserProfile({
         window.location.reload();
       }, 1500);
     } else {
-      console.error("Failed to update profile");
+      // console.error("Failed to update profile");
       alert("An error occurred while updating the profile.");
     }
   };
@@ -177,7 +177,7 @@ export default function EditUserProfile({
         const token = parsedCookies.auth_token;
 
         if (!token) {
-          console.error("No auth token found in cookies");
+          // console.error("No auth token found in cookies");
           return;
         }
 
@@ -200,10 +200,10 @@ export default function EditUserProfile({
 
           setUserTechStack(mappedSkills);
         } else {
-          console.error("Error fetching user tech stack:", data);
+          // console.error("Error fetching user tech stack:", data);
         }
       } catch (error) {
-        console.error("Exception in fetchUserTechStack:", error);
+        // console.error("Exception in fetchUserTechStack:", error);
       }
     };
 
@@ -226,7 +226,7 @@ export default function EditUserProfile({
       const token = parsedCookies.auth_token;
 
       if (!token) {
-        console.error("No auth token found in cookies");
+        // console.error("No auth token found in cookies");
         return;
       }
 
@@ -242,10 +242,10 @@ export default function EditUserProfile({
       if (response.ok) {
         setAvailableTechStack(data.data || []);
       } else {
-        console.error("Error fetching available tech stack:", data);
+        // console.error("Error fetching available tech stack:", data);
       }
     } catch (error) {
-      console.error("Exception in fetchAvailableTechStack:", error);
+      // console.error("Exception in fetchAvailableTechStack:", error);
     }
   };
 
@@ -389,15 +389,15 @@ export default function EditUserProfile({
   // Image upload UI component
   const ImageUploadOverlay = () => (
     <div
-      className="absolute inset-0 bg-black/50 rounded-full flex flex-col items-center justify-center 
-                cursor-pointer group-hover:opacity-100 transition-opacity"
+      className="absolute inset-0 bg-black/40 rounded-full flex flex-col items-center justify-center 
+                 cursor-pointer opacity-100 transition-all duration-300 hover:bg-black/60 hover:scale-105"
     >
-      <Camera className="w-[1.5vw] h-[1.5vw] text-white mb-2" />
+      <Camera className="w-[1.5vw] h-[1.5vw] text-white mb-2 transition-transform duration-300 group-hover:scale-110" />
       <span className="text-white text-[0.8vw] text-center px-2">
         Click to change photo
       </span>
     </div>
-  );
+  );  
 
   if (!employee) {
     return <div>Loading...</div>;
