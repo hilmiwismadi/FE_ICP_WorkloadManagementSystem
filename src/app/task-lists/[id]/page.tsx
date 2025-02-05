@@ -82,7 +82,6 @@ export default function TaskLists({
         if (!response.ok) throw new Error("Failed to fetch tasks");
 
         const data = await response.json();
-        console.log("API Response:", data);
 
         // Check if data is in the expected format and handle the response structure
         const apiTasks: ApiTask[] = Array.isArray(data.data)

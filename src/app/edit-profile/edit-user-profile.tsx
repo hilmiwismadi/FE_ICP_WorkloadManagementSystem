@@ -71,7 +71,6 @@ interface UserProfileProps {
   onSave: (formData: FormData) => Promise<boolean>;
   onImageChange: (file: File | null) => void;
   selectedImage: File | null;
-  techStack: string[];
 }
 
 export default function EditUserProfile({
@@ -79,7 +78,6 @@ export default function EditUserProfile({
   onSave,
   onImageChange,
   selectedImage,
-  techStack,
 }: UserProfileProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -145,7 +143,6 @@ export default function EditUserProfile({
   };
 
   const handleSave = async () => {
-    console.log("Saving form data:", formData);
     const editedData = new FormData();
 
     // Append all fields regardless of whether they have changed
@@ -187,15 +184,11 @@ export default function EditUserProfile({
         const decodedToken: any = jwtDecode(token);
         const employee_Id = decodedToken.employee_Id;
 
-        console.log("Fetching tech stack for user:", employee_Id);
-
         const response = await fetch(
           `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${employee_Id}`
         );
 
-        console.log("User tech stack response status:", response.status);
         const data = await response.json();
-        console.log("User tech stack response data:", data);
 
         if (response.ok && data.data) {
           // Map skills array and extract the necessary data
@@ -218,15 +211,12 @@ export default function EditUserProfile({
   }, []);
 
   useEffect(() => {
-    console.log("Current user tech stack:", userTechStack);
   }, [userTechStack]);
 
   useEffect(() => {
-    console.log("Available tech stack:", availableTechStack);
   }, [availableTechStack]);
 
   useEffect(() => {
-    console.log("Selected tech:", selectedTech);
   }, [selectedTech]);
 
   const fetchAvailableTechStack = async () => {
@@ -243,15 +233,11 @@ export default function EditUserProfile({
       const decodedToken: any = jwtDecode(token);
       const employee_Id = decodedToken.employee_Id;
 
-      console.log("Fetching available tech stack...");
-
       const response = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/tech/read/${employee_Id}`
       );
 
-      console.log("Available tech stack response status:", response.status);
       const data = await response.json();
-      console.log("Available tech stack response data:", data);
 
       if (response.ok) {
         setAvailableTechStack(data.data || []);
@@ -276,9 +262,6 @@ export default function EditUserProfile({
       const decodedToken: any = jwtDecode(token);
       const employee_Id = decodedToken.employee_Id;
 
-      console.log("Adding tech stack for user:", employee_Id);
-      console.log("Tech stack to add:", selectedTech);
-
       const response = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/tech/add/${employee_Id}`,
         {
@@ -292,9 +275,7 @@ export default function EditUserProfile({
         }
       );
 
-      console.log("Add tech stack response status:", response.status);
       const data = await response.json();
-      console.log("Add tech stack response data:", data);
 
       if (response.ok) {
         setIsConfirmTechOpen(false);
@@ -308,10 +289,8 @@ export default function EditUserProfile({
             const response = await fetch(
               `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${employee_Id}`
             );
-
-            console.log("User tech stack response status:", response.status);
+            
             const data = await response.json();
-            console.log("User tech stack response data:", data);
 
             if (response.ok && data.data) {
               // Map skills array and extract the necessary data

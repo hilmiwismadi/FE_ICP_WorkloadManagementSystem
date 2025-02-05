@@ -91,7 +91,6 @@ export default function Dashboard() {
     if (authStorage) {
       try {
         const userData: DecodedToken = jwtDecode(authStorage);
-        console.log("Decoded token data:", userData);
         setTeam(userData.team);
         setUserRole(userData.role);
       } catch (error) {
@@ -128,6 +127,7 @@ export default function Dashboard() {
                   }} 
                 />
               }
+              Role={userRole || "PIC"}
             />
           </div>
         </div>

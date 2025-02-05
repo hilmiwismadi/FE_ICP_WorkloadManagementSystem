@@ -50,9 +50,6 @@ export default function SearchBarActivity() {
     if (authStorage) {
       try {
         const userData: JWTPayload = jwtDecode(authStorage);
-        console.log("Decoded token data:", userData);
-        console.log("Team from decoded token:", userData.team);
-        console.log("Role from decoded token:", userData.role);
         setTeam(userData.team);
         setUserRole(userData.role);
       } catch (error) {

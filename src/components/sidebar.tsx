@@ -15,6 +15,7 @@ import {
   FlagTriangleRight,
   LogOut,
   RefreshCw,
+  PersonStanding,
 } from "lucide-react";
 
 interface Employee {
@@ -61,9 +62,9 @@ const menuItems: MenuItem[] = [
     allowedRoles: ["Manager", "PIC"],
   },
   {
-    title: "PIC Dashboard",
+    title: "PIC Management",
     link: "/pic-dashboard",
-    icon: LayoutDashboard,
+    icon: PersonStanding,
     allowedRoles: ["Manager"],
   },
   {

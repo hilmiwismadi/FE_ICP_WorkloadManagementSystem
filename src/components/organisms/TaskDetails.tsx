@@ -123,6 +123,12 @@ export const TaskDetails = ({
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    setTaskData(initialTask);
+    setShowConfirmation(false);
+    setPendingStatus(null);
+    setStatusUpdateResult(null);
+    setShowFeedback(null);
+
     const fetchTaskDetails = async () => {
       if (!initialTask?.id) return;
 
@@ -327,7 +333,9 @@ export const TaskDetails = ({
   };
 
   const handleClose = () => {
-    setTaskData(null);
+    if (onClose) {
+      onClose();
+    }
   };
 
   if (isLoading) {

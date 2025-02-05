@@ -278,20 +278,6 @@ export function DataTable<TData>({
             />
           </div>
 
-          {/* Filter Dropdown */}
-          <Select value={selectedFilter} onValueChange={handleFilterChange}>
-            <SelectTrigger className="w-[16vw] bg-white">
-              <SelectValue placeholder="Filter by..." />
-            </SelectTrigger>
-            <SelectContent>
-              {filterOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
           {/* Refresh Button */}
           <Button
             variant="outline"
