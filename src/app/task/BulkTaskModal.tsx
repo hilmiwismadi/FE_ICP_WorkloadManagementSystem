@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { Employee } from "@/app/task/types";
 import { cn } from "@/lib/utils";
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 
 interface CreateTaskModalProps {
   userId: string;
@@ -52,6 +54,7 @@ export default function CreateTaskModal({
   onClose,
   onSuccess,
 }: CreateTaskModalProps) {
+  const [userRole, setUserRole] = useState<string>("");
   const [formData, setFormData] = useState<FormData>({
     employee_Ids: [],
     title: "",
@@ -76,6 +79,25 @@ export default function CreateTaskModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showError, setShowError] = useState(false);
   const [selectedEmployees, setSelectedEmployees] = useState<Employee[]>([]);
+
+  // Add JWT token decoding effect
+  useEffect(() => {
+    const authToken = Cookies.get("auth_token");
+    if (authToken) {
+      try {
+        const decodedToken: { role: string; team: string } = jwtDecode(authToken);
+        setUserRole(decodedToken.role);
+        if (decodedToken.role === "PIC") {
+          setFormData((prev) => ({
+            ...prev,
+            team: decodedToken.team
+          }));
+        }
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    }
+  }, []);
 
   const fetchEmployees = useCallback(async () => {
     try {
@@ -553,58 +575,68 @@ export default function CreateTaskModal({
               />
             </div>
 
-            <div className="space-y-[0.417vw]">
-              <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
-                <Calendar className="w-[0.833vw] h-[0.833vw]" />
-                Start Date
-              </label>
-              <input
-                type="date"
-                name="start_Date"
-                required
-                value={formData.start_Date}
-                onChange={handleInputChange}
-                className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
-              />
-            </div>
+                <div className="space-y-[0.417vw]">
+                  <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                    <Calendar className="w-[0.833vw] h-[0.833vw]" />
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    name="start_Date"
+                    required
+                    value={formData.start_Date}
+                    onChange={handleInputChange}
+                    className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  />
+                </div>
 
-            <div className="space-y-[0.417vw]">
-              <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
-                <Calendar className="w-[0.833vw] h-[0.833vw]" />
-                End Date
-              </label>
-              <input
-                type="date"
-                name="end_Date"
-                required
-                value={formData.end_Date}
-                onChange={handleInputChange}
-                className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
-              />
-            </div>
+                <div className="space-y-[0.417vw]">
+                  <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                    <Calendar className="w-[0.833vw] h-[0.833vw]" />
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    name="end_Date"
+                    required
+                    value={formData.end_Date}
+                    onChange={handleInputChange}
+                    className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  />
+                </div>
 
-            <div className="col-span-2 space-y-[0.417vw]">
-              <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
-                <Tag className="w-[0.833vw] h-[0.833vw]" />
-                Team to be assigned
-              </label>
-              <div className="relative">
-                <select
-                  name="team"
-                  value={formData.team}
-                  onChange={handleInputChange}
-                  className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] appearance-none focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
-                >
-                  <option value="">Select team...</option>
-                  <option value="Korporat 1">Korporat 1</option>
-                  <option value="Korporat 2">Korporat 2</option>
-                  <option value="Pelayanan Pelanggan">
-                    Pelayanan Pelanggan
-                  </option>
-                </select>
-                <ChevronDown className="absolute right-[0.833vw] top-[50%] transform -translate-y-1/2 w-[0.833vw] h-[0.833vw] pointer-events-none" />
-              </div>
-            </div>
+                <div className="col-span-2 space-y-[0.417vw]">
+      <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+        <Tag className="w-[0.833vw] h-[0.833vw]" />
+        Team to be assigned
+      </label>
+      <div className="relative">
+        {userRole === 'PIC' ? (
+          <input
+            type="text"
+            name="team"
+            value={formData.team}
+            disabled
+            className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] bg-gray-100 cursor-not-allowed"
+          />
+        ) : (
+          <>
+            <select
+              name="team"
+              value={formData.team}
+              onChange={handleInputChange}
+              className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] appearance-none focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+            >
+              <option value="">Select team...</option>
+              <option value="Korporat 1">Korporat 1</option>
+              <option value="Korporat 2">Korporat 2</option>
+              <option value="Pelayanan Pelanggan">Pelayanan Pelanggan</option>
+            </select>
+            <ChevronDown className="w-[0.833vw] h-[0.833vw] absolute right-[0.833vw] top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500" />
+          </>
+        )}
+      </div>
+    </div>
 
             <div className="col-span-2 space-y-[0.417vw]">
               <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">

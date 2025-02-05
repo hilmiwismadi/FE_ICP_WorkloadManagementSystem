@@ -1,500 +1,768 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogOverlay,
-} from "@/components/ui/alert-dialog";
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2 } from "lucide-react";
-import { jwtDecode } from "jwt-decode";
+import {
+  X,
+  Search,
+  Check,
+  ChevronDown,
+  FileText,
+  Tag,
+  AlertCircle,
+  Calendar,
+  Users,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
+import { Employee } from "@/app/task/types";
+import { cn } from "@/lib/utils";
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 
-const taskTypes = [
-  "Backend",
-  "Frontend",
-  "Full-stack",
-  "UI/UX Design",
-  "Unit Testing",
-  "Other task...",
-];
-
-const taskPriorities = ["Normal", "Medium", "High"];
-
-interface NewTaskModalProps {
-  open: boolean;
+interface CreateTaskModalProps {
+  userId: string;
   onClose: () => void;
-  onTaskSubmit: () => void;
+  onSuccess: () => void;
+  employeeId?: string; // Add employeeId prop
 }
 
-export const NewTaskModal = ({
-  open,
+interface FormData {
+  employee_Ids: string[];
+  title: string;
+  type: string;
+  description: string;
+  status: string;
+  priority: "High" | "Medium" | "Normal";
+  workload: number;
+  start_Date: string;
+  end_Date: string;
+  team: string;
+}
+
+interface EmailData {
+  to: string;
+  subject: string;
+  name: string;
+  title: string;
+  description: string;
+  deadline: string;
+  task_Id: string;
+}
+
+export default function CreateTaskModal({
+  userId,
   onClose,
-  onTaskSubmit,
-}: NewTaskModalProps) => {
-  const params = useParams();
-  const { toast } = useToast();
-  const [formData, setFormData] = useState({
+  onSuccess,
+  employeeId,
+}: CreateTaskModalProps) {
+  const [userRole, setUserRole] = useState<string>("");
+  const [formData, setFormData] = useState<FormData>({
+    employee_Ids: [],
+    title: "",
     type: "",
-    customType: "",
-    workload: 0,
     description: "",
-    startDate: "",
-    endDate: "",
-    priority: "",
+    status: "Ongoing",
+    priority: "Normal",
+    workload: 0,
+    start_Date: "",
+    end_Date: "",
     team: "",
   });
-  const [isCustomType, setIsCustomType] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showError, setShowError] = useState(false);
+
+  // Add JWT token decoding effect
+  useEffect(() => {
+    const authToken = Cookies.get("auth_token");
+    if (authToken) {
+      try {
+        const decodedToken: { role: string; team: string } = jwtDecode(authToken);
+        setUserRole(decodedToken.role);
+        if (decodedToken.role === "PIC") {
+          setFormData((prev) => ({
+            ...prev,
+            team: decodedToken.team
+          }));
+        }
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchEmployeeData = async () => {
+      if (!employeeId) return;
+      
+      try {
+        const response = await fetch(
+          `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${employeeId}`
+        );
+        const result = await response.json();
+
+        if (result.data) {
+          const employee = {
+            ...result.data,
+            
+            employee_Id: result.data.employee_Id,
+            image: getImageUrl(result.data.image),
+          };
+          setEmployees([employee]);
+          setFilteredEmployees([employee]);
+          // Auto-select the employee
+          setFormData(prev => ({
+            ...prev,
+            employee_Ids: [employee.employee_Id]
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching employee:", error);
+        setEmployees([]);
+        setFilteredEmployees([]);
+      }
+    };
+
+    fetchEmployeeData();
+  }, [employeeId]);
+
+  const getImageUrl = (imageUrl: string | undefined): string => {
+    if (!imageUrl) {
+      return "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ";
+    }
+    if (imageUrl.startsWith("http")) {
+      return imageUrl;
+    }
+    if (imageUrl.startsWith("/uploads")) {
+      return `https://be-icpworkloadmanagementsystem.up.railway.app/api${imageUrl}`;
+    }
+    return imageUrl;
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setShowConfirmation(true);
   };
 
   const handleConfirmedSubmit = async () => {
+    setLoading(true);
+    setError("");
+    setErrorMessage(null);
+    setShowError(false);
+
+    let createdTaskId: string | null = null;
+
     try {
-      setIsSubmitting(true);
-
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("auth_token="))
-        ?.split("=")[1];
-
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      const decodedToken: { user_Id: string } = jwtDecode(token);
-      const userId = decodedToken.user_Id;
-
-      if (!userId) {
-        throw new Error("User ID not found in token");
-      }
-
-      const generateTaskData = (formData: any, params: any, userId: string) => {
-        return {
-          employee_Ids: [params.id],
-          title: formData.type,
-          type: isCustomType ? formData.customType : formData.type,
-          description: formData.description,
-          status: "Ongoing",
-          priority: formData.priority,
-          workload: formData.workload,
-          start_Date: formData.startDate,
-          end_Date: formData.endDate,
-          team: formData.team,
-        };
+      const formattedData = {
+        ...formData,
+        workload: Number(formData.workload),
       };
 
-      const response = await fetch(
+      if (
+        new Date(formattedData.end_Date) < new Date(formattedData.start_Date)
+      ) {
+        throw new Error("End date cannot be earlier than start date");
+      }
+
+
+      // Try to create the task first
+      console.log("Creating task:", formattedData);
+      const taskResponse = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/add/${userId}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(generateTaskData(formData, params, userId)),
+          body: JSON.stringify(formattedData),
         }
       );
 
-      console.log(generateTaskData(formData, params, userId));
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create task");
+      if (!taskResponse.ok) {
+        const errorData = await taskResponse.json();
+        throw new Error(errorData.error || "Failed to create task");
       }
 
-      setShowSuccess(true);
-      toast({
-        title: "Success!",
-        description: "Task assigned successfully",
-        duration: 3000,
+      const taskResult = await taskResponse.json();
+      console.log("Task creation response:", taskResult);
+
+      // Check if the response has the expected structure
+      if (taskResult.error) {
+        throw new Error(taskResult.error);
+      }
+
+      if (!taskResult.data?.task_Id) {
+        throw new Error("Created task ID not found in response");
+      }
+
+      createdTaskId = taskResult.data.task_Id;
+      console.log("Created task ID:", createdTaskId);
+
+      // Prepare the complete email data with task_Id
+      const emailData: EmailData = {
+        to: employees?.[0]?.users?.[0]?.email ?? "",
+        subject: `New Task Assignment: ${formData.title}`,
+        name: employees[0].name,
+        title: formData.title,
+        description: formData.description,
+        deadline: new Date(formData.end_Date).toLocaleDateString("en-US", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
+        task_Id: createdTaskId ?? "",
+      };
+
+      // Try to send email notification
+      console.log("Sending email notification:", emailData);
+      const emailResponse = await fetch(
+        "https://be-icpworkloadmanagementsystem.up.railway.app/api/sendMail/assign",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(emailData),
+        }
+      );
+
+      if (!emailResponse.ok) {
+        // If email fails, delete the created task
+        if (createdTaskId) {
+          console.log(
+            "Email sending failed. Rolling back task creation for task ID:",
+            createdTaskId
+          );
+          const deleteResponse = await fetch(
+            `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/delete/${createdTaskId}`,
+            {
+              method: "DELETE",
+            }
+          );
+
+          if (!deleteResponse.ok) {
+            console.error(
+              "Failed to delete task during rollback:",
+              await deleteResponse.text()
+            );
+            throw new Error(
+              "Failed to send email notifications and cleanup task. Please contact support."
+            );
+          }
+          console.log("Task deletion successful");
+        }
+        throw new Error(
+          "Failed to send email notifications. Task creation has been rolled back."
+        );
+      }
+
+      const emailResult = await emailResponse.json();
+      console.log("Task and email notification successful:", {
+        taskResult,
+        emailResult,
       });
+
+      setShowConfirmation(false);
+      setShowSuccess(true);
 
       setTimeout(() => {
         setShowSuccess(false);
-        onTaskSubmit();
+        onSuccess();
         onClose();
       }, 1500);
     } catch (error) {
-      console.error("Error creating task:", error);
-      toast({
-        title: "Error",
-        description: "Failed to assign task. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
+      console.error("Error in task creation process:", error);
+
+      // If task was created but we failed at some other point and haven't handled it yet
+      if (createdTaskId) {
+        try {
+          console.log(
+            "Rolling back task creation due to error for task ID:",
+            createdTaskId
+          );
+          const deleteResponse = await fetch(
+            `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/delete/${createdTaskId}`,
+            {
+              method: "DELETE",
+            }
+          );
+
+          if (!deleteResponse.ok) {
+            console.error(
+              "Failed to delete task during rollback:",
+              await deleteResponse.text()
+            );
+            const rollbackMessage =
+              error instanceof Error
+                ? `${error.message} Additionally, we couldn't clean up the created task. Please contact support.`
+                : "Operation failed and cleanup was unsuccessful. Please contact support.";
+            setErrorMessage(rollbackMessage);
+            setShowError(true);
+            setShowConfirmation(false);
+            return;
+          }
+          console.log("Rollback successful");
+        } catch (rollbackError) {
+          console.error("Error during rollback:", rollbackError);
+          const rollbackMessage =
+            error instanceof Error
+              ? `${error.message} Additionally, we couldn't clean up the created task. Please contact support.`
+              : "Operation failed and cleanup was unsuccessful. Please contact support.";
+          setErrorMessage(rollbackMessage);
+          setShowError(true);
+          setShowConfirmation(false);
+          return;
+        }
+      }
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to complete the operation. Please try again.";
+      setErrorMessage(message);
+      setShowError(true);
       setShowConfirmation(false);
-    }
-  };
-
-  const handleTypeChange = (value: string) => {
-    setIsCustomType(value === "Other task...");
-    setFormData({
-      ...formData,
-      type: value === "Other task..." ? "" : value,
-      customType: value === "Other task..." ? "" : formData.customType,
-    });
-  };
-
-  const handleWorkloadChange = (value: number[]) => {
-    setFormData({ ...formData, workload: value[0] });
-  };
-
-  const handleWorkloadInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value;
-    const parsedValue = parseFloat(value.replace(",", "."));
-
-    if (!isNaN(parsedValue) && parsedValue >= 0 && parsedValue <= 10) {
-      setFormData({ ...formData, workload: parsedValue });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="p-[1vw] overflow-hidden rounded-[0.833vw]">
-          <form
-            onSubmit={handleFormSubmit}
-            className="p-[1.25vw] space-y-[1.25vw] relative"
-          >
-            <AnimatePresence>
-              {showSuccess && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-[0.833vw] z-50"
+    >
+      <motion.div
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.95 }}
+        className="bg-white rounded-[0.417vw] shadow-xl w-[50vw] max-w-[60vw] h-[80vh] max-h-[90vh] overflow-y-auto relative"
+      >
+        <AnimatePresence>
+          {showSuccess && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50"
+            >
+              <motion.div
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
+                className="flex flex-col items-center space-y-[0.833vw]"
+              >
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 0.5 }}
                 >
-                  <motion.div
-                    initial={{ y: 20 }}
-                    animate={{ y: 0 }}
-                    className="flex flex-col items-center space-y-[1vw]"
-                  >
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <CheckCircle2 className="w-[4vw] h-[4vw] text-green-500" />
-                    </motion.div>
-                    <p className="text-[1.2vw] font-semibold text-green-600">
-                      Task assigned successfully!
-                    </p>
-                  </motion.div>
+                  <CheckCircle2 className="w-[3.333vw] h-[3.333vw] text-green-500" />
                 </motion.div>
-              )}
-            </AnimatePresence>
+                <p className="text-[1.042vw] font-semibold text-green-600">
+                  Task created successfully!
+                </p>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-            <DialogTitle className="text-[1.33vw] font-bold pt-[1.25vw]">
-              Add new task
-            </DialogTitle>
-            <div className="grid grid-cols-2 gap-[1.25vw]">
-              {/* Left Column */}
-              <div className="space-y-[2vw]">
-                <div className="space-y-[0.833vw]">
-                  <label className="block text-[1vw]">
-                    Task Type <span className="text-red-500">*</span>
-                  </label>
-                  <Select onValueChange={handleTypeChange} required>
-                    <SelectTrigger className="h-[2.5vw]">
-                      <SelectValue placeholder="Select task type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {taskTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {isCustomType && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                    >
-                      <Input
-                        value={formData.customType}
-                        onChange={(e) => {
-                          const customValue = e.target.value;
-                          setFormData({
-                            ...formData,
-                            customType: customValue,
-                            type: customValue,
-                          });
-                        }}
-                        placeholder="Enter custom task type"
-                        className="h-[2.5vw] mt-[0.417vw]"
-                        required
-                      />
-                    </motion.div>
-                  )}
+        <AnimatePresence>
+          {showError && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            >
+              <motion.div className="bg-white rounded-lg shadow-lg w-full max-w-[40vw] p-6 flex flex-col items-center">
+                <div className="flex items-center mb-4">
+                  <AlertCircle className="w-6 h-6 text-red-500" />
                 </div>
+                <p className="text-md font-semibold text-red-600">
+                  {errorMessage}
+                </p>
+                <button
+                  onClick={() => setShowError(false)}
+                  className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                >
+                  Close
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-                <div className="space-y-[0.833vw]">
-                  <label className="block text-[1vw]">
-                    Task Priority <span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    value={formData.priority}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, priority: value })
-                    }
-                    required
-                  >
-                    <SelectTrigger className="h-[2.5vw]">
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {taskPriorities.map((priority) => (
-                        <SelectItem key={priority} value={priority}>
-                          {priority}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        <div className="flex justify-between items-center p-[1.25vw] border-b">
+          <h2 className="text-[1.042vw] font-semibold">Create New Task</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-[1.25vw] h-[1.25vw]" />
+          </button>
+        </div>
 
-                <div className="space-y-[0.417vw]">
-                  <label className="block text-[1vw]">
-                    Task Workload (0-10) <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex gap-[0.833vw] items-center">
-                    <div className="flex-grow">
-                      <Slider
-                        value={[formData.workload]}
-                        onValueChange={handleWorkloadChange}
-                        max={10}
-                        step={0.1}
-                        className="py-[0.833vw]"
-                      />
-                    </div>
-                    <Input
-                      type="number"
-                      value={formData.workload}
-                      onChange={handleWorkloadInputChange}
-                      className="w-[4.1vw] h-[2.5vw] px-[0.625vw]"
-                      step="0.1"
-                      min="0"
-                      max="10"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column */}
-              <div className="space-y-[2vw]">
-                <div className="space-y-[0.833vw]">
-                  <label className="block text-[1vw]">
-                    Task Start Date <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, startDate: e.target.value })
-                    }
-                    className="h-[2.5vw]"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-[0.417vw]">
-                  <label className="block text-[1vw]">
-                    Task End Date <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, endDate: e.target.value })
-                    }
-                    className="h-[2.5vw]"
-                    required
-                  />
-                </div>
-                <div className="space-y-[0.833vw]">
-                  <label className="block text-[1vw]">
-                    Team <span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    value={formData.team}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, team: value })
-                    }
-                    required
-                  >
-                    <SelectTrigger className="h-[2.5vw]">
-                      <SelectValue placeholder="Select team" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {["Korporat 1", "Korporat 2", "Pelayanan Pelanggan"].map(
-                        (team) => (
-                          <SelectItem key={team} value={team}>
-                            {team}
-                          </SelectItem>
-                        )
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            {/* Description - Full Width */}
+        <form
+          onSubmit={handleSubmit}
+          className="p-[1.25vw] space-y-[1.25vw] text-[1vw]"
+        >
+          <div className="grid grid-cols-2 gap-[1.25vw]">
             <div className="space-y-[0.417vw]">
-              <label className="block text-[1vw]">
-                Task Description <span className="text-red-500">*</span>
+              <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <FileText className="w-[0.833vw] h-[0.833vw]" />
+                Title
               </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Enter Task Description"
-                className={cn(
-                  "w-full min-h-[6.25vw] px-[0.833vw] py-[0.625vw] rounded-lg border border-gray-200",
-                  "resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                )}
+              <input
+                type="text"
+                name="title"
                 required
+                value={formData.title}
+                onChange={handleInputChange}
+                className="w-full px-[0.625vw] py-[0.417vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+                placeholder="Enter task title"
               />
             </div>
 
-            {/* Buttons */}
-            <div className="flex justify-end gap-[0.833vw] pt-[0.833vw]">
-              <Button
-                type="button"
-                onClick={onClose}
-                variant="ghost"
-                className="text-red-500 hover:text-red-600 hover:bg-transparent"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="bg-[#38BDF8] hover:bg-[#32a8dd] text-white px-8"
-                disabled={isSubmitting}
-              >
-                Assign
-              </Button>
+            <div className="space-y-[0.417vw]">
+              <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <Tag className="w-[0.833vw] h-[0.833vw]" />
+                Type
+              </label>
+              <input
+                type="text"
+                name="type"
+                required
+                value={formData.type}
+                onChange={handleInputChange}
+                className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+                placeholder="Enter task type"
+              />
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
 
-      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <AlertDialogOverlay className="bg-black/50 fixed inset-0" />
-        <AlertDialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[30vw] max-w-none z-50 bg-white rounded-[0.8vw] p-[1.5vw] shadow-lg">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: "1vw" }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: "1vw" }}
-            transition={{ duration: 0.2 }}
-          >
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-[1.5vw] font-semibold mb-[1vw]">
-                Confirm Task Assignment
-              </AlertDialogTitle>
-              <div className="space-y-[1vw]">
-                <AlertDialogDescription className="text-[1vw]">
-                  Please review the task details below:
-                </AlertDialogDescription>
-                <motion.div
-                  className="space-y-[0.8vw] text-[0.9vw] border rounded-[0.4vw] p-[1vw] bg-gray-50"
-                  initial={{ y: "1vw", opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.1 }}
+            <div className="col-span-2 space-y-[0.417vw]">
+              <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <FileText className="w-[0.833vw] h-[0.833vw]" />
+                Description
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={3}
+                className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+                placeholder="Enter task description"
+              />
+            </div>
+
+            <div className="space-y-[0.417vw]">
+              <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <AlertCircle className="w-[0.833vw] h-[0.833vw]" />
+                Priority
+              </label>
+              <div className="relative">
+                <select
+                  name="priority"
+                  value={formData.priority}
+                  onChange={handleInputChange}
+                  className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] appearance-none focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
                 >
-                  <div>
-                    <strong>Type:</strong>{" "}
-                    {isCustomType ? formData.customType : formData.type}
-                  </div>
-                  <div>
-                    <strong>Description:</strong> {formData.description}
-                  </div>
-                  <div>
-                    <strong>Workload:</strong> {formData.workload}
-                  </div>
-                  <div>
-                    <strong>Start Date:</strong>{" "}
-                    {formatDate(formData.startDate)}
-                  </div>
-                  <div>
-                    <strong>End Date:</strong> {formatDate(formData.endDate)}
-                  </div>
-                  <div>
-                    <strong>Team:</strong> {formData.team}
-                  </div>
-                </motion.div>
+                  <option value="Normal">Normal</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+                <ChevronDown className="w-[0.833vw] h-[0.833vw] absolute right-[0.833vw] top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500" />
               </div>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="mt-[1vw]">
-              <AlertDialogCancel
-                disabled={isSubmitting}
-                className="text-[0.8vw]"
-              >
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleConfirmedSubmit}
-                disabled={isSubmitting}
-                className="bg-[#38BDF8] hover:bg-[#32a8dd] text-[0.8vw]"
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-[0.417vw]">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                      className="w-[0.833vw] h-[0.833vw] border-[0.417vw] border-white border-t-transparent rounded-full"
-                    />
-                    Assigning...
-                  </div>
-                ) : (
-                  "Confirm Assignment"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </motion.div>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-};
+            </div>
 
-export default NewTaskModal;
+            <div className="space-y-[0.417vw]">
+              <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <AlertCircle className="w-[0.833vw] h-[0.833vw]" />
+                Workload (0 - 10)
+              </label>
+              <input
+                type="number"
+                name="workload"
+                required
+                min="0"
+                max="10"
+                step="0.1"
+                value={formData.workload}
+                onChange={handleInputChange}
+                className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+              />
+            </div>
+
+                <div className="space-y-[0.417vw]">
+                  <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                    <Calendar className="w-[0.833vw] h-[0.833vw]" />
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    name="start_Date"
+                    required
+                    value={formData.start_Date}
+                    onChange={handleInputChange}
+                    className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-[0.417vw]">
+                  <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                    <Calendar className="w-[0.833vw] h-[0.833vw]" />
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    name="end_Date"
+                    required
+                    value={formData.end_Date}
+                    onChange={handleInputChange}
+                    className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  />
+                </div>
+
+                <div className="col-span-2 space-y-[0.417vw]">
+      <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+        <Tag className="w-[0.833vw] h-[0.833vw]" />
+        Team to be assigned
+      </label>
+      <div className="relative">
+        {userRole === 'PIC' ? (
+          <input
+            type="text"
+            name="team"
+            value={formData.team}
+            disabled
+            className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] bg-gray-100 cursor-not-allowed"
+          />
+        ) : (
+          <>
+            <select
+              name="team"
+              value={formData.team}
+              onChange={handleInputChange}
+              className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] appearance-none focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+            >
+              <option value="">Select team...</option>
+              <option value="Korporat 1">Korporat 1</option>
+              <option value="Korporat 2">Korporat 2</option>
+              <option value="Pelayanan Pelanggan">Pelayanan Pelanggan</option>
+            </select>
+            <ChevronDown className="w-[0.833vw] h-[0.833vw] absolute right-[0.833vw] top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500" />
+          </>
+        )}
+      </div>
+    </div>
+
+            <div className="col-span-2 space-y-[0.417vw]">
+              <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <Users className="w-[0.833vw] h-[0.833vw]" />
+                Assignees
+              </label>
+              <div className="relative">
+              <div className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] bg-gray-100">
+          {employees.length > 0 && (
+            <div className="flex items-center">
+              <img
+                src={employees[0].image || "/api/placeholder/32/32"}
+                alt={employees[0].name}
+                className="w-[1.667vw] h-[1.667vw] rounded-full object-cover"
+              />
+              <div className="ml-[0.833vw]">
+                <div className="text-[1vw] font-medium">
+                  {employees[0].name}
+                </div>
+                <div className="text-[0.625vw] text-gray-500">
+                  {employees[0].team} • {employees[0].skill}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+          </div>
+
+          <div className="flex justify-end gap-[1.042vw] pt-[1.042vw]">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-[1.042vw] py-[0.521vw] text-gray-600 hover:text-gray-800 transition-colors text-[1vw] font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className={cn(
+                "px-[1.042vw] py-[0.521vw] bg-blue-600 text-white rounded-[0.208vw] hover:bg-blue-700 transition-colors text-[1vw] font-medium flex items-center gap-[0.417vw]",
+                loading && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              {loading && (
+                <Loader2 className="w-[0.833vw] h-[0.833vw] animate-spin" />
+              )}
+              {loading ? "Creating..." : "Create Task"}
+            </button>
+          </div>
+        </form>
+
+        <AnimatePresence>
+          {showConfirmation && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center p-[1.042vw] z-[60]"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-white rounded-lg shadow-lg w-full max-w-[40vw] p-6"
+              >
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                  Confirm Task Creation
+                </h3>
+
+                <div className="space-y-4">
+                  <div className="bg-gray-50 rounded-md p-4 shadow-inner">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm text-gray-500 flex items-center">
+                          <FileText className="mr-1 w-4 h-4" />
+                          Title
+                        </span>
+                        <p className="text-md font-medium text-gray-700">
+                          {formData.title}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500 flex items-center">
+                          <Tag className="mr-1 w-4 h-4" />
+                          Type
+                        </span>
+                        <p className="text-md font-medium text-gray-700">
+                          {formData.type}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500 flex items-center">
+                          <AlertCircle className="mr-1 w-4 h-4" />
+                          Priority
+                        </span>
+                        <p className="text-md font-medium text-gray-700">
+                          {formData.priority}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500 flex items-center">
+                          <Loader2 className="mr-1 w-4 h-4" />
+                          Workload
+                        </span>
+                        <p className="text-md font-medium text-gray-700">
+                          {formData.workload}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500 flex items-center">
+                          <Calendar className="mr-1 w-4 h-4" />
+                          Start Date
+                        </span>
+                        <p className="text-md font-medium text-gray-700">
+                          {new Date(formData.start_Date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500 flex items-center">
+                          <Calendar className="mr-1 w-4 h-4" />
+                          End Date
+                        </span>
+                        <p className="text-md font-medium text-gray-700">
+                          {new Date(formData.end_Date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <span className="text-sm text-gray-500 ">
+                        Description
+                      </span>
+                      <p className="text-md font-medium text-gray-700 max-h-[8vw] overflow-y-auto">
+                        {formData.description}
+                      </p>
+                    </div>
+
+                    <div className="mt-4">
+                      <span className="text-sm text-gray-500">Status</span>
+                      <p className="text-md font-medium text-gray-700">
+                        {formData.status}
+                      </p>
+                    </div>
+
+                    <div className="mt-4">
+                      <span className="text-sm text-gray-500">Assignees</span>
+                      <p className="text-md font-medium text-gray-700">
+                      {employees[0].name}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-gray-600">
+                    Are you sure you want to create this task?
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-4 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmation(false)}
+                    disabled={loading}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors text-sm font-medium border border-gray-300 rounded-md shadow-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmedSubmit}
+                    disabled={loading}
+                    className={cn(
+                      "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2",
+                      loading && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {loading ? "Creating..." : "Confirm"}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </motion.div>
+  );
+}

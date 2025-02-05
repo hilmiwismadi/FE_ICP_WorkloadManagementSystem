@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button";
 
 // WorkloadStatusBar Component remains the same
 const WorkloadStatusBar = ({ value }: { value: number }) => {
-  const normalize = value / 13.7;
+  const normalize = value;
   const percentage = normalize * 100;
 
   const getColor = () => {
@@ -66,6 +66,7 @@ interface Task {
   start_Date: string;
   end_Date: string;
   employee_Id: string;
+  mcda: number;
   status: string;
   type: string;
   user_Id: string;
@@ -160,7 +161,7 @@ export function DataTable({
       },
     },
     {
-      accessorKey: "workload",
+      accessorKey: "mcda",
       header: ({ column }) => {
         return (
           <Button
@@ -174,7 +175,7 @@ export function DataTable({
         );
       },
       cell: ({ row }) => {
-        const workload = row.getValue("workload") as number;
+        const workload = row.getValue("mcda") as number;
         return <WorkloadStatusBar value={workload} />;
       },
     },

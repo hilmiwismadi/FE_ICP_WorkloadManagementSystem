@@ -298,7 +298,7 @@ const TaskPage = () => {
 
   const renderTaskRow = (task: Task) => {
     const employeeDetails = task.assigns?.map(assign => ({
-      image: assign.employee.image,
+      image: getImageUrl(assign.employee.image), // Added getImageUrl here
       details: assign.employee
     }));
 
@@ -385,7 +385,7 @@ const TaskPage = () => {
                       <div className="flex justify-between">
                         <span className="text-gray-500">Workload:</span>
                         <span className={`${getWorkloadColor(workloadPercentage)}`}>
-                          {workloadPercentage.toFixed(2)}%
+                          {workloadPercentage}%
                         </span>
                       </div>
                       <div className="flex justify-between">
