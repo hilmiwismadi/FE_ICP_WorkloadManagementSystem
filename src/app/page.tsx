@@ -97,7 +97,10 @@ const Login = () => {
         // Clean up cookies if there's any error
         Cookies.remove("auth_token");
         Cookies.remove("remembered_user");
-        console.error("Error during initialization:", error);
+        setAlertMessage({
+          message: "Something went wrong during initialization. Please try again.",
+          type: "error",
+      });
       } finally {
         setIsInitialized(true);
       }

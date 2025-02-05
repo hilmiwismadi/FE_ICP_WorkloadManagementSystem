@@ -38,22 +38,33 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [taskIds, setTaskIds] = useState<string[]>([]);
 
-  const fetchTaskIds = async (employeeId: string): Promise<string[]> => {
+  const fetchTaskIds = async (employeeId: string, role: string): Promise<string[]> => {
+    if (role !== "PIC" && role !== "Employee") {
+      return [];
+    }
+  
     try {
       const response = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/emp/read/${employeeId}`
       );
+  
+      if (response.status === 404) {
+        return [];
+      }
+  
       const responseData = await response.json();
-
+  
       if (responseData.data && Array.isArray(responseData.data)) {
         return responseData.data.map((task: any) => task.task_Id);
       } else {
         return [];
       }
     } catch (error) {
+      console.error("Failed to fetch task data:", error);
       return [];
     }
   };
+  
 
   const checkRoleAccess = (
     userData: UserData,
@@ -130,8 +141,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           router.push("/");
           return;
         }
-
-        const fetchedTaskIds = await fetchTaskIds(decoded.employee_Id);
+        const fetchedTaskIds = await fetchTaskIds(decoded.employee_Id, decoded.role);
         setTaskIds(fetchedTaskIds);
 
         const hasAccess = checkRoleAccess(decoded, pathname, fetchedTaskIds);
