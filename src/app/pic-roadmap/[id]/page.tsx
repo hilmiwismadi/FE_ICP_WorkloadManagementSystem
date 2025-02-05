@@ -38,6 +38,7 @@ interface ApiTask {
     employee: Employee;
   }>;
   team: string;
+  mcda: number;
 }
 
 function convertApiTaskToTask(apiTask: ApiTask): Task {
@@ -47,24 +48,11 @@ function convertApiTaskToTask(apiTask: ApiTask): Task {
     startDate: new Date(apiTask.start_Date),
     endDate: new Date(apiTask.end_Date),
     workload: apiTask.workload.toString(),
-    urgency:
-      apiTask.priority.toLowerCase() === "high"
-        ? "critical"
-        : apiTask.priority.toLowerCase() === "medium"
-        ? "high"
-        : "normal",
     description: apiTask.description,
-    priority: (
-      parseInt(
-        apiTask.priority === "High"
-          ? "8"
-          : apiTask.priority === "Medium"
-          ? "5"
-          : "2"
-      ) + Math.random()
-    ).toFixed(1),
+    priority: apiTask.priority,
     status: apiTask.status as "Ongoing" | "Done" | "Approved",
     team: apiTask.team,
+    mcda: apiTask.mcda,
   };
 }
 

@@ -5,9 +5,9 @@ export interface Task {
   startDate: Date;
   endDate: Date;
   workload: string;
-  urgency: string;
   description: string;
   priority: string;
   status: 'Ongoing' | 'Done' | 'Approved';
   team: string;
+  mcda: number;
 }
