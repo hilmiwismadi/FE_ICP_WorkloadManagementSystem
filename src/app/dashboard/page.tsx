@@ -203,7 +203,7 @@ export default function ActivityPage() {
       setDivisionMetrics(divisionAverages);
       setError(null);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      // console.error("Error fetching data:", error);
       setError(
         error instanceof Error
           ? error.message
@@ -222,7 +222,7 @@ export default function ActivityPage() {
         const userData: JWTPayload = jwtDecode(authStorage);
         setTeam(userData.team);
       } catch (error) {
-        console.error("Error decoding auth token:", error);
+        // console.error("Error decoding auth token:", error);
       }
     }
   }, []);

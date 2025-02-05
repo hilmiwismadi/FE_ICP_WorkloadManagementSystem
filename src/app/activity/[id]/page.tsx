@@ -55,7 +55,7 @@ export default function Activity() {
           setEmployee(response.data.data);
         }
       } catch (error) {
-        console.error("Failed to fetch employee data:", error);
+        // console.error("Failed to fetch employee data:", error);
       }
     };
 
@@ -68,7 +68,7 @@ export default function Activity() {
           setTasks(response.data.data);
         }
       } catch (error) {
-        console.error("Failed to fetch task data:", error);
+        // console.error("Failed to fetch task data:", error);
       } finally {
         setLoading(false);
       }
