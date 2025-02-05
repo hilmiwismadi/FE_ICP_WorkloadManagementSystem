@@ -1,6 +1,5 @@
 export async function fetchTasks(userId: string) {
   try {
-    console.log('Fetching tasks for userId:', userId);
     const response = await fetch(`https://be-icpworkloadmanagementsystem.up.railway.app/api/tasks/read/${userId}`, {
       method: 'GET',
       headers: {
@@ -8,13 +7,11 @@ export async function fetchTasks(userId: string) {
         // Add any required headers like authentication tokens here
       },
     });
-    console.log('API Response status:', response.status);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch tasks: ${response.status}`);
     }
     const data = await response.json();
-    console.log('Raw API response:', data);
     
     // Transform the API response to match our Task interface
     const transformedData = data.map((task: any) => ({
@@ -30,7 +27,6 @@ export async function fetchTasks(userId: string) {
       type: task.type,
       userId: task.user_Id
     }));
-    console.log('Transformed tasks:', transformedData);
     return transformedData;
   } catch (error) {
     console.error('Error details:', error);
