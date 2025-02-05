@@ -37,6 +37,7 @@ interface ApiTask {
     employee: Employee;
   }>;
   team: string;
+  mcda: number;
 }
 
 function convertApiTaskToTask(apiTask: ApiTask): Task {
@@ -50,6 +51,7 @@ function convertApiTaskToTask(apiTask: ApiTask): Task {
     priority: apiTask.priority,
     status: apiTask.status as "Ongoing" | "Done" | "Approved",
     team: apiTask.team,
+    mcda: apiTask.mcda,
   };
 }
 

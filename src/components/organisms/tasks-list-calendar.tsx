@@ -31,9 +31,10 @@ const TaskTimeline = ({
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
 
   const getTaskColor = (workload: string, priority: string): string => {
-    if (priority === "high") return "bg-red-600";
-    if (priority=== "medium") return "bg-orange-600";
+    if (priority === "High") return "bg-red-600";
+    if (priority=== "Medium") return "bg-orange-600";
     return "bg-green-600";
+    
   };
 
   console.log(tasks);
@@ -153,7 +154,7 @@ const TaskTimeline = ({
         <div className="w-[65.5vw] relative z-20">
           {/* Date Headers */}
           <div
-            className="grid gap-0 w-full border-b bg-black"
+            className="grid gap-0 w-full border-b"
             style={{
               gridTemplateColumns: `repeat(${days.length}, minmax(2vw, 1fr))`,
             }}

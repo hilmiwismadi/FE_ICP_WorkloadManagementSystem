@@ -9,4 +9,5 @@ export interface Task {
   priority: string;
   status: 'Ongoing' | 'Done' | 'Approved';
   team: string;
+  mcda: number;
 }

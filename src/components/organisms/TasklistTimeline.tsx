@@ -166,10 +166,10 @@ export default function CompactTaskList({
                       </span>
                       <span
                         className={`${getPriorityColor(
-                          task.priority
+                          task.mcda.toString()
                         )} text-white text-[0.6rem] px-2 py-0.5 rounded-full font-bold`}
                       >
-                        {task.workload}
+                        {task.mcda}
                       </span>
                     </div>
                   </div>
