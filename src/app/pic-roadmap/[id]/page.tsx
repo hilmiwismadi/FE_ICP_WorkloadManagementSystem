@@ -70,7 +70,6 @@ function convertApiTaskToTask(apiTask: ApiTask): Task {
 
 export default function PicRoadmap() {
   const params = useParams();
-  console.log("Params:", params); // Debug log for params
 
   // Use id instead of user_Id from params
   const id = params?.id as string;
@@ -86,7 +85,6 @@ export default function PicRoadmap() {
   useEffect(() => {
     async function fetchTasks() {
       if (!id) {
-        console.log("No ID found in params");
         setError("ID is required");
         setLoading(false);
         return;
@@ -95,7 +93,6 @@ export default function PicRoadmap() {
       try {
         setLoading(true);
         setError(null);
-        console.log("Fetching tasks for ID:", id);
 
         const response = await fetch(
           `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/user/read/${id}`,
@@ -106,7 +103,6 @@ export default function PicRoadmap() {
           }
         );
 
-        console.log("Response status:", response.status);
 
         if (response.status === 404) {
           setTasks([]);
@@ -119,15 +115,12 @@ export default function PicRoadmap() {
         }
 
         const data = await response.json();
-        console.log("API Response data:", data);
 
         const apiTasks: ApiTask[] = Array.isArray(data.data)
           ? data.data
           : data.data || [];
-        console.log("Processed API tasks:", apiTasks);
 
         const convertedTasks = apiTasks.map(convertApiTaskToTask);
-        console.log("Converted tasks:", convertedTasks);
 
         setTasks(convertedTasks);
       } catch (error) {
@@ -139,7 +132,6 @@ export default function PicRoadmap() {
           setError(error instanceof Error ? error.message : "Failed to fetch tasks");
         }
       } finally {
-        console.log("Setting loading to false");
         setLoading(false);
       }
     }

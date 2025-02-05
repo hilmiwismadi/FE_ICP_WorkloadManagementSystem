@@ -80,6 +80,7 @@ const Login = () => {
           const decryptedData = decryptCookieData(rememberedUserData);
           if (decryptedData) {
             const parsedData = JSON.parse(decryptedData) as FormData;
+            console.log(parsedData);
             // Validate the decrypted data
             if (parsedData.email && parsedData.password) {
               setFormData({
