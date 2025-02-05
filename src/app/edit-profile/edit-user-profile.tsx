@@ -164,7 +164,7 @@ export default function EditUserProfile({
         window.location.reload();
       }, 1500);
     } else {
-      console.error("Failed to update profile");
+      // console.error("Failed to update profile");
       alert("An error occurred while updating the profile.");
     }
   };
@@ -177,7 +177,7 @@ export default function EditUserProfile({
         const token = parsedCookies.auth_token;
 
         if (!token) {
-          console.error("No auth token found in cookies");
+          // console.error("No auth token found in cookies");
           return;
         }
 
@@ -200,10 +200,10 @@ export default function EditUserProfile({
 
           setUserTechStack(mappedSkills);
         } else {
-          console.error("Error fetching user tech stack:", data);
+          // console.error("Error fetching user tech stack:", data);
         }
       } catch (error) {
-        console.error("Exception in fetchUserTechStack:", error);
+        // console.error("Exception in fetchUserTechStack:", error);
       }
     };
 
@@ -226,7 +226,7 @@ export default function EditUserProfile({
       const token = parsedCookies.auth_token;
 
       if (!token) {
-        console.error("No auth token found in cookies");
+        // console.error("No auth token found in cookies");
         return;
       }
 
@@ -242,10 +242,10 @@ export default function EditUserProfile({
       if (response.ok) {
         setAvailableTechStack(data.data || []);
       } else {
-        console.error("Error fetching available tech stack:", data);
+        // console.error("Error fetching available tech stack:", data);
       }
     } catch (error) {
-      console.error("Exception in fetchAvailableTechStack:", error);
+      // console.error("Exception in fetchAvailableTechStack:", error);
     }
   };
 
