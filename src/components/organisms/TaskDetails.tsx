@@ -49,7 +49,7 @@ interface Task {
   startDate: Date;
   endDate: Date;
   workload: string;
-  urgency: string;
+  priority: string;
   status: string;
   assigns?: Array<{
     employee_Id: string;
@@ -77,14 +77,13 @@ const calculateWorkloadPercentage = (workload: number): number => {
 };
 
 const getWorkloadColor = (percentage: number): string => {
-  if (percentage < 40) {
-    return "text-green-600";
-  } else if (percentage < 80) {
-    return "text-yellow-600";
-  } else {
-    return "text-red-600";
-  }
+  if (percentage >= 80) return "text-red-700"; // 80-100 (Critical)
+  if (percentage >= 60) return "text-orange-500"; // 60-79 (High)
+  if (percentage >= 40) return "text-yellow-500"; // 40-59 (Medium)
+  if (percentage >= 20) return "text-green-500"; // 20-39 (Low)
+  return "text-blue-300"; // 0-19 (Very Low)
 };
+
 
 const getImageUrl = (imageUrl: string | undefined): string => {
   if (!imageUrl) {
@@ -404,14 +403,14 @@ export const TaskDetails = ({
                 <strong>Urgency:</strong>{" "}
                 <span
                   className={`px-[0.5vw] py-[0.1vw] rounded-full text-[0.8vw] ${
-                    taskData.urgency === "High"
+                    taskData.priority === "High"
                       ? "bg-red-100 text-red-800"
-                      : taskData.urgency === "Medium"
+                      : taskData.priority === "Medium"
                       ? "bg-amber-100 text-amber-800"
                       : "bg-blue-100 text-blue-800"
                   }`}
                 >
-                  {taskData.urgency}
+                  {taskData.priority}
                 </span>
               </span>
             </div>

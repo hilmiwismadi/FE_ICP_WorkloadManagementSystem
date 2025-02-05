@@ -19,12 +19,16 @@ interface TaskListProps {
   isVisible?: boolean;
 }
 
-const getPriorityColor = (priority: string) => {
-  const value = parseFloat(priority);
-  if (value >= 7) return "bg-red-600";
-  if (value >= 4) return "bg-amber-500";
-  return "bg-emerald-500";
+const getPriorityColor = (mcda: number): string => {
+  const value = mcda * 100; // Normalize mcda to percentage
+
+  if (value >= 80) return "bg-red-700"; // 80-100 (Critical)
+  if (value >= 60) return "bg-orange-500"; // 60-79 (High)
+  if (value >= 40) return "bg-yellow-400"; // 40-59 (Medium)
+  if (value >= 20) return "bg-green-500"; // 20-39 (Low)
+  return "bg-blue-500"; // 0-19 (Very Low)
 };
+
 
 const getTaskSpanColor = (status: string) => {
   switch (status) {
@@ -166,10 +170,10 @@ export default function CompactTaskList({
                       </span>
                       <span
                         className={`${getPriorityColor(
-                          task.priority
+                          task.mcda
                         )} text-white text-[0.6rem] px-2 py-0.5 rounded-full font-bold`}
                       >
-                        {task.workload}
+                        {Math.round(task.mcda * 100)}%
                       </span>
                     </div>
                   </div>

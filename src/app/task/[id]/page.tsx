@@ -8,12 +8,12 @@ import SearchBar from "@/components/organisms/SearchBarTask";
 import ProfileHeader from "@/components/organisms/ProfileHeader";
 import Sidebar from "@/components/sidebar";
 import { DataTable } from "../data-table";
-import BulkTaskModal from "../BulkTaskModal";
 import LoadingScreen from "@/components/organisms/LoadingScreen";
 import ProtectedRoute from "@/components/protected-route";
 import { jwtDecode } from "jwt-decode";
 import { AnimatePresence } from "framer-motion";
 import Cookies from "js-cookie";
+import CreateTaskModal from "@/components/organisms/NewTaskModal";
 
 interface TaskDetails {
   task_Id: string;
@@ -23,6 +23,7 @@ interface TaskDetails {
   status: string;
   priority: string;
   workload: number;
+  mcda: number;
   start_Date: string;
   end_Date: string;
   user_Id: string;
@@ -232,8 +233,9 @@ export default function TaskPageId() {
 
         <AnimatePresence>
           {isModalOpen && (
-            <BulkTaskModal
+            <CreateTaskModal
               userId={(user?.user_Id) || ""}
+              employeeId={id as string} // Pass the employee ID from the URL params
               onClose={() => setIsModalOpen(false)}
               onSuccess={handleSubmit}
             />

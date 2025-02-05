@@ -52,7 +52,7 @@ interface Employee {
 }
 
 interface TechStack {
-  techStack_Id: number;
+  skill_Id: string;
   name: string;
   image: string;
 }
@@ -226,7 +226,7 @@ export default function ProfilePage() {
                       <WorkloadOverview
                         tasks={employee.assigns}
                         currentWorkload={Math.round(
-                          (employee.current_Workload / 13.7) * 100
+                          employee.current_Workload  * 100
                         )}
                         averageWorkload={averageWorkload}
                         className="rounded-[1vw] shadow-sm p-[1.25vw] h-full"

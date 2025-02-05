@@ -13,9 +13,14 @@ type Employee = {
   email: string;
   phone: string;
   skill: string;
-  role: string;
+  users: User[]; // Added `users` array  current_Workload: number;
   current_Workload: number;
   start_Date: string;
+};
+
+type User = {
+  email: string;
+  role: string;
 };
 
 type ApiResponse = {
@@ -89,8 +94,24 @@ export default function CustomSearchBar() {
           throw new Error(responseData.error);
         }
         
-        // Set employees from the data property
-        setEmployees(responseData.data);
+        // Filter employees based on user role
+          const filteredEmployees = responseData.data.filter(emp => {
+          // Get the primary user's role (first user in the array)
+          const employeeRole = emp.users[0]?.role.toLowerCase();
+
+          // Skip if no users or no role defined
+          if (!employeeRole) return false;
+
+          // Always exclude managers from the list
+          if (employeeRole === 'manager') return false;
+          
+          // If current user is PIC, exclude other PICs
+          if (userRole === 'PIC' && employeeRole === 'pic') return false;
+          
+          return true;
+        });
+
+        setEmployees(filteredEmployees);
         
         // Extract unique teams from the employee data
         const uniqueTeams = Array.from(new Set(responseData.data.map(emp => emp.team)));
