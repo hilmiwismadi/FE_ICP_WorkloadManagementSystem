@@ -94,8 +94,6 @@ export default function ProfilePage() {
     fetchAllEmployees();
   }, []);
 
-  console.log(averageWorkload);
-
   // Fetch individual employee data
   useEffect(() => {
     const fetchEmployeeData = async () => {
@@ -133,10 +131,8 @@ export default function ProfilePage() {
           `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${id}`
         );
     
-        console.log("User tech stack response status:", response.status);
         const data = await response.json();
-        console.log("Full API Response:", data);
-    
+
         // Check if data and skills exist
         if (response.ok && data?.data?.skills?.length > 0) {
           // Map skills array and extract the necessary data
@@ -146,7 +142,6 @@ export default function ProfilePage() {
             image: skill.techStack?.image || "/placeholder.png",
           }));
     
-          console.log("Mapped Skills:", mappedSkills);
           setTechStacks(mappedSkills);
         } else {
           console.warn("No skills data found for this employee.");

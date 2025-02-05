@@ -220,8 +220,6 @@ export default function ActivityPage() {
     if (authStorage) {
       try {
         const userData: JWTPayload = jwtDecode(authStorage);
-        console.log("Decoded token data:", userData);
-        console.log("Team from decoded token:", userData.team);
         setTeam(userData.team);
       } catch (error) {
         console.error("Error decoding auth token:", error);

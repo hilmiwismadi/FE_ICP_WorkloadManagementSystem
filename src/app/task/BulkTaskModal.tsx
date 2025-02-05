@@ -247,8 +247,6 @@ export default function CreateTaskModal({
         .map((emp) => emp.name.split(" ")[0])
         .join(", ");
 
-      // Try to create the task first
-      console.log("Creating task:", formattedData);
       const taskResponse = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/add/${userId}`,
         {
@@ -266,7 +264,6 @@ export default function CreateTaskModal({
       }
 
       const taskResult = await taskResponse.json();
-      console.log("Task creation response:", taskResult);
 
       // Check if the response has the expected structure
       if (taskResult.error) {
@@ -278,7 +275,6 @@ export default function CreateTaskModal({
       }
 
       createdTaskId = taskResult.data.task_Id;
-      console.log("Created task ID:", createdTaskId);
 
       // Prepare the complete email data with task_Id
       const emailData: EmailData = {
@@ -296,7 +292,6 @@ export default function CreateTaskModal({
       };
 
       // Try to send email notification
-      console.log("Sending email notification:", emailData);
       const emailResponse = await fetch(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/sendMail/assign",
         {
@@ -311,10 +306,6 @@ export default function CreateTaskModal({
       if (!emailResponse.ok) {
         // If email fails, delete the created task
         if (createdTaskId) {
-          console.log(
-            "Email sending failed. Rolling back task creation for task ID:",
-            createdTaskId
-          );
           const deleteResponse = await fetch(
             `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/delete/${createdTaskId}`,
             {
@@ -331,7 +322,6 @@ export default function CreateTaskModal({
               "Failed to send email notifications and cleanup task. Please contact support."
             );
           }
-          console.log("Task deletion successful");
         }
         throw new Error(
           "Failed to send email notifications. Task creation has been rolled back."
@@ -339,10 +329,6 @@ export default function CreateTaskModal({
       }
 
       const emailResult = await emailResponse.json();
-      console.log("Task and email notification successful:", {
-        taskResult,
-        emailResult,
-      });
 
       setShowConfirmation(false);
       setShowSuccess(true);

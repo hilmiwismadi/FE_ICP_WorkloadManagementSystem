@@ -235,7 +235,6 @@ export default function CreateTaskModal({
       };
 
       // Try to send email notification
-      console.log("Sending email notification:", emailData);
       const emailResponse = await fetch(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/sendMail/assign",
         {
@@ -250,10 +249,6 @@ export default function CreateTaskModal({
       if (!emailResponse.ok) {
         // If email fails, delete the created task
         if (createdTaskId) {
-          console.log(
-            "Email sending failed. Rolling back task creation for task ID:",
-            createdTaskId
-          );
           const deleteResponse = await fetch(
             `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/delete/${createdTaskId}`,
             {
@@ -270,7 +265,6 @@ export default function CreateTaskModal({
               "Failed to send email notifications and cleanup task. Please contact support."
             );
           }
-          console.log("Task deletion successful");
         }
         throw new Error(
           "Failed to send email notifications. Task creation has been rolled back."
