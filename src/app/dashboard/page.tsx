@@ -290,9 +290,9 @@ export default function ActivityPage() {
                         margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
                       >
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" domain={[0, 100]} />
+                        <XAxis type="number" domain={[0, 100]}  tickFormatter={(value) => `${value}%`}/>
                         <YAxis dataKey="name" type="category" />
-                        <Tooltip />
+                        <Tooltip formatter={(value) => `${value}%`} />
                         <Bar dataKey="averageWorkload" radius={[0, 4, 4, 0]}>
                           {divisionMetrics.map((entry, index) => (
                             <Cell
