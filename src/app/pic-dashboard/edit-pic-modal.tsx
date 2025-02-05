@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { EmployeeData } from "./columns";
+import { jwtDecode } from "jwt-decode";
+import Cookies from "js-cookie";
 
 interface EditEmployeeModalProps {
   employee: EmployeeData;
@@ -34,12 +36,31 @@ export function EditEmployeeModal({
   onOpenChange,
 }: EditEmployeeModalProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isDemotionConfirmOpen, setIsDemotionConfirmOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [managerData, setManagerData] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: employee.email,
     phone: employee.phone,
     team: employee.team,
     role: employee.role,
   });
+
+  useEffect(() => {
+    const authToken = Cookies.get("auth_token");
+    if (authToken) {
+      try {
+        const decodedToken: { role: string; user_Id: string } =
+          jwtDecode(authToken);
+        setUserRole(decodedToken.role);
+        if (decodedToken.role === "Manager") {
+          setManagerData(decodedToken.user_Id);
+        }
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +98,43 @@ export function EditEmployeeModal({
     }
   };
 
+  const handleDemotePIC = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/user/updateRole/${managerData}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            employee_Id: employee.employee_id,
+            role: "Employee",
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to demote employee from PIC");
+
+      toast({
+        title: "Success",
+        description: "Employee successfully demoted from PIC",
+        duration: 3000,
+      });
+      setIsDemotionConfirmOpen(false);
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to demote employee. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[40vw]">
@@ -107,7 +165,9 @@ export function EditEmployeeModal({
                     <SelectValue placeholder="Select team" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Pelayanan Pelanggan">Pelayanan Pelanggan</SelectItem>
+                    <SelectItem value="Pelayanan Pelanggan">
+                      Pelayanan Pelanggan
+                    </SelectItem>
                     <SelectItem value="Korporat 1">Korporat 1</SelectItem>
                     <SelectItem value="Korporat 2">Korporat 2</SelectItem>
                   </SelectContent>
@@ -130,8 +190,42 @@ export function EditEmployeeModal({
                 >
                   {isLoading ? "Updating..." : "Update Employee"}
                 </Button>
+                <Button
+                  type="button"
+                  onClick={() => setIsDemotionConfirmOpen(true)}
+                  className="text-[0.9vw] px-[2vw] py-[1vw] bg-red-500 hover:bg-red-600"
+                >
+                  Demote PIC
+                </Button>
               </DialogFooter>
             </form>
+
+            <Dialog
+              open={isDemotionConfirmOpen}
+              onOpenChange={setIsDemotionConfirmOpen}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Confirm Demotion</DialogTitle>
+                </DialogHeader>
+                <p>Are you sure you want to demote this employee from PIC?</p>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDemotionConfirmOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleDemotePIC}
+                    className="bg-red-500 hover:bg-red-600"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Demoting..." : "Confirm"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </motion.div>
       </DialogContent>

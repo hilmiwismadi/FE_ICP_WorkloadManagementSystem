@@ -55,7 +55,9 @@ export function PromotePICModal({ onSuccess }: PromotePICModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  );
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -72,21 +74,22 @@ export function PromotePICModal({ onSuccess }: PromotePICModalProps) {
     }
   }, [isOpen]);
 
-    // Add JWT token decoding effect
-    useEffect(() => {
-      const authToken = Cookies.get("auth_token");
-      if (authToken) {
-        try {
-          const decodedToken: { role: string, user_Id: string } = jwtDecode(authToken);
-          setUserRole(decodedToken.role);
-          if (decodedToken.role === "Manager") {
-            setManagerData(decodedToken.user_Id);
-          }
-        } catch (error) {
-          console.error("Error decoding token:", error);
+  // Add JWT token decoding effect
+  useEffect(() => {
+    const authToken = Cookies.get("auth_token");
+    if (authToken) {
+      try {
+        const decodedToken: { role: string; user_Id: string } =
+          jwtDecode(authToken);
+        setUserRole(decodedToken.role);
+        if (decodedToken.role === "Manager") {
+          setManagerData(decodedToken.user_Id);
         }
+      } catch (error) {
+        console.error("Error decoding token:", error);
       }
-    }, []);
+    }
+  }, []);
 
   const fetchEmployees = async () => {
     setIsLoading(true);
@@ -118,7 +121,9 @@ export function PromotePICModal({ onSuccess }: PromotePICModalProps) {
       console.log("2. Employees array:", employeesArray);
 
       if (!Array.isArray(employeesArray)) {
-        throw new Error("Expected array of employees but got: " + typeof employeesArray);
+        throw new Error(
+          "Expected array of employees but got: " + typeof employeesArray
+        );
       }
 
       // Filter for employees (with more detailed logging)
@@ -128,7 +133,7 @@ export function PromotePICModal({ onSuccess }: PromotePICModalProps) {
           console.log("No users array for:", emp.name);
           return false;
         }
-        const isRegularEmployee = emp.users.some(user => {
+        const isRegularEmployee = emp.users.some((user) => {
           console.log("Checking user role:", user.role);
           return user.role === "Employee";
         });
@@ -137,17 +142,17 @@ export function PromotePICModal({ onSuccess }: PromotePICModalProps) {
       });
 
       console.log("3. Filtered regular employees:", regularEmployees);
-      
+
       setEmployees(regularEmployees);
       setFilteredEmployees(regularEmployees);
 
       console.log("4. State updated with employees:", {
         employees: regularEmployees,
-        filteredEmployees: regularEmployees
+        filteredEmployees: regularEmployees,
       });
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
       console.error("Fetch error:", errorMessage);
       setError(errorMessage);
       toast({
@@ -173,18 +178,18 @@ export function PromotePICModal({ onSuccess }: PromotePICModalProps) {
     setSearchQuery(value);
     console.log("Search query:", value);
     console.log("Current employees:", employees);
-    
-    const filtered = employees.filter(emp => 
+
+    const filtered = employees.filter((emp) =>
       emp.name.toLowerCase().includes(value.toLowerCase())
     );
     console.log("Filtered results:", filtered);
-    
+
     setFilteredEmployees(filtered);
   };
 
   const handlePromotePIC = async () => {
     if (!selectedEmployee) return;
-    
+
     console.log("Promoting employee to PIC:", selectedEmployee);
     setIsSubmitting(true);
     try {
@@ -197,7 +202,7 @@ export function PromotePICModal({ onSuccess }: PromotePICModalProps) {
           },
           body: JSON.stringify({
             employee_Id: selectedEmployee.employee_Id,
-            role: "PIC"
+            role: "PIC",
           }),
         }
       );
@@ -206,7 +211,7 @@ export function PromotePICModal({ onSuccess }: PromotePICModalProps) {
       console.log(
         JSON.stringify({
           employee_Id: selectedEmployee.employee_Id,
-          role: "PIC"
+          role: "PIC",
         })
       );
 
@@ -339,12 +344,24 @@ export function PromotePICModal({ onSuccess }: PromotePICModalProps) {
                   Please review the employee details below:
                 </AlertDialogDescription>
                 <div className="space-y-2 text-sm border rounded-md p-4 bg-gray-50">
-                  <div><strong>Name:</strong> {selectedEmployee.name}</div>
-                  <div><strong>ID:</strong> {selectedEmployee.employee_Id}</div>
-                  <div><strong>Team:</strong> {selectedEmployee.team}</div>
-                  <div><strong>Skill:</strong> {selectedEmployee.skill}</div>
-                  <div><strong>Email:</strong> {selectedEmployee.users[0].email}</div>
-                  <div><strong>Phone:</strong> {selectedEmployee.phone}</div>
+                  <div>
+                    <strong>Name:</strong> {selectedEmployee.name}
+                  </div>
+                  <div>
+                    <strong>ID:</strong> {selectedEmployee.employee_Id}
+                  </div>
+                  <div>
+                    <strong>Team:</strong> {selectedEmployee.team}
+                  </div>
+                  <div>
+                    <strong>Skill:</strong> {selectedEmployee.skill}
+                  </div>
+                  <div>
+                    <strong>Email:</strong> {selectedEmployee.users[0].email}
+                  </div>
+                  <div>
+                    <strong>Phone:</strong> {selectedEmployee.phone}
+                  </div>
                   <div>
                     <strong>Start Date:</strong>{" "}
                     {formatDate(selectedEmployee.start_Date)}
