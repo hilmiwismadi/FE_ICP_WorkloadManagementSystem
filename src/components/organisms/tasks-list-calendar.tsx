@@ -30,12 +30,16 @@ const TaskTimeline = ({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
 
-  const getTaskColor = (workload: string, priority: string): string => {
-    if (priority === "High") return "bg-red-600";
-    if (priority=== "Medium") return "bg-orange-600";
-    return "bg-green-600";
-    
+  const getTaskColor = (mcda: number): string => {
+    const normalizedMCDA = mcda * 100; // Convert to percentage
+  
+    if (normalizedMCDA >= 80) return "bg-red-700"; // 80-100 (Critical)
+    if (normalizedMCDA >= 60) return "bg-orange-500"; // 60-79 (High)
+    if (normalizedMCDA >= 40) return "bg-yellow-400"; // 40-59 (Medium)
+    if (normalizedMCDA >= 20) return "bg-green-500"; // 20-39 (Low)
+    return "bg-blue-400"; // 0-19 (Very Low)
   };
+  
 
   console.log(tasks);
 
@@ -222,8 +226,7 @@ const TaskTimeline = ({
                 <div
                   key={task.id}
                   className={`absolute cursor-pointer transition-all ${getTaskColor(
-                    task.workload,
-                    task.priority
+                    task.mcda
                   )} rounded p-1 text-white text-[0.6rem] truncate`}
                   style={{
                     left: `${(startPosition / days.length) * 100}%`,

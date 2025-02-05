@@ -19,12 +19,16 @@ interface TaskListProps {
   isVisible?: boolean;
 }
 
-const getPriorityColor = (mcda: number) => {
+const getPriorityColor = (mcda: number): string => {
   const value = mcda * 100; // Normalize mcda to percentage
-  if (value >= 70) return "bg-red-600";
-  if (value >= 20) return "bg-amber-500";
-  return "bg-emerald-500";
+
+  if (value >= 80) return "bg-red-700"; // 80-100 (Critical)
+  if (value >= 60) return "bg-orange-500"; // 60-79 (High)
+  if (value >= 40) return "bg-yellow-400"; // 40-59 (Medium)
+  if (value >= 20) return "bg-green-500"; // 20-39 (Low)
+  return "bg-blue-500"; // 0-19 (Very Low)
 };
+
 
 const getTaskSpanColor = (status: string) => {
   switch (status) {
