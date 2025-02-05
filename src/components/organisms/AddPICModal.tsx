@@ -1,20 +1,16 @@
-"use client";
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, CheckCircle2, Upload } from "lucide-react";
-import { format } from "date-fns";
+import { X, Search, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -33,83 +29,213 @@ import {
   AlertDialogTitle,
   AlertDialogOverlay,
 } from "@/components/ui/alert-dialog";
+import { jwtDecode } from "jwt-decode";
+import Cookies from "js-cookie";
 
-interface NewPICData {
-  id: string;
+interface Employee {
+  employee_Id: string;
   name: string;
-  image: File | null;
+  image: string;
   phone: string;
   team: string;
   skill: string;
+  current_Workload: number;
   start_Date: string;
-  email: string;
-  role: string;
+  users: {
+    email: string;
+    role: string;
+  }[];
 }
 
-interface AddPICModalProps {
+interface PromotePICModalProps {
   onSuccess?: () => void;
 }
 
-const TEAM_OPTIONS = ["Pelayanan Pelanggan", "Korporat 1", "Korporat 2"];
-const SKILL_OPTIONS = [
-  "Backend Engineer",
-  "Frontend Engineer",
-  "Full-stack Engineer",
-  "UI/UX Designer",
-  "QA Engineer",
-  "Testing Engineer",
-  "System Administrator",
-  "Data Analyst",
-  "Data Engineer",
-];
-
-export function AddPICModal({ onSuccess }: AddPICModalProps) {
+export function PromotePICModal({ onSuccess }: PromotePICModalProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { toast } = useToast();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [managerData, setManagerData] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<NewPICData>({
-    id: "",
-    name: "",
-    image: null,
-    phone: "",
-    team: "",
-    skill: "",
-    start_Date: "",
-    email: "",
-    role: "PIC",
-  });
+  useEffect(() => {
+    if (isOpen) {
+      fetchEmployees();
+    }
+  }, [isOpen]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    // Add JWT token decoding effect
+    useEffect(() => {
+      const authToken = Cookies.get("auth_token");
+      if (authToken) {
+        try {
+          const decodedToken: { role: string, user_Id: string } = jwtDecode(authToken);
+          setUserRole(decodedToken.role);
+          if (decodedToken.role === "Manager") {
+            setManagerData(decodedToken.user_Id);
+          }
+        } catch (error) {
+          console.error("Error decoding token:", error);
+        }
+      }
+    }, []);
+
+  const fetchEmployees = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseText = await response.text();
+      console.log("Raw response:", responseText);
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error("JSON parsing error:", e);
+        throw new Error("Invalid JSON response from server");
+      }
+
+      console.log("1. Parsed API response:", data);
+
+      // Check if data is an array, if not, look for it in a property
+      const employeesArray = Array.isArray(data) ? data : data.data || [];
+      console.log("2. Employees array:", employeesArray);
+
+      if (!Array.isArray(employeesArray)) {
+        throw new Error("Expected array of employees but got: " + typeof employeesArray);
+      }
+
+      // Filter for employees (with more detailed logging)
+      const regularEmployees = employeesArray.filter((emp: Employee) => {
+        console.log("Checking employee:", emp);
+        if (!emp.users || !Array.isArray(emp.users)) {
+          console.log("No users array for:", emp.name);
+          return false;
+        }
+        const isRegularEmployee = emp.users.some(user => {
+          console.log("Checking user role:", user.role);
+          return user.role === "Employee";
+        });
+        console.log("Is regular employee:", isRegularEmployee);
+        return isRegularEmployee;
+      });
+
+      console.log("3. Filtered regular employees:", regularEmployees);
+      
+      setEmployees(regularEmployees);
+      setFilteredEmployees(regularEmployees);
+
+      console.log("4. State updated with employees:", {
+        employees: regularEmployees,
+        filteredEmployees: regularEmployees
+      });
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      console.error("Fetch error:", errorMessage);
+      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: `Failed to fetch employees: ${errorMessage}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.match(/^image\/(jpeg|jpg|png)$/)) {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload only JPG, JPEG, or PNG files",
-          variant: "destructive",
-        });
-        return;
-      }
-      setSelectedFile(file);
-      setFormData((prev) => ({ ...prev, image: file }));
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+  // Add useEffect to log state changes
+  useEffect(() => {
+    console.log("Employees state changed:", employees);
+  }, [employees]);
+
+  useEffect(() => {
+    console.log("Filtered employees state changed:", filteredEmployees);
+  }, [filteredEmployees]);
+
+  const handleSearch = (value: string) => {
+    setSearchQuery(value);
+    console.log("Search query:", value);
+    console.log("Current employees:", employees);
+    
+    const filtered = employees.filter(emp => 
+      emp.name.toLowerCase().includes(value.toLowerCase())
+    );
+    console.log("Filtered results:", filtered);
+    
+    setFilteredEmployees(filtered);
+  };
+
+  const handlePromotePIC = async () => {
+    if (!selectedEmployee) return;
+    
+    console.log("Promoting employee to PIC:", selectedEmployee);
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/user/updateRole/${managerData}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            employee_Id: selectedEmployee.employee_Id,
+            role: "PIC"
+          }),
+        }
+      );
+      const data = await response.json();
+      console.log("Promote to PIC response:", data);
+      console.log(
+        JSON.stringify({
+          employee_Id: selectedEmployee.employee_Id,
+          role: "PIC"
+        })
+      );
+
+      if (!response.ok) throw new Error("Failed to promote employee to PIC");
+
+      setShowConfirmation(false);
+      setShowSuccess(true);
+      toast({
+        title: "Success!",
+        description: "Employee successfully promoted to PIC",
+        duration: 3000,
+      });
+
+      if (onSuccess) onSuccess();
+
+      setTimeout(() => {
+        setShowSuccess(false);
+        setIsOpen(false);
+        setSelectedEmployee(null);
+        setSearchQuery("");
+      }, 1500);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to promote employee to PIC. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -121,411 +247,124 @@ export function AddPICModal({ onSuccess }: AddPICModalProps) {
     });
   };
 
-  const validateFormData = () => {
-    if (!formData.start_Date) return "Start date is required";
-    if (!formData.image && !selectedFile) return "Image is required";
-    if (formData.name.length > 30)
-      return "Name must be less than 30 characters";
-    if (formData.email.length > 30)
-      return "Email must be less than 30 characters";
-    if (formData.phone.length > 30)
-      return "Phone must be less than 30 characters";
-    if (formData.team.length > 30)
-      return "Team must be less than 30 characters";
-    if (formData.skill.length > 30)
-      return "Skill must be less than 30 characters";
-    return null;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const error = validateFormData();
-    if (error) {
-      toast({
-        title: "Error",
-        description: error,
-        variant: "destructive",
-      });
-      return;
-    }
-    setShowConfirmation(true);
-  };
-
-  const handleConfirmedSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      const formDataToSend = new FormData();
-      
-      formDataToSend.append("id", formData.id);
-      formDataToSend.append("name", formData.name);
-      formDataToSend.append("phone", formData.phone);
-      formDataToSend.append("team", formData.team);
-      formDataToSend.append("skill", formData.skill);
-      formDataToSend.append("start_Date", formData.start_Date);
-      formDataToSend.append("email", formData.email);
-      formDataToSend.append("role", formData.role);
-
-      if (selectedFile) {
-        formDataToSend.append("image", selectedFile);
-      }
-
-      const response = await fetch(
-        "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/add",
-        {
-          method: "POST",
-          body: formDataToSend, 
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to add PIC");
-      }
-
-      setShowConfirmation(false);
-      setShowSuccess(true);
-      toast({
-        title: "Success!",
-        description: "PIC added successfully",
-        duration: 3000,
-      });
-      if (onSuccess) {
-        onSuccess();
-      }
-
-      setTimeout(() => {
-        setShowSuccess(false);
-        setIsOpen(false);
-        setFormData({
-          id: "",
-          name: "",
-          image: null,
-          phone: "",
-          team: "",
-          skill: "",
-          start_Date: "",
-          email: "",
-          role: "PIC",
-        });
-        setSelectedFile(null);
-        setImagePreview("");
-      }, 1500);
-    } catch (error) {
-      console.error("Error adding PIC:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add PIC. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-      setShowConfirmation(false);
-    }
-  };
-
   return (
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button className="h-[2.75vw] bg-blue-500 hover:bg-blue-600 text-white text-[0.875vw]">
-            <Plus className="mr-[0.5vw]" />
-            Add PIC
+          <Button className="h-11 bg-blue-500 hover:bg-blue-600 text-white">
+            Promote to PIC
           </Button>
         </DialogTrigger>
-        <DialogContent className="p-[1vw] overflow-hidden rounded-[0.833vw] max-w-[50vw]">
-          <form
-            onSubmit={handleSubmit}
-            className="p-[1.25vw] space-y-[1.25vw] relative"
-          >
-            <AnimatePresence>
-              {showSuccess && (
+        <DialogContent className="p-4 overflow-hidden rounded-lg w-[80vw]">
+          <AnimatePresence>
+            {showSuccess && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50"
+              >
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50"
+                  initial={{ y: 20 }}
+                  animate={{ y: 0 }}
+                  className="flex flex-col items-center space-y-4"
                 >
                   <motion.div
-                    initial={{ y: 20 }}
-                    animate={{ y: 0 }}
-                    className="flex flex-col items-center space-y-[1vw]"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 0.5 }}
                   >
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <CheckCircle2 className="w-[4vw] h-[4vw] text-green-500" />
-                    </motion.div>
-                    <p className="text-[1.2vw] font-semibold text-green-600">
-                      PIC added successfully!
-                    </p>
+                    <CheckCircle2 className="w-16 h-16 text-green-500" />
                   </motion.div>
+                  <p className="text-xl font-semibold text-green-600">
+                    Employee successfully promoted to PIC!
+                  </p>
                 </motion.div>
-              )}
-            </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-            <DialogHeader>
-              <DialogTitle className="text-[1.33vw] font-bold pt-[1.25vw]">
-                Add New PIC
-              </DialogTitle>
-            </DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold pt-5">
+              Promote Employee to PIC
+            </DialogTitle>
+          </DialogHeader>
 
-            <div className="grid grid-cols-3 gap-[1.25vw]">
-              <div className="space-y-[0.25vw]">
-                <label className="text-[1vw] font-medium">
-                  Name <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  className="h-[2.5vw] text-[0.8vw]"
-                />
-              </div>
-              <div className="space-y-[0.25vw]">
-                <label className="text-[1vw] font-medium">
-                  PIC ID <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  name="id"
-                  value={formData.id}
-                  onChange={handleInputChange}
-                  required
-                  className="h-[2.5vw] text-[0.8vw]"
-                />
-              </div>
-              <div className="space-y-[0.25vw]">
-                <label className="text-[1vw] font-medium">
-                  Team <span className="text-red-500">*</span>
-                </label>
-                <Select
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, team: value }))
-                  }
-                >
-                  <SelectTrigger className="h-[2.5vw] text-[0.8vw]">
-                    <SelectValue placeholder="Select team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TEAM_OPTIONS.map((team) => (
-                      <SelectItem
-                        key={team}
-                        value={team}
-                        className="text-[0.8vw]"
-                      >
-                        {team}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-[0.25vw]">
-                <label className="text-[1vw] font-medium">
-                  Skill <span className="text-red-500">*</span>
-                </label>
-                <Select
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, skill: value }))
-                  }
-                >
-                  <SelectTrigger className="h-[2.5vw] text-[0.8vw]">
-                    <SelectValue placeholder="Select skill" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SKILL_OPTIONS.map((skill) => (
-                      <SelectItem
-                        key={skill}
-                        value={skill}
-                        className="text-[0.8vw]"
-                      >
-                        {skill}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-[0.25vw]">
-                <label className="text-[1vw] font-medium">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className="h-[2.5vw] text-[0.8vw]"
-                />
-              </div>
-              <div className="space-y-[0.25vw]">
-                <label className="text-[1vw] font-medium">
-                  Phone <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  required
-                  className="h-[2.5vw] text-[0.8vw]"
-                />
-              </div>
-              <div className="space-y-[0.25vw]">
-                <label className="text-[1vw] font-medium">
-                  Start Date <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="date"
-                  name="start_Date"
-                  value={formData.start_Date}
-                  onChange={handleInputChange}
-                  className="h-[2.5vw] text-[0.8vw]"
-                  required
-                />
-              </div>
-              <div className="space-y-[0.25vw]">
-                <label className="text-[1vw] font-medium">
-                  Profile Image <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <Input
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png"
-                    onChange={handleFileChange}
-                    className="h-[2.5vw] text-[0.8vw] hidden"
-                    id="image-upload"
-                  />
-                  <label
-                    htmlFor="image-upload"
-                    className="flex items-center justify-center h-[2.5vw] px-4 border rounded-md cursor-pointer hover:bg-gray-50"
+          <div className="mt-4">
+            <Command className="rounded-lg border shadow-md">
+              <CommandInput
+                placeholder="Search employee name..."
+                value={searchQuery}
+                onValueChange={handleSearch}
+              />
+              <CommandEmpty>No employees found.</CommandEmpty>
+              <CommandGroup className="max-h-64 overflow-auto">
+                {filteredEmployees.map((emp) => (
+                  <CommandItem
+                    key={emp.employee_Id}
+                    onSelect={() => {
+                      setSelectedEmployee(emp);
+                      setShowConfirmation(true);
+                    }}
+                    className="flex items-center p-2 cursor-pointer hover:bg-gray-100"
                   >
-                    <Upload className="w-4 h-4 mr-2" />
-                    <span className="text-[0.8vw]">
-                      {selectedFile ? selectedFile.name : "Upload Image"}
-                    </span>
-                  </label>
-                  {imagePreview && (
-                    <div className="mt-2">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="h-[5vw] w-auto object-cover rounded-md"
-                      />
+                    <img
+                      src={emp.image}
+                      alt={emp.name}
+                      className="w-8 h-8 rounded-full mr-2"
+                    />
+                    <div>
+                      <div className="font-medium">{emp.name}</div>
+                      <div className="text-sm text-gray-500">
+                        {emp.team} - {emp.skill}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-[0.833vw] pt-[0.833vw]">
-              <Button
-                type="button"
-                onClick={() => setIsOpen(false)}variant="ghost"
-                className="text-red-500 hover:text-red-600 hover:bg-transparent text-[0.8vw]"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="bg-[#38BDF8] hover:bg-[#32a8dd] text-white px-8 text-[0.8vw]"
-                disabled={isSubmitting}
-              >
-                Add PIC
-              </Button>
-            </div>
-          </form>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </div>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
         <AlertDialogOverlay className="bg-black/50 fixed inset-0" />
-        <AlertDialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[30vw] max-w-none z-50 bg-white rounded-[0.8vw] p-[1.5vw] shadow-lg">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: "1vw" }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: "1vw" }}
-            transition={{ duration: 0.2 }}
-          >
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-[1.5vw] font-semibold mb-[1vw]">
-                Confirm PIC Addition
-              </AlertDialogTitle>
-              <div className="space-y-[1vw]">
-                <AlertDialogDescription className="text-[1vw]">
-                  Please review the PIC details below:
+        <AlertDialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[480px] max-w-none z-50 bg-white rounded-lg p-6 shadow-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-semibold mb-4">
+              Confirm PIC Promotion
+            </AlertDialogTitle>
+            {selectedEmployee && (
+              <div className="space-y-4">
+                <AlertDialogDescription>
+                  Please review the employee details below:
                 </AlertDialogDescription>
-                <motion.div
-                  className="space-y-[0.8vw] text-[0.9vw] border rounded-[0.4vw] p-[1vw] bg-gray-50"
-                  initial={{ y: "1vw", opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <div>
-                    <strong>Name:</strong> {formData.name}
-                  </div>
-                  <div>
-                    <strong>PIC ID:</strong> {formData.id}
-                  </div>
-                  <div>
-                    <strong>Team:</strong> {formData.team}
-                  </div>
-                  <div>
-                    <strong>Skill:</strong> {formData.skill}
-                  </div>
-                  <div>
-                    <strong>Email:</strong> {formData.email}
-                  </div>
-                  <div>
-                    <strong>Role:</strong> {formData.role}
-                  </div>
-                  <div>
-                    <strong>Phone:</strong> {formData.phone}
-                  </div>
+                <div className="space-y-2 text-sm border rounded-md p-4 bg-gray-50">
+                  <div><strong>Name:</strong> {selectedEmployee.name}</div>
+                  <div><strong>ID:</strong> {selectedEmployee.employee_Id}</div>
+                  <div><strong>Team:</strong> {selectedEmployee.team}</div>
+                  <div><strong>Skill:</strong> {selectedEmployee.skill}</div>
+                  <div><strong>Email:</strong> {selectedEmployee.users[0].email}</div>
+                  <div><strong>Phone:</strong> {selectedEmployee.phone}</div>
                   <div>
                     <strong>Start Date:</strong>{" "}
-                    {formData.start_Date
-                      ? formatDate(formData.start_Date)
-                      : "Not specified"}
+                    {formatDate(selectedEmployee.start_Date)}
                   </div>
-                  {selectedFile && (
-                    <div>
-                      <strong>Selected Image:</strong> {selectedFile.name}
-                    </div>
-                  )}
-                </motion.div>
+                </div>
               </div>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="mt-[1vw]">
-              <AlertDialogCancel
-                disabled={isSubmitting}
-                className="text-[0.8vw]"
-              >
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleConfirmedSubmit}
-                disabled={isSubmitting}
-                className="bg-[#38BDF8] hover:bg-[#32a8dd] text-[0.8vw]"
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-[0.417vw]">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                      className="w-[0.833vw] h-[0.833vw] border-[0.417vw] border-white border-t-transparent rounded-full"
-                    />
-                    Adding...
-                  </div>
-                ) : (
-                  "Confirm Addition"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </motion.div>
+            )}
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel disabled={isSubmitting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handlePromotePIC}
+              disabled={isSubmitting}
+              className="bg-blue-500 hover:bg-blue-600"
+            >
+              {isSubmitting ? "Promoting..." : "Confirm Promotion"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>

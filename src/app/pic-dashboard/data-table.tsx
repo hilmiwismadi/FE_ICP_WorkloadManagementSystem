@@ -45,7 +45,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { AddPICModal } from "@/components/organisms/AddPICModal";
+import { PromotePICModal } from "@/components/organisms/AddPICModal";
 
 const TEAM_OPTIONS = ["Pelayanan Pelanggan", "Korporat 1", "Korporat 2"];
 
@@ -295,7 +295,7 @@ export function DataTable<TData>({
           </Button>
 
           <div className="flex justify-end">
-            <AddPICModal onSuccess={onRefresh} />
+            <PromotePICModal onSuccess={onRefresh} />
           </div>
         </div>
 
