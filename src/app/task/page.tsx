@@ -98,25 +98,22 @@ const TaskPage = () => {
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/team/${team}`
       );
       const fetchedTasks = await response.json();
-      
+  
       if (fetchedTasks?.data && Array.isArray(fetchedTasks.data)) {
-        // For each task, fetch the detailed data
-        const detailedTasks = await Promise.all(
-          fetchedTasks.data.map(async (task: any) => {
-            try {
-              const taskResponse = await fetch(
-                `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${task.task_Id}`
-              );
-              const detailedTask = await taskResponse.json();
-              return detailedTask.data;
-            } catch (error) {
-              console.error(`Error fetching task details for ${task.task_Id}:`, error);
-              return task; // Return original task if detailed fetch fails
-            }
-          })
-        );
-        setTasks(detailedTasks);
-        setFilteredTasks(detailedTasks);
+        // Format tasks by directly including employee details
+        const formattedTasks = fetchedTasks.data.map((task: any) => ({
+          ...task,
+          assigns: task.assigns.map((assign: any) => ({
+            employee_Id: assign.employee_Id,
+            employee: {
+              ...assign.employee,
+              image: getImageUrl(assign.employee.image), 
+            },
+          })),
+        }));
+  
+        setTasks(formattedTasks);
+        setFilteredTasks(formattedTasks);
         setShowNoTasksModal(false);
       } else {
         setTasks([]);
@@ -132,6 +129,8 @@ const TaskPage = () => {
       setLoading(false);
     }
   };
+  
+  
 
   const getImageUrl = (imageUrl: string | undefined): string => {
     if (!imageUrl) {
