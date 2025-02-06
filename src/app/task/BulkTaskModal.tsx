@@ -109,7 +109,7 @@ export default function CreateTaskModal({
       // Exclude if either:
       // 1. Employee is a Manager (for all users)
       // 2. Employee is a PIC (only when current user is also PIC)
-      return !isManager && !(userRole === "PIC" && isPIC);
+      return !isManager && !isPIC;
     });
   }, [userRole]);
 
@@ -353,7 +353,7 @@ export default function CreateTaskModal({
         onClose();
       }, 1500);
     } catch (error) {
-      console.error("Error in task creation process:", error);
+      // console.error("Error in task creation process:", error);
 
       // If task was created but we failed at some other point and haven't handled it yet
       if (createdTaskId) {
