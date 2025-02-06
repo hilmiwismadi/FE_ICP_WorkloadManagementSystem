@@ -49,6 +49,10 @@ interface Employee {
       title: string;
     };
   }>;
+  users: Array<{
+    email: string;
+    role: string;
+  }>;
 }
 
 interface TechStack {
@@ -72,9 +76,29 @@ export default function ProfilePage() {
           "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
         );
 
-        if (response.data && response.data.data) {
+        const allEmployeesResult = await response.data;
+        const allEmployeesData = allEmployeesResult.data || allEmployeesResult;
+
+        // Filter employees based on user role
+        const filteredEmployees = allEmployeesData.filter((emp:Employee) => {
+          // Get the primary user's role (first user in the array)
+          const employeeRole = emp.users[0]?.role.toLowerCase();
+
+          // Skip if no users or no role defined
+          if (!employeeRole) return false;
+
+          // Always exclude managers from the list
+          if (employeeRole === 'manager') return false;
+          
+          // If current user is PIC, exclude other PICs
+          if (employeeRole === 'pic') return false;
+          
+          return true;
+        });
+
+        if (filteredEmployees) {
           // Calculate average workload
-          const employees = response.data.data;
+          const employees = filteredEmployees;
           const totalWorkload = employees.reduce(
             (sum: number, emp: Employee) => {
               const workloadPercentage = emp.current_Workload * 100;

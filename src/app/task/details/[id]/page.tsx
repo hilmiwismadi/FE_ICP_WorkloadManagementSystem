@@ -1465,15 +1465,29 @@ const TaskDetailPage = () => {
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="workload" className="text-[0.8vw] font-medium">
-                Workload
+                Workload (0 - 10)
               </Label>
               <Input
                 id="workload"
                 type="number"
+                min="0"
+                max="10"
                 value={editForm.workload}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, workload: Number(e.target.value) })
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+              
+                  // Allow empty input for typing
+                  if (value === "") {
+                    setEditForm({ ...editForm, workload: 0 });
+                    return;
+                  }
+              
+                  // Convert to a number and ensure it's within range
+                  const numericValue = Number(value);
+                  if (numericValue >= 0 && numericValue <= 10) {
+                    setEditForm({ ...editForm, workload: numericValue });
+                  }
+                }}
                 className="text-[0.8vw]"
               />
             </div>
