@@ -23,11 +23,14 @@ import Cookies from "js-cookie";
 interface Employee {
   employee_Id: string;
   name: string;
-  role: string;
   team: string;
   current_Workload: number;
   taskCount?: number;
   workloadPercentage?: number;
+  users: Array<{
+    email: string;
+    role: string;
+  }>;
 }
 
 interface Task {
@@ -89,7 +92,7 @@ const EmployeeMetricsCard = ({
               </span>
               <div>
                 <p className="font-medium">{employee.name}</p>
-                <p className="text-[0.8vw] text-gray-500">{employee.role}</p>
+                <p className="text-[0.8vw] text-gray-500">{employee.users[0]?.role}</p>
               </div>
             </div>
             <div className="text-right">
@@ -150,12 +153,43 @@ export default function ActivityPage() {
       const allEmployeesData = allEmployeesResult.data || allEmployeesResult;
       const tasksData = tasksResult.data || tasksResult;
 
-      if (!Array.isArray(teamEmployeesData) || !Array.isArray(allEmployeesData)) {
+      // Filter employees based on user role
+      const filteredTeamEmployees = teamEmployeesData.filter((emp: Employee) => {
+        // Get the primary user's role (first user in the array)
+        const employeeRole = emp.users[0]?.role;
+
+        // Skip if no users or no role defined
+        if (!employeeRole) return false;
+
+        // Always exclude managers from the list
+        if (employeeRole === 'Manager') return false;
+
+        if (employeeRole === 'PIC') return false;
+        
+        return true;
+      });
+
+      const filteredAllEmployees = allEmployeesData.filter((emp: Employee) => {
+        // Get the primary user's role (first user in the array)
+        const employeeRole = emp.users[0]?.role;
+
+        // Skip if no users or no role defined
+        if (!employeeRole) return false;
+
+        // Always exclude managers from the list
+        if (employeeRole === 'Manager') return false;
+
+        if (employeeRole === 'PIC') return false;
+                
+        return true;
+      });
+
+      if (!Array.isArray(filteredTeamEmployees) || !Array.isArray(filteredAllEmployees)) {
         throw new Error("Invalid data format received from API");
       }
 
       // Process team employees for top/bottom cards
-      const processedTeamEmployees = teamEmployeesData.map((emp: Employee) => {
+      const processedTeamEmployees = filteredTeamEmployees.map((emp: Employee) => {
         const employeeTasks = tasksData.filter(
           (task: Task) =>
             task.assigns.some(assign => assign.employee_Id === emp.employee_Id) && task.status === "Ongoing"
@@ -178,7 +212,7 @@ export default function ActivityPage() {
       setBottomEmployees([...sortedEmployees].reverse().slice(0, 5));
 
       // Process all employees for division metrics
-      const divisionData: { [key: string]: number[] } = allEmployeesData.reduce(
+      const divisionData: { [key: string]: number[] } = filteredAllEmployees.reduce(
         (acc: { [key: string]: number[] }, emp: Employee) => {
           if (!acc[emp.team]) {
             acc[emp.team] = [];
