@@ -18,6 +18,11 @@ export interface Assign {
     user_Id: string;
     assigns: Assign[];
   }
+
+  export interface User {
+    email: string;
+    role: string;
+  }
   
   export interface Employee {
     employee_Id: string;
@@ -28,6 +33,6 @@ export interface Assign {
     skill: string;
     current_Workload: number;
     start_Date: string;
-    users?: { email: string; role: string; }[];
+    users?: User[];
     email?: string;
   }

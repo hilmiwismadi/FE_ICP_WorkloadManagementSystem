@@ -1,5 +1,18 @@
 "use client";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Trash2, Edit } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "next/navigation";
@@ -120,6 +133,119 @@ const TaskDetailPage = () => {
     "Reject"
   );
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const router = useRouter();
+
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    priority: "",
+    workload: 0,
+    start_Date: "",
+    end_Date: "",
+  });
+
+  const handleDelete = async () => {
+    if (!canEditDelete) return;
+    try {
+      setIsDeleting(true);
+      const response = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/delete/${taskId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete task");
+      }
+
+      setShowDeleteDialog(false);
+      setShowFeedback({
+        show: true,
+        type: "success",
+        message: "Task deleted successfully!",
+      });
+
+      // Navigate back to tasks list after short delay
+      setTimeout(() => {
+        router.push("/task");
+      }, 3000);
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      setShowFeedback({
+        show: true,
+        type: "error",
+        message: "Failed to delete task. Please try again.",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    if (!canEditDelete) return;
+    try {
+      setIsEditing(true);
+      const response = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/edit/${taskId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(editForm),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update task");
+      }
+
+      const updatedTask = await response.json();
+      setTask((prev) => ({ ...prev, ...updatedTask.data }));
+      setShowEditDialog(false);
+      setShowFeedback({
+        show: true,
+        type: "success",
+        message: "Task updated successfully!",
+      });
+
+      setTimeout(() => {
+        setShowFeedback({ show: false, type: "success", message: "" });
+      }, 3000);
+    } catch (error) {
+      console.error("Error updating task:", error);
+      setShowFeedback({
+        show: true,
+        type: "error",
+        message: "Failed to update task. Please try again.",
+      });
+    } finally {
+      setIsEditing(false);
+    }
+  };
+
+  // Add useEffect to populate edit form when task changes
+  useEffect(() => {
+    if (task) {
+      setEditForm({
+        title: task.title || "",
+        description: task.description || "",
+        priority: task.priority || "",
+        workload: task.workload || 0,
+        start_Date: task.start_Date
+          ? new Date(task.start_Date).toISOString().split("T")[0]
+          : "",
+        end_Date: task.end_Date
+          ? new Date(task.end_Date).toISOString().split("T")[0]
+          : "",
+      });
+    }
+  }, [task]);
 
   useEffect(() => {
     const authStorage = Cookies.get("auth_token");
@@ -523,16 +649,6 @@ const TaskDetailPage = () => {
     });
   };
 
-  // const handleApproveClick = () => {
-  //   if (!canManageTask || task?.status !== "Done" || isUpdatingStatus) return;
-  //   setShowApproveDialog(true);
-  // };
-
-  // const handleRejectClick = () => {
-  //   if (!canManageTask || task?.status !== "Done") return;
-  //   setShowRejectDialog(true);
-  // };
-
   const handleRejectClick = () => {
     setCommentType("Reject");
     setShowCommentDialog(true);
@@ -843,6 +959,8 @@ const TaskDetailPage = () => {
     return <LoadingScreen />;
   }
 
+  const canEditDelete = user?.role === "Manager" || user?.role === "PIC";
+
   return (
     <ProtectedRoute>
       <div className="flex h-screen bg-gray-200">
@@ -857,56 +975,80 @@ const TaskDetailPage = () => {
                     <h1 className="text-[1.2vw] font-bold text-gray-900 mb-1">
                       {task?.title}
                     </h1>
-                    <div className="flex items-center gap-3 text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        <span className="text-xs">
-                          {task?.start_Date && task?.end_Date
-                            ? `${new Date(
-                                task.start_Date
-                              ).toLocaleDateString()} - ${new Date(
-                                task.end_Date
-                              ).toLocaleDateString()}`
-                            : "N/A"}
-                        </span>
+                    <div className="flex flex-col gap-[0.5vw]">
+                      <div className="flex items-center gap-3 text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          <span className="text-xs">
+                            {task?.start_Date && task?.end_Date
+                              ? `${new Date(
+                                  task.start_Date
+                                ).toLocaleDateString()} - ${new Date(
+                                  task.end_Date
+                                ).toLocaleDateString()}`
+                              : "N/A"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Activity className="w-3 h-3" />
+                          <span className="text-xs">
+                            {task?.workload} workload units
+                          </span>
+                        </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Activity className="w-3 h-3" />
-                        <span className="text-xs">
-                          {task?.workload} workload units
-                        </span>
+                        {task?.priority && (
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-xs ${
+                              task.priority === "High"
+                                ? "bg-red-100 text-red-800"
+                                : task.priority === "Medium"
+                                ? "bg-orange-100 text-orange-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            {task.priority}
+                          </span>
+                        )}
+                        {task?.status && (
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-xs ${
+                              task.status === "Ongoing"
+                                ? "bg-blue-100 text-blue-800"
+                                : task.status === "Done"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {task.status}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="flex gap-1">
-                      {task?.priority && (
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-xs ${
-                            task.priority === "High"
-                              ? "bg-red-100 text-red-800"
-                              : task.priority === "Medium"
-                              ? "bg-orange-100 text-orange-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
+
+                  <div className="flex flex-col justify-between items-end gap-[1.75vw] py-auto">
+                    {canEditDelete && (
+                      <div className="flex flex-row gap-2">
+                        <motion.button
+                          onClick={() => setShowEditDialog(true)}
+                          className="p-1 rounded-full hover:bg-gray-100"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
                         >
-                          {task.priority}
-                        </span>
-                      )}
-                      {task?.status && (
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-xs ${
-                            task.status === "Ongoing"
-                              ? "bg-blue-100 text-blue-800"
-                              : task.status === "Done"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
+                          <Edit className="w-4 h-4 text-blue-600" />
+                        </motion.button>
+                        <motion.button
+                          onClick={() => setShowDeleteDialog(true)}
+                          className="p-1 rounded-full hover:bg-gray-100"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
                         >
-                          {task.status}
-                        </span>
-                      )}
-                    </div>
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                        </motion.button>
+                      </div>
+                    )}
+                    {renderActionButtons()}
                   </div>
                 </div>
                 <div className="flex flex-row justify-between items-center mb-[1vw]">
@@ -915,7 +1057,6 @@ const TaskDetailPage = () => {
                       {task.description}
                     </p>
                   )}
-                  {renderActionButtons()}
                 </div>
                 <div className="border-t pt-2">
                   <h3 className="font-semibold text-gray-600 mb-[0.5vw] text-xs">
@@ -1226,6 +1367,180 @@ const TaskDetailPage = () => {
           </div>
         </div>
       </div>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogOverlay className="bg-black/50 fixed inset-0" />
+        <AlertDialogContent className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-[30vw] max-w-none z-50 bg-white rounded-[0.8vw] p-[1.5vw] shadow-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-[1.5vw] font-semibold mb-[1vw]">
+              Delete Task
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[1vw]">
+              Are you sure you want to delete this task? This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-[1vw]">
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? (
+                <div className="flex items-center gap-2">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                  />
+                  Deleting...
+                </div>
+              ) : (
+                "Delete Task"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Task Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-[50vw] max-h-[45vw] ">
+          <DialogHeader className="pb-3 border-b border-gray-200">
+            <DialogTitle className="text-[1vw] font-medium">
+              Edit Task
+            </DialogTitle>
+            <DialogDescription className="text-[0.8vw] text-gray-500">
+              Make changes to the task details below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-[1vw] py-[0.1vw]">
+            <div className="grid gap-1.5">
+              <Label htmlFor="title" className="text-[0.8vw] font-medium">
+                Title
+              </Label>
+              <Input
+                id="title"
+                value={editForm.title}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, title: e.target.value })
+                }
+                className="w-full text-[0.8vw]"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="description" className="text-xs font-medium">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                value={editForm.description}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, description: e.target.value })
+                }
+                className="min-h-[15vh] text-[0.8vw]"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="priority" className="text-[0.8vw] font-medium">
+                Priority
+              </Label>
+              <select
+                id="priority"
+                value={editForm.priority}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, priority: e.target.value })
+                }
+                className="flex h-9 w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-[0.8vw] shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Normal">Normal</option>
+              </select>
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="workload" className="text-[0.8vw] font-medium">
+                Workload
+              </Label>
+              <Input
+                id="workload"
+                type="number"
+                value={editForm.workload}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, workload: Number(e.target.value) })
+                }
+                className="text-[0.8vw]"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="start_Date" className="text-xs font-medium">
+                  Start Date
+                </Label>
+                <Input
+                  id="start_Date"
+                  type="date"
+                  value={editForm.start_Date}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, start_Date: e.target.value })
+                  }
+                  className="text-[0.8vw]"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="end_Date" className="text-[0.8vw] font-medium">
+                  End Date
+                </Label>
+                <Input
+                  id="end_Date"
+                  type="date"
+                  value={editForm.end_Date}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, end_Date: e.target.value })
+                  }
+                  className="text-[0.8vw]"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <button
+              type="button"
+              onClick={() => setShowEditDialog(false)}
+              className="px-3 py-1.5 text-[0.8vw] font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleEditSubmit}
+              disabled={isEditing}
+              className="px-3 py-1.5 text-[0.8vw] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {isEditing ? (
+                <div className="flex items-center gap-1.5">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                    className="w-3 h-3 border-2 border-white border-t-transparent rounded-full"
+                  />
+                  <span>Saving...</span>
+                </div>
+              ) : (
+                "Save Changes"
+              )}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ProtectedRoute>
   );
 };

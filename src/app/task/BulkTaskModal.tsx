@@ -15,7 +15,7 @@ import {
   Loader2,
   CheckCircle2,
 } from "lucide-react";
-import { Employee } from "@/app/task/types";
+import { Employee, User } from "@/app/task/types";
 import { cn } from "@/lib/utils";
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
@@ -99,6 +99,20 @@ export default function CreateTaskModal({
     }
   }, []);
 
+  const filterEmployees = useCallback((employees: Employee[]) => {
+    return employees.filter((emp: Employee) => {
+      // Check if any user has a Manager role
+      const isManager = emp.users?.some((user: User) => user.role === "Manager");
+      // If current user is PIC, also exclude other PICs
+      const isPIC = emp.users?.some((user: User) => user.role === "PIC");
+      
+      // Exclude if either:
+      // 1. Employee is a Manager (for all users)
+      // 2. Employee is a PIC (only when current user is also PIC)
+      return !isManager && !(userRole === "PIC" && isPIC);
+    });
+  }, [userRole]);
+
   const fetchEmployees = useCallback(async () => {
     try {
       const response = await fetch(
@@ -106,29 +120,29 @@ export default function CreateTaskModal({
       );
       const result = await response.json();
 
-      let formattedEmployees;
+      let formattedEmployees: Employee[] = [];
+
       if (Array.isArray(result)) {
-        formattedEmployees = result.map((emp: any) => ({
+        formattedEmployees = result
+        formattedEmployees = result.map((emp: Employee) => ({
           ...emp,
           image: getImageUrl(emp.image),
         }));
       } else if (result.data && Array.isArray(result.data)) {
-        formattedEmployees = result.data.map((emp: any) => ({
+        formattedEmployees = result.data.map((emp: Employee) => ({
           ...emp,
           image: getImageUrl(emp.image),
         }));
-      } else {
-        formattedEmployees = [];
-      }
-
-      setEmployees(formattedEmployees);
-      setFilteredEmployees(formattedEmployees);
+      } 
+      const filteredEmps = filterEmployees(formattedEmployees);
+      setEmployees(filteredEmps);
+      setFilteredEmployees(filteredEmps);
     } catch (error) {
       console.error("Error fetching employees:", error);
       setEmployees([]);
       setFilteredEmployees([]);
     }
-  }, []);
+  }, [filterEmployees]);
 
   useEffect(() => {
     fetchEmployees();
