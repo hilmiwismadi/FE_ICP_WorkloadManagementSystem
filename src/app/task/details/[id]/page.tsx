@@ -149,6 +149,7 @@ const TaskDetailPage = () => {
   });
 
   const handleDelete = async () => {
+    if (!canEditDelete) return;
     try {
       setIsDeleting(true);
       const response = await fetch(
@@ -172,7 +173,7 @@ const TaskDetailPage = () => {
       // Navigate back to tasks list after short delay
       setTimeout(() => {
         router.push("/task");
-      }, 2000);
+      }, 3000);
     } catch (error) {
       console.error("Error deleting task:", error);
       setShowFeedback({
@@ -186,6 +187,7 @@ const TaskDetailPage = () => {
   };
 
   const handleEditSubmit = async () => {
+    if (!canEditDelete) return;
     try {
       setIsEditing(true);
       const response = await fetch(
@@ -211,6 +213,10 @@ const TaskDetailPage = () => {
         type: "success",
         message: "Task updated successfully!",
       });
+
+      setTimeout(() => {
+        setShowFeedback({ show: false, type: "success", message: "" });
+      }, 3000);
     } catch (error) {
       console.error("Error updating task:", error);
       setShowFeedback({
@@ -643,16 +649,6 @@ const TaskDetailPage = () => {
     });
   };
 
-  // const handleApproveClick = () => {
-  //   if (!canManageTask || task?.status !== "Done" || isUpdatingStatus) return;
-  //   setShowApproveDialog(true);
-  // };
-
-  // const handleRejectClick = () => {
-  //   if (!canManageTask || task?.status !== "Done") return;
-  //   setShowRejectDialog(true);
-  // };
-
   const handleRejectClick = () => {
     setCommentType("Reject");
     setShowCommentDialog(true);
@@ -963,6 +959,8 @@ const TaskDetailPage = () => {
     return <LoadingScreen />;
   }
 
+  const canEditDelete = user?.role === "Manager" || user?.role === "PIC";
+
   return (
     <ProtectedRoute>
       <div className="flex h-screen bg-gray-200">
@@ -1028,25 +1026,29 @@ const TaskDetailPage = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="flex flex-row gap-[0.5vw]">
-                      <motion.button
-                        onClick={() => setShowEditDialog(true)}
-                        className="ml-2 p-1 rounded-full hover:bg-gray-100"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Edit className="w-4 h-4 text-blue-600" />
-                      </motion.button>
-                      <motion.button
-                        onClick={() => setShowDeleteDialog(true)}
-                        className="p-1 rounded-full hover:bg-gray-100"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </motion.button>
-                    </div>
+
+                  <div className="flex flex-col justify-between items-end gap-[1.75vw] py-auto">
+                    {canEditDelete && (
+                      <div className="flex flex-row gap-2">
+                        <motion.button
+                          onClick={() => setShowEditDialog(true)}
+                          className="p-1 rounded-full hover:bg-gray-100"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Edit className="w-4 h-4 text-blue-600" />
+                        </motion.button>
+                        <motion.button
+                          onClick={() => setShowDeleteDialog(true)}
+                          className="p-1 rounded-full hover:bg-gray-100"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                        </motion.button>
+                      </div>
+                    )}
+                    {renderActionButtons()}
                   </div>
                 </div>
                 <div className="flex flex-row justify-between items-center mb-[1vw]">
@@ -1055,7 +1057,6 @@ const TaskDetailPage = () => {
                       {task.description}
                     </p>
                   )}
-                  {renderActionButtons()}
                 </div>
                 <div className="border-t pt-2">
                   <h3 className="font-semibold text-gray-600 mb-[0.5vw] text-xs">
@@ -1411,7 +1412,9 @@ const TaskDetailPage = () => {
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="max-w-[50vw] max-h-[45vw] ">
           <DialogHeader className="pb-3 border-b border-gray-200">
-            <DialogTitle className="text-[1vw] font-medium">Edit Task</DialogTitle>
+            <DialogTitle className="text-[1vw] font-medium">
+              Edit Task
+            </DialogTitle>
             <DialogDescription className="text-[0.8vw] text-gray-500">
               Make changes to the task details below.
             </DialogDescription>
