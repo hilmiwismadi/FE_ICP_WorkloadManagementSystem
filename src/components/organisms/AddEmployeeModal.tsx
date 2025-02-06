@@ -201,7 +201,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
         }
       );
 
-      const responseData = await response.json(); // ✅ Get JSON response
+      const responseData = await response.json();
 
       if (!response.ok || responseData.error) {
         throw new Error(responseData.error || "Failed to add employee");
@@ -210,7 +210,6 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
       setShowConfirmation(false);
       setShowSuccess(true);
 
-      // ✅ Show backend success message
       toast({
         title: "Success!",
         description: responseData.message || "Employee added successfully",
@@ -248,7 +247,6 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
       // console.error("Error adding employee:", error.message);
       setShowError(true);
 
-      // ✅ Show backend error message
       toast({
         title: "Error",
         description:
@@ -257,10 +255,11 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
         duration: 4000,
       });
 
-      setShowSuccess(false); // Ensure the success modal doesn't show on failure
+      setShowSuccess(false);
     } finally {
       setIsSubmitting(false);
       setShowConfirmation(false);
+      window.location.reload();
     }
   };
 
