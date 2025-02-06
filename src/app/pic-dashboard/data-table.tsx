@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, Check, ChevronDown, X, RefreshCw } from "lucide-react";
+import { Search, Check, ChevronDown, X, RefreshCw, ArrowUp, ArrowBigUpDash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
@@ -45,7 +45,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { PromotePICModal } from "@/components/organisms/AddPICModal";
+import PromotePICModal from "@/components/organisms/AddPICModal";
 
 const TEAM_OPTIONS = ["Pelayanan Pelanggan", "Korporat 1", "Korporat 2"];
 
@@ -212,6 +212,11 @@ export function DataTable<TData>({
   const [selectedFilter, setSelectedFilter] = React.useState<string>("name");
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -295,7 +300,14 @@ export function DataTable<TData>({
           </Button>
 
           <div className="flex justify-end">
-            <PromotePICModal onSuccess={onRefresh} />
+            <Button onClick={handleOpenModal} className="bg-blue-500 flex h-[2.75vw] hover:bg-blue-700">
+              <ArrowBigUpDash className="mr-[0.25vw]" />
+              Promote PIC
+            </Button>
+            <PromotePICModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)} 
+            />
           </div>
         </div>
 
@@ -327,7 +339,10 @@ export function DataTable<TData>({
                     className="cursor-pointer hover:bg-gray-100 transition-colors"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-[0.4vw] px-[2.5vw]">
+                      <TableCell
+                        key={cell.id}
+                        className="py-[0.4vw] px-[2.5vw]"
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
