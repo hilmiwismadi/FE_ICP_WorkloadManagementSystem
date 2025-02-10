@@ -44,6 +44,7 @@ const TaskPage = () => {
   const [dateSort, setDateSort] = useState<"asc" | "desc" | null>(null);
   const [hoverCardPosition, setHoverCardPosition] = useState<{ [key: string]: 'above' | 'below' | null }>({});
   const [showNoTasksModal, setShowNoTasksModal] = useState(false);
+  
 
   const router = useRouter();
 
@@ -53,7 +54,11 @@ const TaskPage = () => {
       try {
         const userData: AuthUser = jwtDecode(authStorage);
         setUser(userData);
-        fetchTasks(userData.team); // Changed to pass team instead of user_Id
+        if(userData.role == "PIC"){
+        fetchTasks(userData.team)
+        }else if(userData.role == "Manager"){
+          fetchTasksAll()
+        }
       } catch (error) {
         console.error("Error decoding auth token:", error);
       }
@@ -129,9 +134,46 @@ const TaskPage = () => {
       setLoading(false);
     }
   };
-  
-  
 
+  const fetchTasksAll = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read`
+      );
+      const fetchedTasks = await response.json();
+  
+      if (fetchedTasks?.data && Array.isArray(fetchedTasks.data)) {
+        // Format tasks by directly including employee details
+        const formattedTasks = fetchedTasks.data.map((task: any) => ({
+          ...task,
+          assigns: task.assigns.map((assign: any) => ({
+            employee_Id: assign.employee_Id,
+            employee: {
+              ...assign.employee,
+              image: getImageUrl(assign.employee.image), 
+            },
+          })),
+        }));
+  
+        setTasks(formattedTasks);
+        setFilteredTasks(formattedTasks);
+        setShowNoTasksModal(false);
+      } else {
+        setTasks([]);
+        setFilteredTasks([]);
+        setShowNoTasksModal(true);
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      setTasks([]);
+      setFilteredTasks([]);
+      setShowNoTasksModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const getImageUrl = (imageUrl: string | undefined): string => {
     if (!imageUrl) {
       return "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ";
@@ -480,7 +522,7 @@ const TaskPage = () => {
                 <div className="flex justify-between items-center mb-[1vw]">
                   <div>
                     <h1 className="text-[1.4vw] font-bold text-gray-900">
-                      Tasks - {user?.team}
+                    Tasks {user?.role === "PIC" ? `- ${user?.team}` : ""}
                     </h1>
                     <p className="text-[0.8vw] text-gray-500">
                       {filteredTasks.length} tasks total
@@ -638,7 +680,11 @@ const TaskPage = () => {
               userId={user?.user_Id || ""}
               onClose={() => setIsModalOpen(false)}
               onSuccess={() => {
+                if(user?.role === "PIC"){
                 fetchTasks(user?.team || "");
+                }else if(user?.role === "Manager"){
+                  fetchTasksAll()
+                }
                 setIsModalOpen(false);
               }}
             />
