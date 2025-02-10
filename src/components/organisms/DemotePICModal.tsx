@@ -30,7 +30,7 @@ interface JwtPayload {
   user_Id: string;
 }
 
-interface PromotePICModalProps {
+interface DemotePICModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
@@ -41,7 +41,7 @@ interface FeedbackState {
   message: string;
 }
 
-const PromotePICModal: React.FC<PromotePICModalProps> = ({ isOpen, onClose }) => {
+const DemotePICModal: React.FC<DemotePICModalProps> = ({ isOpen, onClose }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -76,16 +76,16 @@ const PromotePICModal: React.FC<PromotePICModalProps> = ({ isOpen, onClose }) =>
         
         if (result && Array.isArray(result.data)) {
           // Filter out employees who are already PICs
-          const nonPICEmployees = result.data.filter(emp => 
-            emp.users.some(user => user.role === 'Employee')
+          const PICEmployees = result.data.filter(emp => 
+            emp.users.some(user => user.role === 'PIC')
           );
-          setEmployees(nonPICEmployees);
+          setEmployees(PICEmployees);
         } else {
           console.error('Invalid API response format:', result);
           setEmployees([]);
         }
       } catch (error) {
-        console.error('Error fetching employees:', error);
+        console.error('Error fetching PIC:', error);
         setEmployees([]);
       }
     };
@@ -115,7 +115,7 @@ const PromotePICModal: React.FC<PromotePICModalProps> = ({ isOpen, onClose }) =>
         .slice(0, 10)
     : [];
 
-  const handlePromote = async () => {
+  const handleDemote = async () => {
     if (!selectedEmployee) return;
     
     setIsLoading(true);
@@ -129,7 +129,7 @@ const PromotePICModal: React.FC<PromotePICModalProps> = ({ isOpen, onClose }) =>
           },
           body: JSON.stringify({
             employee_Id: selectedEmployee.employee_Id,
-            role: "PIC",
+            role: "Employee",
           }),
         }
       );
@@ -138,7 +138,7 @@ const PromotePICModal: React.FC<PromotePICModalProps> = ({ isOpen, onClose }) =>
         setFeedback({
           show: true,
           success: true,
-          message: 'Employee successfully promoted to PIC!'
+          message: 'PIC successfully Demoted!'
         });
         setTimeout(() => {
           window.location.reload();
@@ -147,7 +147,7 @@ const PromotePICModal: React.FC<PromotePICModalProps> = ({ isOpen, onClose }) =>
         setFeedback({
           show: true,
           success: false,
-          message: 'Failed to promote employee. Please try again.'
+          message: 'Failed to demote pic. Please try again.'
         });
       }
     } catch (error) {
@@ -180,7 +180,7 @@ const PromotePICModal: React.FC<PromotePICModalProps> = ({ isOpen, onClose }) =>
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-[1.2vw] font-semibold">Promote to PIC</h2>
+              <h2 className="text-[1.2vw] font-semibold">Demote PIC</h2>
               <button onClick={onClose}>
                 <X className="w-[1.2vw] h-[1.2vw] text-gray-500 hover:text-gray-700" />
               </button>
@@ -192,7 +192,7 @@ const PromotePICModal: React.FC<PromotePICModalProps> = ({ isOpen, onClose }) =>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-[1vw] h-[1vw]" />
               <input
                 type="text"
-                placeholder="Search employees..."
+                placeholder="Search PIC..."
                 className="w-full pl-[2.5vw] pr-[1vw] py-[0.8vw] border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchQuery}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
@@ -264,7 +264,7 @@ const PromotePICModal: React.FC<PromotePICModalProps> = ({ isOpen, onClose }) =>
               onClick={() => selectedEmployee && setShowConfirmation(true)}
               disabled={!selectedEmployee}
             >
-              Select Employee
+              Select PIC
             </button>
           </motion.div>
 
@@ -287,9 +287,9 @@ const PromotePICModal: React.FC<PromotePICModalProps> = ({ isOpen, onClose }) =>
                 >
                   <div className="text-center">
                     <AlertCircle className="w-[4vw] h-[4vw] text-blue-600 mx-auto mb-4" />
-                    <h3 className="text-[1.2vw] font-semibold mb-2">Confirm Promotion</h3>
+                    <h3 className="text-[1.2vw] font-semibold mb-2">Confirm Demotion</h3>
                     <p className="text-[1vw] text-gray-600 mb-6">
-                      Are you sure you want to promote <strong>{selectedEmployee?.name}</strong> to <strong>PIC?</strong>
+                      Are you sure you want to demote <strong>{selectedEmployee?.name}</strong> to <strong>Employee?</strong>
                     </p>
                     <div className="flex gap-[1vw] justify-center">
                       <button
@@ -300,10 +300,10 @@ const PromotePICModal: React.FC<PromotePICModalProps> = ({ isOpen, onClose }) =>
                       </button>
                       <button
                         className="px-[2vw] py-[0.8vw] rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
-                        onClick={handlePromote}
+                        onClick={handleDemote}
                         disabled={isLoading}
                       >
-                        {isLoading ? 'Promoting...' : 'Confirm'}
+                        {isLoading ? 'Demoting...' : 'Confirm'}
                       </button>
                     </div>
                   </div>
@@ -339,4 +339,4 @@ const PromotePICModal: React.FC<PromotePICModalProps> = ({ isOpen, onClose }) =>
   );
 };
 
-export default PromotePICModal;
+export default DemotePICModal;

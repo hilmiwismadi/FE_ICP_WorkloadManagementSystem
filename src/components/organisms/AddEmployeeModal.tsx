@@ -35,7 +35,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
-import ErrorModal from "./ErrorMessage";
 
 interface NewEmployeeData {
   id: string;
@@ -51,6 +50,12 @@ interface NewEmployeeData {
 
 interface AddEmployeeModalProps {
   onSuccess?: () => void;
+}
+
+interface FeedbackState {
+  show: boolean;
+  success: boolean;
+  message: string;
 }
 
 const TEAM_OPTIONS = ["Pelayanan Pelanggan", "Korporat 1", "Korporat 2"];
@@ -77,6 +82,12 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [userRole, setUserRole] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [feedback, setFeedback] = useState<FeedbackState>({
+    show: false,
+    success: false,
+    message: "",
+  });
 
   const [formData, setFormData] = useState<NewEmployeeData>({
     id: "",
@@ -163,10 +174,10 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
     e.preventDefault();
     const error = validateFormData();
     if (error) {
-      toast({
-        title: "Error",
-        description: error,
-        variant: "destructive",
+      setFeedback({
+        show: true,
+        success: false,
+        message: error,
       });
       return;
     }
@@ -176,7 +187,6 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
   const handleConfirmedSubmit = async () => {
     setIsSubmitting(true);
     setShowError(false);
-    setErrorMessage(null);
     try {
       const formDataToSend = new FormData();
 
@@ -207,13 +217,10 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
         throw new Error(responseData.error || "Failed to add employee");
       }
 
-      setShowConfirmation(false);
-      setShowSuccess(true);
-
-      toast({
-        title: "Success!",
-        description: responseData.message || "Employee added successfully",
-        duration: 3000,
+      setFeedback({
+        show: true,
+        success: true,
+        message: "Employee added successfully!",
       });
 
       if (onSuccess) {
@@ -221,7 +228,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
       }
 
       setTimeout(() => {
-        setShowSuccess(false);
+        setShowConfirmation(false);
         setIsOpen(false);
         setFormData({
           id: "",
@@ -236,30 +243,18 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
         });
         setSelectedFile(null);
         setImagePreview("");
+        window.location.reload();
       }, 1500);
     } catch (error: any) {
-      console.error("Error creating task:", error);
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to create task. Please try again.";
-      setErrorMessage(message);
-      // console.error("Error adding employee:", error.message);
-      setShowError(true);
-
-      toast({
-        title: "Error",
-        description:
-          error.message || "Failed to add employee. Please try again.",
-        variant: "destructive",
-        duration: 4000,
+      setFeedback({
+        show: true,
+        success: false,
+        message: error.message || "Failed to add employee. Please try again.",
       });
-
-      setShowSuccess(false);
     } finally {
+      setIsLoading(false);
       setIsSubmitting(false);
       setShowConfirmation(false);
-      window.location.reload();
     }
   };
 
@@ -277,58 +272,6 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
             onSubmit={handleSubmit}
             className="p-[1.25vw] space-y-[1.25vw] relative"
           >
-            <AnimatePresence>
-              {showSuccess && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50"
-                >
-                  <motion.div
-                    initial={{ y: 20 }}
-                    animate={{ y: 0 }}
-                    className="flex flex-col items-center space-y-[1vw]"
-                  >
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <CheckCircle2 className="w-[4vw] h-[4vw] text-green-500" />
-                    </motion.div>
-                    <p className="text-[1.2vw] font-semibold text-green-600">
-                      Employee added successfully!
-                    </p>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {showError && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-                >
-                  <motion.div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6 flex flex-col items-center">
-                    <div className="flex items-center mb-4">
-                      <AlertCircle className="w-6 h-6 text-red-500" />
-                    </div>
-                    <p className="text-md font-semibold text-red-600">
-                      {errorMessage}
-                    </p>
-                    <button
-                      onClick={() => setShowError(false)}
-                      className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                    >
-                      Close
-                    </button>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             <DialogHeader>
               <DialogTitle className="text-[1.33vw] font-bold pt-[1.25vw]">
@@ -503,7 +446,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
               <Button
                 type="submit"
                 className="bg-[#38BDF8] hover:bg-[#32a8dd] text-white px-8 text-[0.8vw]"
-                disabled={isSubmitting}
+                disabled={isLoading}
               >
                 Add Employee
               </Button>
@@ -579,30 +522,49 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleConfirmedSubmit}
-                disabled={isSubmitting}
+                disabled={isLoading}
                 className="bg-[#38BDF8] hover:bg-[#32a8dd] text-[0.8vw]"
               >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-[0.417vw]">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                      className="w-[0.833vw] h-[0.833vw] border-[0.417vw] border-white border-t-transparent rounded-full"
-                    />
-                    Adding...
-                  </div>
-                ) : (
-                  "Confirm Addition"
-                )}
+                {isLoading ? "Adding..." : "Confirm"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </motion.div>
         </AlertDialogContent>
       </AlertDialog>
+
+            {/* Feedback Toast */}
+            <AnimatePresence>
+        {feedback.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className={`fixed bottom-[2vw] right-[2vw] p-[1vw] rounded-lg shadow-lg flex items-center gap-[0.8vw] z-[100]
+              ${feedback.success ? "bg-green-100" : "bg-red-100"}`}
+          >
+            {feedback.success ? (
+              <CheckCircle2
+                className={`w-[1.5vw] h-[1.5vw] ${
+                  feedback.success ? "text-green-600" : "text-red-600"
+                }`}
+              />
+            ) : (
+              <AlertCircle
+                className={`w-[1.5vw] h-[1.5vw] ${
+                  feedback.success ? "text-green-600" : "text-red-600"
+                }`}
+              />
+            )}
+            <span
+              className={`text-[1vw] ${
+                feedback.success ? "text-green-800" : "text-red-800"
+              }`}
+            >
+              {feedback.message}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
