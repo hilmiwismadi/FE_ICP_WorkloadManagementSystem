@@ -57,7 +57,7 @@ export function DeleteConfirmModal({
       setFeedback({
         show: true,
         success: true,
-        message: "Employee has been deleted successfully"
+        message: "PIC has been deleted successfully"
       })
 
       setTimeout(() => {
@@ -67,7 +67,7 @@ export function DeleteConfirmModal({
       setFeedback({
         show: true,
         success: false,
-        message: "Failed to delete employee. Please try again."
+        message: "Failed to delete PIC. Please try again."
       })
     } finally {
       setIsLoading(false)
@@ -81,7 +81,7 @@ export function DeleteConfirmModal({
         <AlertDialogContent className="max-w-[40vw]">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-[1.5vw] font-bold">
-              Delete Employee
+              Delete PIC
             </AlertDialogTitle>
             <AlertDialogDescription className="text-[1vw]">
               Are you sure you want to delete {employeeName}? This action cannot be undone.
@@ -113,7 +113,7 @@ export function DeleteConfirmModal({
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className={`fixed bottom-[2vw] right-[2vw] p-[1vw] rounded-lg shadow-lg flex items-center gap-[0.8vw]
+            className={`fixed bottom-[2vw] right-[2vw] p-[1vw] rounded-lg shadow-lg flex items-center gap-[0.8vw] z-[100]
               ${feedback.success ? 'bg-green-100' : 'bg-red-100'}`}
           >
             {feedback.success ? (
