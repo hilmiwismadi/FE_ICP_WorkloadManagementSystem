@@ -815,23 +815,45 @@ const TaskDetailPage = () => {
       );
       const employeeImageData = await employeeImageResponse.json();
       const employeeImage = getImageUrl(employeeImageData.data?.image);
-
+  
       // Fetch task details
       const taskResponse = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/${taskId}`
       );
       const taskData = await taskResponse.json();
-
+  
       // Format names and collect emails
       const assignedEmployees = taskData.data.assigns;
       const formattedNames = assignedEmployees
         .map((assign: TaskAssign) => assign.employee.name.split(" ")[0])
         .join(", ");
-
+  
       const emailAddresses = assignedEmployees
         .map((assign: TaskAssign) => assign.employee.users?.[0]?.email ?? "")
         .filter(Boolean);
-
+  
+      // Update task status to "Ongoing"
+      const response = await fetch(
+        `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/edit/status/${taskId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...task,
+            status: "Ongoing",
+          }),
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error("Failed to update task status");
+      }
+  
+      const updatedTask = await response.json();
+      setTask((prev) => ({ ...prev, ...updatedTask.data }));
+  
       // Add rejection activity
       const rejectionActivity: Comment = {
         comment_Id: "",
@@ -847,7 +869,7 @@ const TaskDetailPage = () => {
           },
         },
       };
-
+  
       // Add comment
       const commentResponse = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/comment/add/${taskId}`,
@@ -864,9 +886,9 @@ const TaskDetailPage = () => {
           }),
         }
       );
-
+  
       const commentData = await commentResponse.json();
-
+  
       // Send email notification with all names formatted
       const emailResponse = await fetch(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/sendMail/reject",
@@ -885,11 +907,11 @@ const TaskDetailPage = () => {
           }),
         }
       );
-
+  
       if (!emailResponse.ok) {
         console.error("Failed to send email notification");
       }
-
+  
       // Emit the comment through the socket
       socket.emit("comment", {
         ...commentData.data,
@@ -903,11 +925,11 @@ const TaskDetailPage = () => {
           },
         },
       });
-
+  
       setShowFeedback({
         show: true,
         type: "success",
-        message: "Task rejected successfully!",
+        message: "Task rejected and status updated to Ongoing!",
       });
     } catch (error) {
       console.error("Error rejecting task:", error);
@@ -918,12 +940,13 @@ const TaskDetailPage = () => {
       });
     } finally {
       setIsUpdatingStatus(false);
-
+  
       setTimeout(() => {
         setShowFeedback((prev) => ({ ...prev, show: false }));
       }, 3000);
     }
   };
+  
 
   const renderActionButtons = () => {
     if (!canManageTask) {
@@ -1378,26 +1401,30 @@ const TaskDetailPage = () => {
             </AlertDialog>
 
             {/* Comment Dialog */}
-            <CommentInputDialog
-              isOpen={showCommentDialog}
-              onClose={() => setShowCommentDialog(false)}
-              onSubmit={(content) => {
-                if (commentType === "Reject") {
-                  setShowRejectDialog(true);
-                  setRejectionContent(content);
-                } else {
-                  setShowApproveDialog(true);
-                  setApprovalContent(content);
-                }
-              }}
-              title={`${commentType} Task Message`}
-              type={commentType}
-              defaultContent={
-                commentType === "Reject"
-                  ? "The task has been rejected. Please make the necessary changes and resubmit."
-                  : "The task has been approved. Keep up the Good job!"
-              }
-            />
+            {showCommentDialog && (
+              <div className="absolute bg-black/50 flex justify-center items-center">
+                <CommentInputDialog
+                  isOpen={showCommentDialog}
+                  onClose={() => setShowCommentDialog(false)}
+                  onSubmit={(content) => {
+                    if (commentType === "Reject") {
+                      setShowRejectDialog(true);
+                      setRejectionContent(content);
+                    } else {
+                      setShowApproveDialog(true);
+                      setApprovalContent(content);
+                    }
+                  }}
+                  title={`${commentType} Task Message`}
+                  type={commentType}
+                  defaultContent={
+                    commentType === "Reject"
+                      ? "The task has been rejected. Please make the necessary changes and resubmit."
+                      : "The task has been approved. Keep up the Good job!"
+                  }
+                />
+              </div>
+            )}
 
             {/* Feedback Alert */}
             <AnimatePresence>
