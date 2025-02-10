@@ -1,11 +1,18 @@
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
-import { useEffect, useState } from 'react';
 import { DeleteConfirmModal } from "@/app/profile/[id]/delete-emp-modal";
 import { EditEmployeeModal } from "@/app/profile/[id]/edit-emp-modal";
-import { Edit, Trash2 } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  Mail,
+  Phone,
+  Users,
+  Briefcase,
+  Code,
+} from "lucide-react";
 import { motion } from "framer-motion";
-
 
 interface User {
   email: string;
@@ -31,24 +38,26 @@ interface ProfileHeaderProps {
 
 const getImageUrl = (imageUrl: string | undefined): string => {
   if (!imageUrl) {
-    return 'https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ';
+    return "https://utfs.io/f/B9ZUAXGX2BWYfKxe9sxSbMYdspargO3QN2qImSzoXeBUyTFJ";
   }
-  if (imageUrl.startsWith('http')) {
+  if (imageUrl.startsWith("http")) {
     return imageUrl;
   }
-  if (imageUrl.startsWith('/uploads')) {
+  if (imageUrl.startsWith("/uploads")) {
     return `https://be-icpworkloadmanagementsystem.up.railway.app/api${imageUrl}`;
   }
   return imageUrl;
 };
 
-export default function ProfileHeader({ id, showEditButton = true }: ProfileHeaderProps) {
+export default function ProfileHeader({
+  id,
+  showEditButton = true,
+}: ProfileHeaderProps) {
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-
 
   const fetchEmployee = async () => {
     try {
@@ -61,7 +70,7 @@ export default function ProfileHeader({ id, showEditButton = true }: ProfileHead
       if (result.data) {
         setEmployee({
           ...result.data,
-          image: getImageUrl(result.data.image)
+          image: getImageUrl(result.data.image),
         });
       } else {
         setError("Employee data not found");
@@ -82,9 +91,11 @@ export default function ProfileHeader({ id, showEditButton = true }: ProfileHead
 
   if (loading) {
     return (
-      <Card className="bg-[#0A1D56]">
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardContent className="p-4">
-          <div className="text-white text-sm">Loading employee details...</div>
+          <div className="text-gray-600 text-xs">
+            Loading employee details...
+          </div>
         </CardContent>
       </Card>
     );
@@ -92,117 +103,124 @@ export default function ProfileHeader({ id, showEditButton = true }: ProfileHead
 
   if (error || !employee) {
     return (
-      <Card className="bg-[#0A1D56]">
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardContent className="p-4">
-          <div className="text-white text-sm">{error || "Select an employee to view details."}</div>
+          <div className="text-gray-600 text-xs">
+            {error || "Select an employee to view details."}
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-<Card className="bg-[#0A1D56] w-full h-[25vh] rounded-lg shadow-lg overflow-hidden">
-  <CardContent className="p-6 h-full">
-    <div className="flex items-center h-full gap-8">
-      {/* Left side - Image */}
-      <div className="flex-shrink-0">
-        <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-[#29A6DE] bg-slate-100 shadow-lg">
-          <Image
-            src={employee.image || "/img/sidebar/UserProfile.png"}
-            alt="Avatar"
-            width={96}
-            height={96}
-            className="h-full w-full object-cover"
-            priority
-          />
+    <Card className="bg-white border border-gray-200 shadow-sm rounded-[0.3vw]">
+      <CardContent className="p-4">
+        {/* Main Content */}
+        <div className="flex gap-6">
+          {/* Profile Image */}
+          <div className="flex-shrink-0">
+            <div className="h-20 w-20 rounded-full overflow-hidden border border-gray-200 bg-gray-50">
+              <Image
+                src={employee.image || "/img/sidebar/UserProfile.png"}
+                alt="Avatar"
+                width={80}
+                height={80}
+                className="h-full w-full object-cover"
+                priority
+              />
+            </div>
+          </div>
+
+          {/* Employee Information */}
+          <div className="flex-grow">
+            {/* Name and ID */}
+            <div className="flex flex-row items-center mb-[0.625vw]">
+              <div className="flex flex-col">
+                <h2 className="text-sm font-medium text-gray-900">
+                  {employee.name}
+                </h2>
+                <p className="text-xs text-gray-500">
+                  ID: {employee.employee_Id}
+                </p>
+              </div>
+              <div className="flex flex-grow justify-end items-center gap-2">
+              <motion.button
+                onClick={() => setIsEditOpen(true)}
+                className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Edit className="w-3.5 h-3.5 text-gray-500" />
+              </motion.button>
+              <motion.button
+                onClick={() => setIsDeleteOpen(true)}
+                className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Trash2 className="w-3.5 h-3.5 text-gray-500" />
+              </motion.button>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-gray-200 mb-3" />
+
+            {/* Grid Layout for Details */}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+              {/* Left Column */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-xs text-gray-600">
+                    {employee.users[0]?.email || "N/A"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-xs text-gray-600">
+                    {employee.phone}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-xs text-gray-600">{employee.team}</span>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-xs text-gray-600">
+                    {employee.users[0]?.role || "N/A"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Code className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-xs text-gray-600">
+                    {employee.skill}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </CardContent>
 
-      {/* Right side - Content */}
-      <div className="flex-grow grid grid-cols-2 gap-x-8">
-        {/* Left column (Name + Modals) */}
-        <div className="space-y-2">
-          {/* Name and Actions Row */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-white tracking-tight">
-              {employee.name}
-            </h2>
-          </div>
-
-          {/* Employee Details */}
-          <div className="space-y-1">
-            <p className="text-slate-300 text-sm flex items-center">
-              <span className="w-16 text-slate-400">ID</span>
-              <span className="text-white">{employee.employee_Id}</span>
-            </p>
-            <p className="text-slate-300 text-sm flex items-center">
-              <span className="w-16 text-slate-400">Email</span>
-              <span className="text-white">{employee.users[0]?.email || "N/A"}</span>
-            </p>
-            <p className="text-slate-300 text-sm flex items-center">
-              <span className="w-16 text-slate-400">Phone</span>
-              <span className="text-white">{employee.phone}</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Right column */}
-        <div className="space-y-2 relative">
-          {/* Buttons on Top */}
-          <div className="absolute top-0 right-0 flex gap-2 pt-2">
-          <motion.button
-              onClick={() => setIsEditOpen(true)}
-              className="p-1 rounded-full hover:bg-gray-300"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Edit className="w-4 h-4 text-blue-600" />
-            </motion.button>
-            {/* Delete Button */}
-            <motion.button
-              onClick={() => setIsDeleteOpen(true)}
-              className="p-1 rounded-full hover:bg-gray-300"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Trash2 className="w-4 h-4 text-red-600" />
-            </motion.button>
-          </div>
-
-          {/* Right column content */}
-          <div className="space-y-1 pt-8">
-            <p className="text-slate-300 text-sm flex items-center">
-              <span className="w-16 text-slate-400">Team</span>
-              <span className="text-white">{employee.team}</span>
-            </p>
-            <p className="text-slate-300 text-sm flex items-center">
-              <span className="w-16 text-slate-400">Role</span>
-              <span className="text-white">{employee.users[0]?.role || "N/A"}</span>
-            </p>
-            <p className="text-slate-300 text-sm flex items-center">
-              <span className="w-16 text-slate-400">Skill</span>
-              <span className="text-white">{employee.skill}</span>
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </CardContent>
-
-{/* Delete Confirmation Modal */}
-<DeleteConfirmModal
- employeeId={employee.employee_Id}
- employeeName={employee.name}
- open={isDeleteOpen}
- onOpenChange={setIsDeleteOpen}
-/>
-
-{/* Edit Modal */}
-<EditEmployeeModal
-  employee={employee}
-  open={isEditOpen}
-  onOpenChange={setIsEditOpen}
-/>
-</Card>
+      {/* Modals */}
+      <DeleteConfirmModal
+        employeeId={employee.employee_Id}
+        employeeName={employee.name}
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+      />
+      <EditEmployeeModal
+        employee={employee}
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+      />
+    </Card>
   );
 }
