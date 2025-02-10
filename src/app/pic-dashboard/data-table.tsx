@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, Check, ChevronDown, X, RefreshCw, ArrowUp, ArrowBigUpDash } from "lucide-react";
+import { Search, Check, ChevronDown, X, RefreshCw, ArrowBigDownDash, ArrowBigUpDash } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
@@ -46,6 +46,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import PromotePICModal from "@/components/organisms/AddPICModal";
+import DemotePICModal from "@/components/organisms/DemotePICModal";
 
 const TEAM_OPTIONS = ["Pelayanan Pelanggan", "Korporat 1", "Korporat 2"];
 
@@ -212,10 +213,16 @@ export function DataTable<TData>({
   const [selectedFilter, setSelectedFilter] = React.useState<string>("name");
   const [popoverOpen, setPopoverOpen] = React.useState(false);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  
+  const [isPromoteModalOpen, setIsPromoteModalOpen] = React.useState(false);
+  const [isDemoteModalOpen, setIsDemoteModalOpen] = React.useState(false);
 
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
+ const handleOpenPromoteModal = () => {
+    setIsPromoteModalOpen(true);
+  };
+
+  const handleOpenDemoteModal = () => {
+    setIsDemoteModalOpen(true);
   };
 
   const handleRefresh = async () => {
@@ -300,13 +307,23 @@ export function DataTable<TData>({
           </Button>
 
           <div className="flex justify-end">
-            <Button onClick={handleOpenModal} className="bg-blue-500 flex h-[2.75vw] hover:bg-blue-700">
+            <Button onClick={handleOpenPromoteModal} className="bg-blue-500 flex h-[2.75vw] hover:bg-blue-700">
               <ArrowBigUpDash className="mr-[0.25vw]" />
               Promote PIC
             </Button>
             <PromotePICModal
-              isOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)} 
+              isOpen={isPromoteModalOpen}
+              onClose={() => setIsPromoteModalOpen(false)} 
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={handleOpenDemoteModal} className="bg-red-500 flex h-[2.75vw] hover:bg-red-700">
+              <ArrowBigDownDash className="mr-[0.25vw]" />
+              Demote PIC
+            </Button>
+            <DemotePICModal
+              isOpen={isDemoteModalOpen}
+              onClose={() => setIsDemoteModalOpen(false)} 
             />
           </div>
         </div>
