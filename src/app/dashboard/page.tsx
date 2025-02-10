@@ -116,6 +116,8 @@ export default function ActivityPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [team, setTeam] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
 
   const getBarColor = (index: number) => {
     const colors = ["#22c55e", "#eab308", "#ef4444"];
@@ -153,21 +155,15 @@ export default function ActivityPage() {
       const allEmployeesData = allEmployeesResult.data || allEmployeesResult;
       const tasksData = tasksResult.data || tasksResult;
 
+      
       // Filter employees based on user role
-      const filteredTeamEmployees = teamEmployeesData.filter((emp: Employee) => {
-        // Get the primary user's role (first user in the array)
-        const employeeRole = emp.users[0]?.role;
-
-        // Skip if no users or no role defined
-        if (!employeeRole) return false;
-
-        // Always exclude managers from the list
-        if (employeeRole === 'Manager') return false;
-
-        if (employeeRole === 'PIC') return false;
-        
-        return true;
-      });
+      const filteredTeamEmployees =  userRole === "Manager"
+      ? allEmployeesData // If Manager, include all employees
+      : teamEmployeesData.filter((emp: Employee) => {
+          const employeeRole = emp.users[0]?.role;
+          if (!employeeRole) return false;
+          return employeeRole !== "Manager" && employeeRole !== "PIC";
+        });
 
       const filteredAllEmployees = allEmployeesData.filter((emp: Employee) => {
         // Get the primary user's role (first user in the array)
@@ -255,6 +251,7 @@ export default function ActivityPage() {
       try {
         const userData: JWTPayload = jwtDecode(authStorage);
         setTeam(userData.team);
+        setUserRole(userData.role);
       } catch (error) {
         // console.error("Error decoding auth token:", error);
       }
