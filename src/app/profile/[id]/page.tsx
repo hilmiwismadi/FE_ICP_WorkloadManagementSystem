@@ -15,6 +15,7 @@ import ProtectedRoute from "@/components/protected-route";
 import { jwtDecode } from "jwt-decode";
 import { parse } from "cookie";
 import { IdCardIcon } from "lucide-react";
+import CurrentAndAverageWorkload from "@/components/organisms/CurrentAndAverageWorkload";
 
 interface Employee {
   employee_Id: string;
@@ -47,6 +48,7 @@ interface Employee {
       user_Id: string;
       priority: string;
       title: string;
+      mcda: number;
     };
   }>;
   users: Array<{
@@ -67,6 +69,7 @@ export default function ProfilePage() {
   const [averageWorkload, setAverageWorkload] = useState<number>(0);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [techStacks, setTechStacks] = useState<TechStack[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true); 
 
   // Fetch all employees data to calculate average workload
   useEffect(() => {
@@ -131,6 +134,8 @@ export default function ProfilePage() {
         }
       } catch (error) {
         console.error("Failed to fetch employee data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -202,6 +207,7 @@ export default function ProfilePage() {
           endDate: assign.task.end_Date
             ? new Date(assign.task.end_Date).toISOString()
             : null,
+          mcda: assign.task.mcda || 0,
         }))
     : [];
 
@@ -223,9 +229,13 @@ export default function ProfilePage() {
     return <LoadingScreen />;
   }
 
+  if (isLoading) {
+    return <LoadingScreen />; 
+  }
+
   return (
     <ProtectedRoute>
-      <div className="flex h-screen bg-stale-50">
+      <div className="flex h-screen bg-gray-200">
         <Sidebar />
         <div className="flex-grow overflow-auto flex items-start justify-center">
           <div
@@ -242,18 +252,23 @@ export default function ProfilePage() {
                     <div className="col-span-12 md:col-span-5 space-y-[1.25vw]">
                       <ProgrammingLanguages
                         techStacks={techStacks}
-                        className="bg-navy  shadow-sm p-[1.25vw] min-h-[12vw]"
+                        className="shadow-sm min-h-[12vw]"
                       />
                       <WorkExperience experience={workExperience} />
                     </div>
-                    <div className="col-span-12 md:col-span-7">
+                    <div className="col-span-7 space-y-[1.25vw]">
                       <WorkloadOverview
                         tasks={employee.assigns}
                         currentWorkload={Math.round(
                           employee.current_Workload  * 100
                         )}
                         averageWorkload={averageWorkload}
-                        className="rounded-[1vw] shadow-sm p-[1.25vw] h-full"
+                        className="rounded-[1vw] shadow-sm"
+                      />
+                      <CurrentAndAverageWorkload currentWorkload={Math.round(
+                          employee.current_Workload  * 100
+                        )}
+                        averageWorkload={averageWorkload} 
                       />
                     </div>
                   </div>

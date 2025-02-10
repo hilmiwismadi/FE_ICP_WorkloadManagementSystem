@@ -18,15 +18,15 @@ export default function ProgrammingLanguages({
 }: ProgrammingLanguagesProps) {
   if (!techStacks || techStacks.length === 0) {
     return (
-      <Card className="bg-[#0A1D56] min-h-[5vw]">
-        <CardHeader>
-          <CardTitle className="text-white text-[1.25vw] font-semibold">
-            Programming Language
+      <Card className="bg-white shadow-sm rounded-[0.3vw] h-[19vw]">
+        <CardHeader className="border-b border-gray-200 pb-3">
+          <CardTitle className="text-gray-800 text-sm font-medium">
+            Programming Languages
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[12vw] text-white text-[1vw]">
-            No programming languages added yet
+          <div className="flex items-center justify-center h-40 text-gray-500 text-sm">
+            -
           </div>
         </CardContent>
       </Card>
@@ -34,32 +34,31 @@ export default function ProgrammingLanguages({
   }
 
   return (
-    <Card className={`bg-[#0A1D56] ${className}`}>
-      <CardHeader>
-        <CardTitle className="text-white text-[1.25vw] font-semibold">
-          Programming Language
+    <Card className={`bg-white shadow-sm ${className} rounded-[0.3vw] h-[19vw]`}>
+      <CardHeader className="border-b border-gray-200 pb-3">
+        <CardTitle className="text-gray-800 text-[0.95vw] font-medium">
+          Tech Skills
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        {/* Added fixed height and scrollbar */}
-        <div className="max-h-[14vw] overflow-y-scroll scrollbar-thin scrollbar-thumb-white scrollbar-track-[#0A1D56]">
-          <div className="grid grid-cols-2 gap-[1vw]">
+      <CardContent className="max-h-[15vw] overflow-y-auto scrollbar-hide scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <div className="py-[1vw]">
+          <div className="grid grid-cols-2 gap-3">
             {techStacks.map((tech) => (
               <div
                 key={tech.skill_Id}
-                className="flex items-center justify-center bg-white rounded-[0.5vw] w-full h-[3vw]"
+                className="flex items-center justify-center bg-gray-50 rounded-[0.3vw] border border-gray-200 hover:bg-gray-100 transition-colors duration-200 py-2.5 px-3"
               >
-                <div className="relative flex justify-center items-center gap-[0.4vw]">
+                <div className="flex justify-start items-center gap-2 w-full">
                   <Image
                     src={tech.image}
                     alt={tech.name}
                     width={200}
                     height={200}
-                    className="w-[2vw] h-auto"
+                    className="w-5 h-5 object-contain"
                   />
-                  <h1 className="text-[0.8vw] font-medium text-slate-700 whitespace-nowrap">
+                  <span className="text-xs font-medium text-gray-700 truncate">
                     {tech.name}
-                  </h1>
+                  </span>
                 </div>
               </div>
             ))}
