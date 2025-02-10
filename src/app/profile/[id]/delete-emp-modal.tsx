@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +35,7 @@ export function DeleteConfirmModal({
   open,
   onOpenChange,
 }: DeleteConfirmModalProps) {
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [feedback, setFeedback] = useState<FeedbackState>({
     show: false,
@@ -61,7 +63,7 @@ export function DeleteConfirmModal({
       })
 
       setTimeout(() => {
-        window.location.reload()
+        router.push('/activity')
       }, 1000)
     } catch (error) {
       setFeedback({

@@ -1,6 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { useEffect, useState } from 'react';
+import { DeleteConfirmModal } from "@/app/profile/[id]/delete-emp-modal";
+import { EditEmployeeModal } from "@/app/profile/[id]/edit-emp-modal";
+import { Edit, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
+
 
 interface User {
   email: string;
@@ -41,6 +46,9 @@ export default function ProfileHeader({ id, showEditButton = true }: ProfileHead
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
 
   const fetchEmployee = async () => {
     try {
@@ -93,62 +101,108 @@ export default function ProfileHeader({ id, showEditButton = true }: ProfileHead
   }
 
   return (
-    <Card className="bg-[#0A1D56] w-full h-[25vh] rounded-lg shadow-lg overflow-hidden">
-      <CardContent className="p-6 h-full">
-        <div className="flex items-center h-full gap-8">
-          {/* Left side - Image */}
-          <div className="flex-shrink-0">
-            <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-[#29A6DE] bg-slate-100 shadow-lg">
-              <Image
-                src={employee.image || "/img/sidebar/UserProfile.png"}
-                alt="Avatar"
-                width={96}
-                height={96}
-                className="h-full w-full object-cover"
-                priority
-              />
-            </div>
+<Card className="bg-[#0A1D56] w-full h-[25vh] rounded-lg shadow-lg overflow-hidden">
+  <CardContent className="p-6 h-full">
+    <div className="flex items-center h-full gap-8">
+      {/* Left side - Image */}
+      <div className="flex-shrink-0">
+        <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-[#29A6DE] bg-slate-100 shadow-lg">
+          <Image
+            src={employee.image || "/img/sidebar/UserProfile.png"}
+            alt="Avatar"
+            width={96}
+            height={96}
+            className="h-full w-full object-cover"
+            priority
+          />
+        </div>
+      </div>
+
+      {/* Right side - Content */}
+      <div className="flex-grow grid grid-cols-2 gap-x-8">
+        {/* Left column (Name + Modals) */}
+        <div className="space-y-2">
+          {/* Name and Actions Row */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold text-white tracking-tight">
+              {employee.name}
+            </h2>
           </div>
 
-          {/* Right side - Content */}
-          <div className="flex-grow grid grid-cols-2 gap-x-8">
-            {/* Left column */}
-            <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-white tracking-tight mb-1">{employee.name}</h2>
-              <div className="space-y-1">
-                <p className="text-slate-300 text-sm flex items-center">
-                  <span className="w-16 text-slate-400">ID</span>
-                  <span className="text-white">{employee.employee_Id}</span>
-                </p>
-                <p className="text-slate-300 text-sm flex items-center">
-                  <span className="w-16 text-slate-400">Email</span>
-                  <span className="text-white">{employee.users[0]?.email || 'N/A'}</span>
-                </p>
-                <p className="text-slate-300 text-sm flex items-center">
-                  <span className="w-16 text-slate-400">Phone</span>
-                  <span className="text-white">{employee.phone}</span>
-                </p>
-              </div>
-            </div>
-
-            {/* Right column */}
-            <div className="space-y-2 pt-9">
-              <p className="text-slate-300 text-sm flex items-center">
-                <span className="w-16 text-slate-400">Team</span>
-                <span className="text-white">{employee.team}</span>
-              </p>
-              <p className="text-slate-300 text-sm flex items-center">
-                <span className="w-16 text-slate-400">Role</span>
-                <span className="text-white">{employee.users[0]?.role || 'N/A'}</span>
-              </p>
-              <p className="text-slate-300 text-sm flex items-center">
-                <span className="w-16 text-slate-400">Skill</span>
-                <span className="text-white">{employee.skill}</span>
-              </p>
-            </div>
+          {/* Employee Details */}
+          <div className="space-y-1">
+            <p className="text-slate-300 text-sm flex items-center">
+              <span className="w-16 text-slate-400">ID</span>
+              <span className="text-white">{employee.employee_Id}</span>
+            </p>
+            <p className="text-slate-300 text-sm flex items-center">
+              <span className="w-16 text-slate-400">Email</span>
+              <span className="text-white">{employee.users[0]?.email || "N/A"}</span>
+            </p>
+            <p className="text-slate-300 text-sm flex items-center">
+              <span className="w-16 text-slate-400">Phone</span>
+              <span className="text-white">{employee.phone}</span>
+            </p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Right column */}
+        <div className="space-y-2 relative">
+          {/* Buttons on Top */}
+          <div className="absolute top-0 right-0 flex gap-2 pt-2">
+          <motion.button
+              onClick={() => setIsEditOpen(true)}
+              className="p-1 rounded-full hover:bg-gray-300"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Edit className="w-4 h-4 text-blue-600" />
+            </motion.button>
+            {/* Delete Button */}
+            <motion.button
+              onClick={() => setIsDeleteOpen(true)}
+              className="p-1 rounded-full hover:bg-gray-300"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Trash2 className="w-4 h-4 text-red-600" />
+            </motion.button>
+          </div>
+
+          {/* Right column content */}
+          <div className="space-y-1 pt-8">
+            <p className="text-slate-300 text-sm flex items-center">
+              <span className="w-16 text-slate-400">Team</span>
+              <span className="text-white">{employee.team}</span>
+            </p>
+            <p className="text-slate-300 text-sm flex items-center">
+              <span className="w-16 text-slate-400">Role</span>
+              <span className="text-white">{employee.users[0]?.role || "N/A"}</span>
+            </p>
+            <p className="text-slate-300 text-sm flex items-center">
+              <span className="w-16 text-slate-400">Skill</span>
+              <span className="text-white">{employee.skill}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </CardContent>
+
+{/* Delete Confirmation Modal */}
+<DeleteConfirmModal
+ employeeId={employee.employee_Id}
+ employeeName={employee.name}
+ open={isDeleteOpen}
+ onOpenChange={setIsDeleteOpen}
+/>
+
+{/* Edit Modal */}
+<EditEmployeeModal
+  employee={employee}
+  open={isEditOpen}
+  onOpenChange={setIsEditOpen}
+/>
+</Card>
   );
 }

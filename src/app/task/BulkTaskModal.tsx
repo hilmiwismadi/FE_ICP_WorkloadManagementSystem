@@ -566,7 +566,7 @@ export default function CreateTaskModal({
                 type="number"
                 name="workload"
                 required
-                min="0"
+                min="0.1"
                 max="10"
                 step="0.1"
                 value={formData.workload}
