@@ -8,6 +8,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import EditTaskDialog from "./EditTaskDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -144,7 +145,7 @@ const TaskDetailPage = () => {
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
-    priority: "",
+    priority: "" as Priority,
     workload: 0,
     start_Date: "",
     end_Date: "",
@@ -202,6 +203,8 @@ const TaskDetailPage = () => {
           body: JSON.stringify(editForm),
         }
       );
+
+      console.log("editForm", editForm);
 
       if (!response.ok) {
         throw new Error("Failed to update task");
@@ -1510,152 +1513,14 @@ const TaskDetailPage = () => {
       </AlertDialog>
 
       {/* Edit Task Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-[50vw] max-h-[45vw] ">
-          <DialogHeader className="pb-3 border-b border-gray-200">
-            <DialogTitle className="text-[1vw] font-medium">
-              Edit Task
-            </DialogTitle>
-            <DialogDescription className="text-[0.8vw] text-gray-500">
-              Make changes to the task details below.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-[1vw] py-[0.1vw]">
-            <div className="grid gap-1.5">
-              <Label htmlFor="title" className="text-[0.8vw] font-medium">
-                Title
-              </Label>
-              <Input
-                id="title"
-                value={editForm.title}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, title: e.target.value })
-                }
-                className="w-full text-[0.8vw]"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="description" className="text-xs font-medium">
-                Description
-              </Label>
-              <Textarea
-                id="description"
-                value={editForm.description}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, description: e.target.value })
-                }
-                className="min-h-[15vh] text-[0.8vw]"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="priority" className="text-[0.8vw] font-medium">
-                Priority
-              </Label>
-              <select
-                id="priority"
-                value={editForm.priority}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, priority: e.target.value })
-                }
-                className="flex h-9 w-full rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-[0.8vw] shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Normal">Normal</option>
-              </select>
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="workload" className="text-[0.8vw] font-medium">
-                Workload (0 - 10)
-              </Label>
-              <Input
-                id="workload"
-                type="number"
-                min="0"
-                max="10"
-                value={editForm.workload}
-                onChange={(e) => {
-                  const value = e.target.value;
-
-                  // Allow empty input for typing
-                  if (value === "") {
-                    setEditForm({ ...editForm, workload: 0 });
-                    return;
-                  }
-
-                  // Convert to a number and ensure it's within range
-                  const numericValue = Number(value);
-                  if (numericValue >= 0 && numericValue <= 10) {
-                    setEditForm({ ...editForm, workload: numericValue });
-                  }
-                }}
-                className="text-[0.8vw]"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="start_Date" className="text-xs font-medium">
-                  Start Date
-                </Label>
-                <Input
-                  id="start_Date"
-                  type="date"
-                  value={editForm.start_Date}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, start_Date: e.target.value })
-                  }
-                  className="text-[0.8vw]"
-                />
-              </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="end_Date" className="text-[0.8vw] font-medium">
-                  End Date
-                </Label>
-                <Input
-                  id="end_Date"
-                  type="date"
-                  value={editForm.end_Date}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, end_Date: e.target.value })
-                  }
-                  className="text-[0.8vw]"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <button
-              type="button"
-              onClick={() => setShowEditDialog(false)}
-              className="px-3 py-1.5 text-[0.8vw] font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleEditSubmit}
-              disabled={isEditing}
-              className="px-3 py-1.5 text-[0.8vw] font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {isEditing ? (
-                <div className="flex items-center gap-1.5">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 1,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                    className="w-3 h-3 border-2 border-white border-t-transparent rounded-full"
-                  />
-                  <span>Saving...</span>
-                </div>
-              ) : (
-                "Save Changes"
-              )}
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditTaskDialog
+        showEditDialog={showEditDialog}
+        setShowEditDialog={setShowEditDialog}
+        editForm={editForm}
+        setEditForm={setEditForm}
+        handleEditSubmit={handleEditSubmit}
+        isEditing={isEditing}
+      />
     </ProtectedRoute>
   );
 };
