@@ -211,7 +211,7 @@ const Sidebar = () => {
       <div className="flex justify-center py-[2.5vw]">
         <Image
           src="/img/sidebar/Logo_IconPlus.png"
-          alt="logo"
+          alt="PLN Icon Plus Logo"
           width={isExpanded ? 120 : 40}
           height={isExpanded ? 120 : 40}
           className={`transition-all duration-300 ${
