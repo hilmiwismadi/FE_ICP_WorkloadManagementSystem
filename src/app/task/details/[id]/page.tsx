@@ -137,6 +137,8 @@ const TaskDetailPage = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [approvalContent, setApprovalContent] = useState<string>("");
+  const [rejectionContent, setRejectionContent] = useState<string>("");
   const router = useRouter();
 
   const [editForm, setEditForm] = useState({
@@ -660,9 +662,11 @@ const TaskDetailPage = () => {
   };
 
   const handleConfirmApprove = async (content: string) => {
+    if (isUpdatingStatus) return;
+    setIsUpdatingStatus(true);
+    setShowCommentDialog(false);
+    setShowApproveDialog(false);
     try {
-      setIsUpdatingStatus(true);
-
       // Fetch current user's employee details
       const employeeImageResponse = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${user?.employee_Id}`
@@ -778,8 +782,6 @@ const TaskDetailPage = () => {
           },
         },
       });
-
-      setShowCommentDialog(false);
       setShowFeedback({
         show: true,
         type: "success",
@@ -794,6 +796,7 @@ const TaskDetailPage = () => {
       });
     } finally {
       setIsUpdatingStatus(false);
+
       setTimeout(() => {
         setShowFeedback((prev) => ({ ...prev, show: false }));
       }, 3000);
@@ -801,9 +804,11 @@ const TaskDetailPage = () => {
   };
 
   const handleConfirmReject = async (content: string) => {
+    if (isUpdatingStatus) return;
+    setIsUpdatingStatus(true);
+    setShowCommentDialog(false);
+    setShowApproveDialog(false);
     try {
-      console.log("Task rejected successfully");
-
       // Fetch current user's employee details
       const employeeImageResponse = await fetch(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/${user?.employee_Id}`
@@ -899,8 +904,6 @@ const TaskDetailPage = () => {
         },
       });
 
-      // setShowRejectDialog(false);
-      setShowCommentDialog(false);
       setShowFeedback({
         show: true,
         type: "success",
@@ -914,6 +917,8 @@ const TaskDetailPage = () => {
         message: "Failed to reject task. Please try again.",
       });
     } finally {
+      setIsUpdatingStatus(false);
+
       setTimeout(() => {
         setShowFeedback((prev) => ({ ...prev, show: false }));
       }, 3000);
@@ -932,24 +937,92 @@ const TaskDetailPage = () => {
           disabled={task?.status !== "Done" || isUpdatingStatus}
           className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
             task?.status === "Done"
-              ? "bg-green-500 hover:bg-green-600 text-white"
+              ? isUpdatingStatus
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-600 text-white"
               : "bg-gray-100 text-gray-400 cursor-not-allowed"
           }`}
         >
-          <ThumbsUp className="w-3 h-3" />
-          Approve
+          {isUpdatingStatus ? (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+              {/* Circular loader container */}
+              <div className="relative w-[5vw] h-[5vw]">
+                {/* Light grey circle (base) */}
+                <div className="absolute inset-0 rounded-full border-[1vw] border-gray-300/20" />
+
+                {/* Yellow rotating circle */}
+                <div className="absolute inset-0 rounded-full border-[1vw] border-transparent border-t-yellow-300 animate-spin" />
+
+                {/* Blue accent circle */}
+                <div className="absolute inset-0 rounded-full border-[1vw] border-transparent border-l-blue-300 animate-spin-slow" />
+              </div>
+
+              <style jsx>{`
+                @keyframes spin-slow {
+                  from {
+                    transform: rotate(0deg);
+                  }
+                  to {
+                    transform: rotate(360deg);
+                  }
+                }
+                .animate-spin-slow {
+                  animation: spin-slow 1.2s linear infinite;
+                }
+              `}</style>
+            </div>
+          ) : (
+            <>
+              <ThumbsUp className="w-3 h-3" />
+              Approve
+            </>
+          )}
         </motion.button>
         <motion.button
           onClick={handleRejectClick}
-          disabled={task?.status !== "Done"}
+          disabled={task?.status !== "Done" || isUpdatingStatus}
           className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs ${
             task?.status === "Done"
-              ? "bg-red-500 hover:bg-red-600 text-white"
+              ? isUpdatingStatus
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-red-500 hover:bg-red-600 text-white"
               : "bg-gray-100 text-gray-400 cursor-not-allowed"
           }`}
         >
-          <ThumbsDown className="w-3 h-3" />
-          Reject
+          {isUpdatingStatus ? (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+              {/* Circular loader container */}
+              <div className="relative w-[5vw] h-[5vw]">
+                {/* Light grey circle (base) */}
+                <div className="absolute inset-0 rounded-full border-[1vw] border-gray-300/20" />
+
+                {/* Yellow rotating circle */}
+                <div className="absolute inset-0 rounded-full border-[1vw] border-transparent border-t-yellow-300 animate-spin" />
+
+                {/* Blue accent circle */}
+                <div className="absolute inset-0 rounded-full border-[1vw] border-transparent border-l-blue-300 animate-spin-slow" />
+              </div>
+
+              <style jsx>{`
+                @keyframes spin-slow {
+                  from {
+                    transform: rotate(0deg);
+                  }
+                  to {
+                    transform: rotate(360deg);
+                  }
+                }
+                .animate-spin-slow {
+                  animation: spin-slow 1.2s linear infinite;
+                }
+              `}</style>
+            </div>
+          ) : (
+            <>
+              <ThumbsDown className="w-3 h-3" />
+              Reject
+            </>
+          )}
         </motion.button>
       </div>
     );
@@ -1191,30 +1264,15 @@ const TaskDetailPage = () => {
                 >
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-[1.5vw] font-semibold mb-[1vw]">
-                      Confirm Task Approval
+                      {isUpdatingStatus
+                        ? "Processing Approval..."
+                        : "Confirm Task Approval"}
                     </AlertDialogTitle>
                     <AlertDialogDescription className="text-[1vw]">
-                      Are you sure you want to approve this task? This action
-                      cannot be undone.
+                      {isUpdatingStatus
+                        ? "Please wait while we process your approval..."
+                        : "Are you sure you want to approve this task? This action cannot be undone."}
                     </AlertDialogDescription>
-                    <motion.div
-                      className="mt-[1vw] p-[1vw] bg-gray-50 rounded-[0.4vw] text-[0.9vw]"
-                      initial={{ y: "1vw", opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      <div className="space-y-[0.5vw]">
-                        <div>
-                          <strong>Task:</strong> {task?.title}
-                        </div>
-                        <div>
-                          <strong>Status:</strong> {task?.status}
-                        </div>
-                        <div>
-                          <strong>Priority:</strong> {task?.priority}
-                        </div>
-                      </div>
-                    </motion.div>
                   </AlertDialogHeader>
                   <AlertDialogFooter className="mt-[1vw]">
                     <AlertDialogCancel
@@ -1224,12 +1282,16 @@ const TaskDetailPage = () => {
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={() => handleConfirmApprove("")}
+                      onClick={() => handleConfirmApprove(approvalContent)}
                       disabled={isUpdatingStatus}
-                      className="bg-green-600 hover:bg-green-700 text-[0.8vw]"
+                      className={`${
+                        isUpdatingStatus
+                          ? "bg-gray-400"
+                          : "bg-green-600 hover:bg-green-700"
+                      } text-[0.8vw]`}
                     >
                       {isUpdatingStatus ? (
-                        <div className="flex items-center gap-[0.417vw]">
+                        <div className="flex items-center gap-2">
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{
@@ -1237,9 +1299,10 @@ const TaskDetailPage = () => {
                               repeat: Infinity,
                               ease: "linear",
                             }}
-                            className="w-[0.833vw] h-[0.833vw] border-[0.417vw] border-white border-t-transparent rounded-full"
-                          />
-                          Approving...
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                          </motion.div>
+                          <span>Processing...</span>
                         </div>
                       ) : (
                         "Confirm Approval"
@@ -1249,26 +1312,6 @@ const TaskDetailPage = () => {
                 </motion.div>
               </AlertDialogContent>
             </AlertDialog>
-
-            {/* Comment Dialog */}
-            <CommentInputDialog
-              isOpen={showCommentDialog}
-              onClose={() => setShowCommentDialog(false)}
-              onSubmit={(content) => {
-                if (commentType === "Reject") {
-                  handleConfirmReject(content);
-                } else {
-                  handleConfirmApprove(content);
-                }
-              }}
-              title={`${commentType} Task Message`}
-              type={commentType}
-              defaultContent={
-                commentType === "Reject"
-                  ? "The task has been rejected. Please make the necessary changes and resubmit."
-                  : "The task has been approved. Keep up the Good job!"
-              }
-            />
 
             {/* Reject Dialog */}
             <AlertDialog
@@ -1285,45 +1328,76 @@ const TaskDetailPage = () => {
                 >
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-[1.5vw] font-semibold mb-[1vw]">
-                      Confirm Task Rejection
+                      {isUpdatingStatus
+                        ? "Processing Rejection..."
+                        : "Confirm Task Rejection"}
                     </AlertDialogTitle>
                     <AlertDialogDescription className="text-[1vw]">
-                      Are you sure you want to reject this task? The task will
-                      be sent back for revision.
+                      {isUpdatingStatus
+                        ? "Please wait while we process your rejection..."
+                        : "Are you sure you want to reject this task? The task will be sent back for revision."}
                     </AlertDialogDescription>
-                    <motion.div
-                      className="mt-[1vw] p-[1vw] bg-gray-50 rounded-[0.4vw] text-[0.9vw]"
-                      initial={{ y: "1vw", opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.1 }}
-                    >
-                      <div className="space-y-[0.5vw]">
-                        <div>
-                          <strong>Task:</strong> {task?.title}
-                        </div>
-                        <div>
-                          <strong>Status:</strong> {task?.status}
-                        </div>
-                        <div>
-                          <strong>Priority:</strong> {task?.priority}
-                        </div>
-                      </div>
-                    </motion.div>
                   </AlertDialogHeader>
                   <AlertDialogFooter className="mt-[1vw]">
-                    <AlertDialogCancel className="text-[0.8vw]">
+                    <AlertDialogCancel
+                      disabled={isUpdatingStatus}
+                      className="text-[0.8vw]"
+                    >
                       Cancel
                     </AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={() => handleConfirmReject("")}
-                      className="bg-red-600 hover:bg-red-700 text-[0.8vw]"
+                      onClick={() => handleConfirmReject(rejectionContent)}
+                      disabled={isUpdatingStatus}
+                      className={`${
+                        isUpdatingStatus
+                          ? "bg-gray-400"
+                          : "bg-red-600 hover:bg-red-700"
+                      } text-[0.8vw]`}
                     >
-                      Confirm Rejection
+                      {isUpdatingStatus ? (
+                        <div className="flex items-center gap-2">
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: "linear",
+                            }}
+                          >
+                            <RefreshCw className="w-4 h-4" />
+                          </motion.div>
+                          <span>Processing...</span>
+                        </div>
+                      ) : (
+                        "Reject"
+                      )}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </motion.div>
               </AlertDialogContent>
             </AlertDialog>
+
+            {/* Comment Dialog */}
+            <CommentInputDialog
+              isOpen={showCommentDialog}
+              onClose={() => setShowCommentDialog(false)}
+              onSubmit={(content) => {
+                if (commentType === "Reject") {
+                  setShowRejectDialog(true);
+                  setRejectionContent(content);
+                } else {
+                  setShowApproveDialog(true);
+                  setApprovalContent(content);
+                }
+              }}
+              title={`${commentType} Task Message`}
+              type={commentType}
+              defaultContent={
+                commentType === "Reject"
+                  ? "The task has been rejected. Please make the necessary changes and resubmit."
+                  : "The task has been approved. Keep up the Good job!"
+              }
+            />
 
             {/* Feedback Alert */}
             <AnimatePresence>
@@ -1475,13 +1549,13 @@ const TaskDetailPage = () => {
                 value={editForm.workload}
                 onChange={(e) => {
                   const value = e.target.value;
-              
+
                   // Allow empty input for typing
                   if (value === "") {
                     setEditForm({ ...editForm, workload: 0 });
                     return;
                   }
-              
+
                   // Convert to a number and ensure it's within range
                   const numericValue = Number(value);
                   if (numericValue >= 0 && numericValue <= 10) {
