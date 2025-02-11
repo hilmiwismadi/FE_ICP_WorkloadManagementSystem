@@ -159,7 +159,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
     if (!formData.image && !selectedFile) return "Image is required";
     if (formData.name.length > 30)
       return "Name must be less than 30 characters";
-    if (formData.email.length > 30)
+    if (formData.email.length > 100)
       return "Email must be less than 30 characters";
     if (formData.phone.length > 30)
       return "Phone must be less than 30 characters";
