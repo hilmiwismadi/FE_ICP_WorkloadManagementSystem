@@ -247,6 +247,7 @@ export default function ProfilePage() {
                   <ProfileHeader
                     id={employee.employee_Id}
                     showEditButton={true}
+                    showDeleteButton={true}
                   />
                   <div className="grid grid-cols-12 gap-[1.25vw]">
                     <div className="col-span-12 md:col-span-5 space-y-[1.25vw]">
