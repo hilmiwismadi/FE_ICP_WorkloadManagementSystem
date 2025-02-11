@@ -56,6 +56,7 @@ interface PasswordChangeForm {
   confirmPassword: string;
 }
 
+
 interface TechStack {
   name: string;
   image: string;
@@ -72,6 +73,35 @@ interface UserProfileProps {
   onImageChange: (file: File | null) => void;
   selectedImage: File | null;
 }
+
+interface SuccessMessageProps {
+  message: string;
+}
+
+const SuccessMessage: React.FC<SuccessMessageProps> = ({ message }) => (
+    <motion.div
+    initial={{ opacity: 0, scale: 0.8 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 0.8 }}
+    className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50"
+  >
+    <motion.div
+      initial={{ y: 20 }}
+      animate={{ y: 0 }}
+      className="flex flex-col items-center space-y-[1vw]"
+    >
+      <motion.div
+        animate={{ scale: [1, 1.2, 1] }}
+        transition={{ duration: 0.5 }}
+      >
+        <CheckCircle2 className="w-[4vw] h-[4vw] text-green-500" />
+      </motion.div>
+      <p className="text-[1.2vw] font-semibold text-green-600">
+        {message}
+      </p>
+    </motion.div>
+  </motion.div>
+);
 
 export default function EditUserProfile({
   employee,
@@ -93,7 +123,7 @@ export default function EditUserProfile({
   const [searchValue, setSearchValue] = useState("");
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [confirmationType, setConfirmationType] = useState<
-    "profile" | "password"
+    "profile" | "password" | "skills"
   >("profile");
   const [formData, setFormData] = useState({
     name: employee?.name || "",
@@ -158,9 +188,9 @@ export default function EditUserProfile({
     if (success) {
       setShowConfirmation(false);
       setShowSuccess(true);
+      setIsEditing(false);
       setTimeout(() => {
         setShowSuccess(false);
-        setIsEditing(false);
         window.location.reload();
       }, 1500);
     } else {
@@ -280,10 +310,10 @@ export default function EditUserProfile({
       if (response.ok) {
         setIsConfirmTechOpen(false);
         setShowSuccess(true);
+        setSelectedTech([]);
+        setIsTechStackModalOpen(false);
         setTimeout(() => {
           setShowSuccess(false);
-          setIsTechStackModalOpen(false);
-          setSelectedTech([]);
           // Refresh user's tech stack
           const fetchUserTechStack = async () => {
             const response = await fetch(
@@ -303,6 +333,7 @@ export default function EditUserProfile({
               setUserTechStack(mappedSkills);
             }
           };
+          window.location.reload();
           fetchUserTechStack();
         }, 1500);
       } else if (response.status === 409) {
@@ -359,14 +390,14 @@ export default function EditUserProfile({
       if (response.ok) {
         setShowConfirmation(false);
         setShowSuccess(true);
+        setPasswordForm({
+          previousPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+        setIsPasswordModalOpen(false);
         setTimeout(() => {
           setShowSuccess(false);
-          setIsPasswordModalOpen(false);
-          setPasswordForm({
-            previousPassword: "",
-            newPassword: "",
-            confirmPassword: "",
-          });
         }, 1500);
       } else {
         const data = await response.json();
@@ -377,7 +408,7 @@ export default function EditUserProfile({
         );
       }
     } catch (error) {
-      console.error("Error changing password:", error);
+      // console.error("Error changing password:", error);
       setPasswordError(
         error instanceof Error ? error.message : "An error occurred"
       );
@@ -405,6 +436,21 @@ export default function EditUserProfile({
 
   return (
     <div className="w-full">
+       <AnimatePresence>
+        {showSuccess && (
+          <SuccessMessage 
+            message={
+              confirmationType === "profile"
+                ? "Profile updated successfully!"
+                : confirmationType === "password"
+                ? "Password changed successfully!"
+                : confirmationType === "skills"
+                ? "Skills added successfully!"
+                : "Profile updated successfully!"
+            }
+          />
+        )}
+      </AnimatePresence>
       {/* Profile Header */}
       <div className="bg-[#15234A] rounded-t-[0.833vw] p-[1.5vw] text-white">
         <div className="flex items-center justify-between">
@@ -532,32 +578,6 @@ export default function EditUserProfile({
       {isPasswordModalOpen && (
         <div className="fixed inset-0 bg-black/75 flex justify-center items-center z-50">
           <Card className="w-[90vw] max-w-[30vw] p-[1.5vw] relative">
-            <AnimatePresence>
-              {showSuccess && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50"
-                >
-                  <motion.div
-                    initial={{ y: 20 }}
-                    animate={{ y: 0 }}
-                    className="flex flex-col items-center space-y-[1vw]"
-                  >
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <CheckCircle2 className="w-[4vw] h-[4vw] text-green-500" />
-                    </motion.div>
-                    <p className="text-[1.2vw] font-semibold text-green-600">
-                      Password changed successfully!
-                    </p>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             <h2 className="text-[1.25vw] font-semibold mb-[1vw]">
               Change Password
@@ -758,34 +778,6 @@ export default function EditUserProfile({
               </Button>
             </div>
           </Card>
-          <AnimatePresence>
-            {showSuccess && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50"
-              >
-                <motion.div
-                  initial={{ y: 20 }}
-                  animate={{ y: 0 }}
-                  className="flex flex-col items-center space-y-[1vw]"
-                >
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <CheckCircle2 className="w-[4vw] h-[4vw] text-green-500" />
-                  </motion.div>
-                  <p className="text-[1.2vw] font-semibold text-green-600">
-                    {confirmationType === "profile"
-                      ? "Profile updated successfully!"
-                      : "Password changed successfully!"}
-                  </p>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       )}
 
@@ -830,7 +822,10 @@ export default function EditUserProfile({
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleAddTechStack}
+              onClick={() => {
+                setConfirmationType("skills");
+                handleAddTechStack();
+              }}
               disabled={isLoadingTech}
               className="bg-[#38BDF8] hover:bg-[#32a8dd] text-[0.8vw]"
             >
