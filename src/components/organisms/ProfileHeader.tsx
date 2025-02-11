@@ -34,6 +34,7 @@ interface Employee {
 interface ProfileHeaderProps {
   id: string;
   showEditButton?: boolean;
+  showDeleteButton?: boolean;
 }
 
 const getImageUrl = (imageUrl: string | undefined): string => {
@@ -52,6 +53,7 @@ const getImageUrl = (imageUrl: string | undefined): string => {
 export default function ProfileHeader({
   id,
   showEditButton = true,
+  showDeleteButton = true,
 }: ProfileHeaderProps) {
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
@@ -145,22 +147,27 @@ export default function ProfileHeader({
                 </p>
               </div>
               <div className="flex flex-grow justify-end items-center gap-2">
-              <motion.button
-                onClick={() => setIsEditOpen(true)}
-                className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Edit className="w-3.5 h-3.5 text-gray-500" />
-              </motion.button>
-              <motion.button
-                onClick={() => setIsDeleteOpen(true)}
-                className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Trash2 className="w-3.5 h-3.5 text-gray-500" />
-              </motion.button>
+              {showEditButton && (
+                    <motion.button
+                      onClick={() => setIsEditOpen(true)}
+                      className="p-1 rounded-full hover:bg-gray-300"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Edit className="w-4 h-4 text-blue-600" />
+                    </motion.button>
+                  )}
+
+              {showDeleteButton && (
+                    <motion.button
+                      onClick={() => setIsDeleteOpen(true)}
+                      className="p-1 rounded-full hover:bg-gray-300"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </motion.button>
+                  )}
               </div>
             </div>
 
@@ -209,18 +216,24 @@ export default function ProfileHeader({
         </div>
       </CardContent>
 
-      {/* Modals */}
-      <DeleteConfirmModal
-        employeeId={employee.employee_Id}
-        employeeName={employee.name}
-        open={isDeleteOpen}
-        onOpenChange={setIsDeleteOpen}
-      />
-      <EditEmployeeModal
-        employee={employee}
-        open={isEditOpen}
-        onOpenChange={setIsEditOpen}
-      />
+       {/* Delete Confirmation Modal */}
+       {showDeleteButton && (
+        <DeleteConfirmModal
+          employeeId={employee.employee_Id}
+          employeeName={employee.name}
+          open={isDeleteOpen}
+          onOpenChange={setIsDeleteOpen}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {showEditButton && (
+        <EditEmployeeModal
+          employee={employee}
+          open={isEditOpen}
+          onOpenChange={setIsEditOpen}
+        />
+      )}
     </Card>
   );
 }

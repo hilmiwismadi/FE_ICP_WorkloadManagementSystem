@@ -106,8 +106,8 @@ export default function CustomSearchBar() {
           if (employeeRole === 'manager') return false;
           
           // If current user is PIC, exclude other PICs
-          if (userRole === 'PIC' && employeeRole === 'pic') return false;
-          
+          if (employeeRole === 'pic') return false;
+
           return true;
         });
 
