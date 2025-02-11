@@ -179,6 +179,10 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
         success: false,
         message: error,
       });
+
+      setTimeout(() => {
+        setFeedback((prev) => ({ ...prev, show: false }));
+      }, 3000);
       return;
     }
     setShowConfirmation(true);
@@ -226,10 +230,17 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
       if (onSuccess) {
         onSuccess();
       }
-
+    } catch (error: any) {
+      setFeedback({
+        show: true,
+        success: false,
+        message: error.message || "Failed to add employee. Please try again.",
+      });
+    } finally {
       setTimeout(() => {
         setShowConfirmation(false);
         setIsOpen(false);
+        setIsLoading(false);
         setFormData({
           id: "",
           name: "",
@@ -245,16 +256,6 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
         setImagePreview("");
         window.location.reload();
       }, 1500);
-    } catch (error: any) {
-      setFeedback({
-        show: true,
-        success: false,
-        message: error.message || "Failed to add employee. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-      setIsSubmitting(false);
-      setShowConfirmation(false);
     }
   };
 
@@ -319,6 +320,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
                     onValueChange={(value) =>
                       setFormData((prev) => ({ ...prev, team: value }))
                     }
+                    required
                   >
                     <SelectTrigger className="h-[2.5vw] text-[0.8vw]">
                       <SelectValue placeholder="Select team" />
@@ -345,6 +347,7 @@ export function AddEmployeeModal({ onSuccess }: AddEmployeeModalProps) {
                   onValueChange={(value) =>
                     setFormData((prev) => ({ ...prev, skill: value }))
                   }
+                  required
                 >
                   <SelectTrigger className="h-[2.5vw] text-[0.8vw]">
                     <SelectValue placeholder="Select skill" />

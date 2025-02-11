@@ -79,7 +79,7 @@ export default function CreateTaskModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showError, setShowError] = useState(false);
   const [selectedEmployees, setSelectedEmployees] = useState<Employee[]>([]);
-
+  
   // Add JWT token decoding effect
   useEffect(() => {
     const authToken = Cookies.get("auth_token");
@@ -228,6 +228,12 @@ export default function CreateTaskModal({
 
     if (formData.employee_Ids.length === 0) {
       setErrorMessage("Please select at least one employee");
+      setShowError(true);
+      return;
+    }
+
+    if (formData.end_Date < formData.start_Date) {
+      setErrorMessage("End date cannot be earlier than start date");
       setShowError(true);
       return;
     }

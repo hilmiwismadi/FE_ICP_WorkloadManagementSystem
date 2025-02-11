@@ -230,6 +230,7 @@ export const TaskDetails = ({
         setShowConfirmation(false);
         setStatusUpdateResult(null);
         setTaskData(null);
+        window.location.reload();
       }, 500);
     }
   };

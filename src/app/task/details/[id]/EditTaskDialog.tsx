@@ -64,12 +64,6 @@ interface Task {
         isValid = false;
       }
   
-      // Description validation
-      if (!editForm.description.trim()) {
-        newErrors.description = 'Description is required';
-        isValid = false;
-      }
-  
       // Priority validation
       if (!editForm.priority) {
         newErrors.priority = 'Priority is required';
@@ -80,7 +74,7 @@ interface Task {
       if (editForm.workload === null) {
         newErrors.workload = 'Workload is required';
         isValid = false;
-      } else if (typeof editForm.workload === 'number' && (editForm.workload < 0 || editForm.workload > 10)) {
+      } else if (typeof editForm.workload === 'number' && (editForm.workload <= 0 || editForm.workload > 10)) {
         newErrors.workload = 'Workload must be between 0 and 10';
         isValid = false;
       }
@@ -95,7 +89,7 @@ interface Task {
         newErrors.end_Date = 'End date is required';
         isValid = false;
       } else if (editForm.start_Date && editForm.end_Date && new Date(editForm.end_Date) < new Date(editForm.start_Date)) {
-        newErrors.end_Date = 'End date must be after start date';
+        newErrors.end_Date = 'End date cannot be earlier than start date';
         isValid = false;
       }
   

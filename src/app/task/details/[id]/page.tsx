@@ -538,7 +538,7 @@ const TaskDetailPage = () => {
   });
 
   const calculateWorkloadPercentage = (workload: number): number => {
-    const normalize = workload / 15;
+    const normalize = workload;
     return normalize * 100;
   };
 
@@ -638,7 +638,7 @@ const TaskDetailPage = () => {
                   >
                     {calculateWorkloadPercentage(
                       employee.current_Workload
-                    ).toFixed(2)}
+                    )}
                     %
                   </span>
                 </div>

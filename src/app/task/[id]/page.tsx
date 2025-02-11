@@ -202,6 +202,7 @@ export default function TaskPageId() {
               <ProfileHeader
                 id={selectedEmployee.id}
                 showEditButton={false}
+                showDeleteButton={false}
               />
             )}
 
