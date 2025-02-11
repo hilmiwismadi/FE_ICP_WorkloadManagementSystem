@@ -619,7 +619,7 @@ const TaskPage = () => {
                                 </span>
                               </div>
 
-                              <div className="flex-1 overflow-auto p-[0.625vw] space-y-[0.625vw]">
+                              <div className="flex-1 overflow-auto scrollbar-hide p-[0.625vw] space-y-[0.625vw]">
                                 <AnimatePresence>
                                   {statusTasks.map((task) =>
                                     renderTaskCard(task)

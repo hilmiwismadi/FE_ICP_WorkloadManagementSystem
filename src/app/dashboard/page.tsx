@@ -200,72 +200,74 @@ export default function ActivityPage() {
       setIsLoading(true);
       if (!team) return;
 
-      // Fetch employees for specific team (for top/bottom workload cards)
-      const teamEmployeesResponse = await axios.get(
+      const fetchWithFallback = async (url: string) => {
+        try {
+          const response = await axios.get(url);
+          return response.data.data || response.data;
+        } catch (error: any) {
+          if (error.response?.status === 404) {
+            console.warn(`Data not found for ${url}`);
+            return []; // Return empty array for 404 errors
+          }
+          throw error;
+        }
+      };
+
+      // Fetch employees for the specific team (for top/bottom workload cards)
+      const teamEmployeesData = await fetchWithFallback(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read/team/${encodeURIComponent(
           team
         )}`
       );
 
       // Fetch all employees for division metrics
-      const allEmployeesResponse = await axios.get(
+      const allEmployeesData = await fetchWithFallback(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/emp/read"
       );
 
-      const allTasksResponse = await axios.get(
+      // Fetch all tasks
+      const allTasksData = await fetchWithFallback(
         "https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read"
       );
 
-      const tasksTeamResponse = await axios.get(
+      // Fetch tasks for the specific team
+      const teamTasksData = await fetchWithFallback(
         `https://be-icpworkloadmanagementsystem.up.railway.app/api/task/read/team/${encodeURIComponent(
           team
         )}`
       );
-
-      const teamEmployeesResult = await teamEmployeesResponse.data;
-      const allEmployeesResult = await allEmployeesResponse.data;
-      const allTasksResult = await allTasksResponse.data;
-      const teamTasksResult = await tasksTeamResponse.data;
-
-      const teamEmployeesData = teamEmployeesResult.data || teamEmployeesResult;
-      const allEmployeesData = allEmployeesResult.data || allEmployeesResult;
-      const allTasksData = allTasksResult.data || allTasksResult;
-      const teamTasksData = teamTasksResult.data || teamTasksResult;
 
       // Filter employees based on user role
       const filteredTeamEmployees =
         userRole === "Manager"
           ? allEmployeesData.filter((emp: Employee) => {
               const employeeRole = emp.users[0]?.role;
-              if (!employeeRole) return false;
-              return employeeRole !== "Manager" && employeeRole !== "PIC";
-            }) // If Manager, include all employees
+              return (
+                employeeRole &&
+                employeeRole !== "Manager" &&
+                employeeRole !== "PIC"
+              );
+            })
           : teamEmployeesData.filter((emp: Employee) => {
               const employeeRole = emp.users[0]?.role;
-              if (!employeeRole) return false;
-              return employeeRole !== "Manager" && employeeRole !== "PIC";
+              return (
+                employeeRole &&
+                employeeRole !== "Manager" &&
+                employeeRole !== "PIC"
+              );
             });
 
-      setEmployees(filteredTeamEmployees);
+      setEmployees(filteredTeamEmployees || []);
 
-      const filteredTeamTasks = 
-        userRole === "Manager"
-        ? setTaskData(allTasksData)
-        : setTaskData(teamTasksData);
+      // Assign tasks data based on user role
+      setTaskData(userRole === "Manager" ? allTasksData : teamTasksData);
 
+      // Process all employees for division metrics
       const filteredAllEmployees = allEmployeesData.filter((emp: Employee) => {
-        // Get the primary user's role (first user in the array)
         const employeeRole = emp.users[0]?.role;
-
-        // Skip if no users or no role defined
-        if (!employeeRole) return false;
-
-        // Always exclude managers from the list
-        if (employeeRole === "Manager") return false;
-
-        if (employeeRole === "PIC") return false;
-
-        return true;
+        return (
+          employeeRole && employeeRole !== "Manager" && employeeRole !== "PIC"
+        );
       });
 
       if (
@@ -300,7 +302,7 @@ export default function ActivityPage() {
       setTopEmployees(sortedEmployees.slice(0, 5));
       setBottomEmployees([...sortedEmployees].reverse().slice(0, 5));
 
-      // Process all employees for division metrics
+      // Process division metrics
       const divisionData: { [key: string]: number[] } =
         filteredAllEmployees.reduce(
           (acc: { [key: string]: number[] }, emp: Employee) => {
@@ -317,9 +319,11 @@ export default function ActivityPage() {
       const divisionAverages = Object.entries(divisionData)
         .map(([name, workloads], index) => ({
           name,
-          averageWorkload: Math.round(
-            workloads.reduce((sum, val) => sum + val, 0) / workloads.length
-          ),
+          averageWorkload: workloads.length
+            ? Math.round(
+                workloads.reduce((sum, val) => sum + val, 0) / workloads.length
+              )
+            : 0,
           color: getBarColor(index),
         }))
         .sort((a, b) => b.averageWorkload - a.averageWorkload);
@@ -327,7 +331,7 @@ export default function ActivityPage() {
       setDivisionMetrics(divisionAverages);
       setError(null);
     } catch (error) {
-      // console.error("Error fetching data:", error);
+      console.error("Error fetching data:", error);
       setError(
         error instanceof Error
           ? error.message
@@ -482,7 +486,11 @@ export default function ActivityPage() {
                   </CardContent>
                 </Card>
               </div>
-              <DashboardMetrics employees={employees} tasks={taskData} userRole={userRole} />
+              <DashboardMetrics
+                employees={employees}
+                tasks={taskData}
+                userRole={userRole}
+              />
             </div>
           </div>
         </div>
