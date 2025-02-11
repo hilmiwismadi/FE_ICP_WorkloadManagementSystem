@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import { Employee, User } from "@/app/task/types";
 import { cn } from "@/lib/utils";
-import Cookies from 'js-cookie';
-import { jwtDecode } from 'jwt-decode';
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
 interface CreateTaskModalProps {
   userId: string;
@@ -85,12 +85,13 @@ export default function CreateTaskModal({
     const authToken = Cookies.get("auth_token");
     if (authToken) {
       try {
-        const decodedToken: { role: string; team: string } = jwtDecode(authToken);
+        const decodedToken: { role: string; team: string } =
+          jwtDecode(authToken);
         setUserRole(decodedToken.role);
         if (decodedToken.role === "PIC") {
           setFormData((prev) => ({
             ...prev,
-            team: decodedToken.team
+            team: decodedToken.team,
           }));
         }
       } catch (error) {
@@ -99,19 +100,24 @@ export default function CreateTaskModal({
     }
   }, []);
 
-  const filterEmployees = useCallback((employees: Employee[]) => {
-    return employees.filter((emp: Employee) => {
-      // Check if any user has a Manager role
-      const isManager = emp.users?.some((user: User) => user.role === "Manager");
-      // If current user is PIC, also exclude other PICs
-      const isPIC = emp.users?.some((user: User) => user.role === "PIC");
-      
-      // Exclude if either:
-      // 1. Employee is a Manager (for all users)
-      // 2. Employee is a PIC (only when current user is also PIC)
-      return !isManager && !isPIC;
-    });
-  }, [userRole]);
+  const filterEmployees = useCallback(
+    (employees: Employee[]) => {
+      return employees.filter((emp: Employee) => {
+        // Check if any user has a Manager role
+        const isManager = emp.users?.some(
+          (user: User) => user.role === "Manager"
+        );
+        // If current user is PIC, also exclude other PICs
+        const isPIC = emp.users?.some((user: User) => user.role === "PIC");
+
+        // Exclude if either:
+        // 1. Employee is a Manager (for all users)
+        // 2. Employee is a PIC (only when current user is also PIC)
+        return !isManager && !isPIC;
+      });
+    },
+    [userRole]
+  );
 
   const fetchEmployees = useCallback(async () => {
     try {
@@ -123,7 +129,7 @@ export default function CreateTaskModal({
       let formattedEmployees: Employee[] = [];
 
       if (Array.isArray(result)) {
-        formattedEmployees = result
+        formattedEmployees = result;
         formattedEmployees = result.map((emp: Employee) => ({
           ...emp,
           image: getImageUrl(emp.image),
@@ -133,7 +139,7 @@ export default function CreateTaskModal({
           ...emp,
           image: getImageUrl(emp.image),
         }));
-      } 
+      }
       const filteredEmps = filterEmployees(formattedEmployees);
       setEmployees(filteredEmps);
       setFilteredEmployees(filteredEmps);
@@ -219,6 +225,13 @@ export default function CreateTaskModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.employee_Ids.length === 0) {
+      setErrorMessage("Please select at least one employee");
+      setShowError(true);
+      return;
+    }
+
     setShowConfirmation(true);
   };
 
@@ -546,6 +559,7 @@ export default function CreateTaskModal({
                 <select
                   name="priority"
                   value={formData.priority}
+                  required={true}
                   onChange={handleInputChange}
                   className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] appearance-none focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
                 >
@@ -575,68 +589,71 @@ export default function CreateTaskModal({
               />
             </div>
 
-                <div className="space-y-[0.417vw]">
-                  <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
-                    <Calendar className="w-[0.833vw] h-[0.833vw]" />
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    name="start_Date"
-                    required
-                    value={formData.start_Date}
-                    onChange={handleInputChange}
-                    className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  />
-                </div>
+            <div className="space-y-[0.417vw]">
+              <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <Calendar className="w-[0.833vw] h-[0.833vw]" />
+                Start Date
+              </label>
+              <input
+                type="date"
+                name="start_Date"
+                required
+                value={formData.start_Date}
+                onChange={handleInputChange}
+                className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+              />
+            </div>
 
-                <div className="space-y-[0.417vw]">
-                  <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
-                    <Calendar className="w-[0.833vw] h-[0.833vw]" />
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    name="end_Date"
-                    required
-                    value={formData.end_Date}
-                    onChange={handleInputChange}
-                    className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
-                  />
-                </div>
+            <div className="space-y-[0.417vw]">
+              <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <Calendar className="w-[0.833vw] h-[0.833vw]" />
+                End Date
+              </label>
+              <input
+                type="date"
+                name="end_Date"
+                required
+                value={formData.end_Date}
+                onChange={handleInputChange}
+                className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+              />
+            </div>
 
-                <div className="col-span-2 space-y-[0.417vw]">
-      <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
-        <Tag className="w-[0.833vw] h-[0.833vw]" />
-        Team to be assigned
-      </label>
-      <div className="relative">
-        {userRole === 'PIC' ? (
-          <input
-            type="text"
-            name="team"
-            value={formData.team}
-            disabled
-            className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] bg-gray-100 cursor-not-allowed"
-          />
-        ) : (
-          <>
-            <select
-              name="team"
-              value={formData.team}
-              onChange={handleInputChange}
-              className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] appearance-none focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
-            >
-              <option value="">Select team...</option>
-              <option value="Korporat 1">Korporat 1</option>
-              <option value="Korporat 2">Korporat 2</option>
-              <option value="Pelayanan Pelanggan">Pelayanan Pelanggan</option>
-            </select>
-            <ChevronDown className="w-[0.833vw] h-[0.833vw] absolute right-[0.833vw] top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500" />
-          </>
-        )}
-      </div>
-    </div>
+            <div className="col-span-2 space-y-[0.417vw]">
+              <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
+                <Tag className="w-[0.833vw] h-[0.833vw]" />
+                Team to be assigned
+              </label>
+              <div className="relative">
+                {userRole === "PIC" ? (
+                  <input
+                    type="text"
+                    name="team"
+                    value={formData.team}
+                    disabled
+                    className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] bg-gray-100 cursor-not-allowed"
+                  />
+                ) : (
+                  <>
+                    <select
+                      name="team"
+                      value={formData.team}
+                      required={true}
+                      onChange={handleInputChange}
+                      className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] appearance-none focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    >
+                      <option value="">Select team...</option>
+                      <option value="Korporat 1">Korporat 1</option>
+                      <option value="Korporat 2">Korporat 2</option>
+                      <option value="Pelayanan Pelanggan">
+                        Pelayanan Pelanggan
+                      </option>
+                    </select>
+                    <ChevronDown className="w-[0.833vw] h-[0.833vw] absolute right-[0.833vw] top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500" />
+                  </>
+                )}
+              </div>
+            </div>
 
             <div className="col-span-2 space-y-[0.417vw]">
               <label className="text-[1vw] font-medium text-gray-700 flex items-center gap-[0.417vw]">
