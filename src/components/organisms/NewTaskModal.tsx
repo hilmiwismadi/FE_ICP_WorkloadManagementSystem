@@ -162,6 +162,13 @@ export default function CreateTaskModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.end_Date < formData.start_Date) {
+      setErrorMessage("End date cannot be earlier than start date");
+      setShowError(true);
+      return;
+    }
+    
     setShowConfirmation(true);
   };
 
@@ -558,6 +565,7 @@ export default function CreateTaskModal({
               name="team"
               value={formData.team}
               onChange={handleInputChange}
+              required
               className="w-full px-[0.833vw] py-[0.521vw] border rounded-[0.208vw] appearance-none focus:ring-[0.104vw] focus:ring-blue-500 focus:border-blue-500 transition-all"
             >
               <option value="">Select team...</option>

@@ -1229,7 +1229,7 @@ const TaskDetailPage = () => {
                       });
                     }}
                     disabled={!newActivity.trim() || isSending}
-                    className="px-[0.5vw] py-[0.3vw] bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
+                    className="px-[1.25vw] py-[0.75vw] bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
                   >
                     {isSending ? (
                       <motion.div
@@ -1243,7 +1243,7 @@ const TaskDetailPage = () => {
                         <RefreshCw className="w-4 h-4" />
                       </motion.div>
                     ) : (
-                      <Send className="w-4 h-4" />
+                      <Send className="w-[1vw] h-[1vw]" />
                     )}
                   </motion.button>
 
