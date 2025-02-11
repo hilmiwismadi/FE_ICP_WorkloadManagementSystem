@@ -231,11 +231,6 @@ const TaskPage = () => {
       details: assign.employee
     }));
 
-    const calculateWorkloadPercentage = (workload: number): number => {
-      const normalize = workload;
-      return normalize * 100;
-    };
-
     return (
       <motion.div
         key={task.task_Id}
@@ -344,9 +339,10 @@ const TaskPage = () => {
       details: assign.employee
     }));
 
-    const workloadPercentage = employeeDetails[0]?.details?.current_Workload 
-      ? calculateWorkloadPercentage(employeeDetails[0].details.current_Workload) 
-      : 0;
+    const calculateWorkloadPercentage = (workload: number): number => {
+      const normalize = Math.round(workload * 100);
+      return normalize;
+    };
 
     return (
       <motion.tr
@@ -426,8 +422,8 @@ const TaskPage = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-500">Workload:</span>
-                        <span className={`${getWorkloadColor(workloadPercentage)}`}>
-                          {workloadPercentage}%
+                        <span className={`${getWorkloadColor(calculateWorkloadPercentage(emp.details.current_Workload))}`}>
+                          {calculateWorkloadPercentage(emp.details.current_Workload)}%
                         </span>
                       </div>
                       <div className="flex justify-between">

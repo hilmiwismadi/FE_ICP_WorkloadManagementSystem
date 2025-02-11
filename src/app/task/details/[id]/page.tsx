@@ -178,7 +178,7 @@ const TaskDetailPage = () => {
         router.push("/task");
       }, 3000);
     } catch (error) {
-      console.error("Error deleting task:", error);
+      // console.error("Error deleting task:", error);
       setShowFeedback({
         show: true,
         type: "error",
@@ -207,7 +207,8 @@ const TaskDetailPage = () => {
       console.log("editForm", editForm);
 
       if (!response.ok) {
-        throw new Error("Failed to update task");
+        const errorData = await response.json(); // Extract error message from response
+        throw new Error(errorData.error || "Failed to update task status");
       }
 
       const updatedTask = await response.json();
@@ -218,19 +219,21 @@ const TaskDetailPage = () => {
         type: "success",
         message: "Task updated successfully!",
       });
+    } catch (error) {
+      // console.error("Error updating task:", error);
+      setShowFeedback({
+        show: true,
+        type: "error",
+        message: error instanceof Error
+        ? error.message
+        : "Failed to update task. Please try again.",
+      });
+    } finally {
+      setIsEditing(false);
 
       setTimeout(() => {
         setShowFeedback({ show: false, type: "success", message: "" });
       }, 3000);
-    } catch (error) {
-      console.error("Error updating task:", error);
-      setShowFeedback({
-        show: true,
-        type: "error",
-        message: "Failed to update task. Please try again.",
-      });
-    } finally {
-      setIsEditing(false);
     }
   };
 
@@ -428,7 +431,7 @@ const TaskDetailPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Error adding comment:", errorData);
+        // console.error("Error adding comment:", errorData);
         throw new Error(
           errorData.message || "Failed to save comment to database"
         );
@@ -538,8 +541,8 @@ const TaskDetailPage = () => {
   });
 
   const calculateWorkloadPercentage = (workload: number): number => {
-    const normalize = workload;
-    return normalize * 100;
+    const normalize = Math.round(workload * 100);
+    return normalize;
   };
 
   const getWorkloadColor = (percentage: number): string => {
@@ -791,7 +794,7 @@ const TaskDetailPage = () => {
         message: "Task approved successfully!",
       });
     } catch (error) {
-      console.error("Error approving task:", error);
+      // console.error("Error approving task:", error);
       setShowFeedback({
         show: true,
         type: "error",
@@ -851,7 +854,8 @@ const TaskDetailPage = () => {
       );
   
       if (!response.ok) {
-        throw new Error("Failed to update task status");
+        const errorData = await response.json(); // Extract error message from response
+        throw new Error(errorData.error || "Failed to update task status");
       }
   
       const updatedTask = await response.json();
@@ -935,11 +939,11 @@ const TaskDetailPage = () => {
         message: "Task rejected and status updated to Ongoing!",
       });
     } catch (error) {
-      console.error("Error rejecting task:", error);
+      // console.error("Error rejecting task:", error);
       setShowFeedback({
         show: true,
         type: "error",
-        message: "Failed to reject task. Please try again.",
+        message: error instanceof Error ? error.message : "Failed to reject task. Please try again.",
       });
     } finally {
       setIsUpdatingStatus(false);
@@ -1436,7 +1440,7 @@ const TaskDetailPage = () => {
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="fixed top-4 right-4 z-50"
+                  className="fixed top-4 right-4 z-[60]"
                 >
                   <Alert
                     className={`w-[20vw] ${
