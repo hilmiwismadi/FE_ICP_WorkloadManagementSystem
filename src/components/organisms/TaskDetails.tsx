@@ -355,7 +355,7 @@ export const TaskDetails = ({
 
   return (
     <>
-      <div className="p-6 border rounded-lg bg-white w-full relative">
+      <div className="px-[1.25vw] pt-6 pb-[3vw] border rounded-lg bg-white w-full relative shadow-sm">
         <button
           onClick={handleClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
@@ -502,6 +502,7 @@ export const TaskDetails = ({
 
       <AnimatePresence>
         {showConfirmation && (
+        <div className="fixed inset-0 z-[60]">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -587,6 +588,7 @@ export const TaskDetails = ({
               )}
             </motion.div>
           </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </>

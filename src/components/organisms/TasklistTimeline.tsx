@@ -59,7 +59,7 @@ export default function CompactTaskList({
   );
 
   return (
-    <Card className="w-full border-gray-200 shadow-md">
+    <Card className="w-full border-gray-200">
       <CardHeader className="p-4 bg-gray-50 border-b border-gray-200">
         <div className="flex flex-col gap-[1vw] justify-between items-center">
           <div
@@ -142,18 +142,18 @@ export default function CompactTaskList({
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-3 h-[81vh] overflow-y-auto rounded-[0.3vw] scrollbar-hide scrollbar-thumb-transparent">
+      <CardContent className="p-3 h-[83.5vh] overflow-y-auto rounded-[0.3vw] scrollbar-hide scrollbar-thumb-transparent">
         <div className="space-y-3">
           {filteredTasks.map((task) => (
             <div
               key={task.id}
-              className="relative bg-white border border-gray-200 rounded-md hover:bg-blue-50 cursor-pointer transition-all duration-200 ease-in-out shadow-sm hover:shadow-md group"
+              className="relative bg-white border border-gray-200 rounded-[0.3vw] hover:bg-blue-50 cursor-pointer transition-all duration-200 ease-in-out shadow-sm hover:shadow-md group"
               onClick={() => onTaskSelect(task)}
             >
               <div
                 className={`absolute top-0 left-0 right-0 h-1 ${getTaskSpanColor(
                   task.status
-                )} rounded-t-md`}
+                )} rounded-t-[0.3vw]`}
               ></div>
               <div className="p-3">
                 <div className="flex justify-between items-start">
@@ -165,7 +165,7 @@ export default function CompactTaskList({
                       {task.description}
                     </p>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-medium text-gray-600 capitalize bg-gray-100 px-2 py-0.5 rounded">
+                      <span className="text-xs font-medium text-gray-600 capitalize bg-gray-100 px-2 py-0.5 rounded-[0.3vw]">
                         {task.status}
                       </span>
                       <span
